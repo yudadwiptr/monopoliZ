@@ -7,7 +7,7 @@ import { Logo } from '@/ui/common';
 import { IconButton } from './IconButton';
 import { useMapDef } from './hooks';
 
-export type TopBarVariant = 'wide' | 'compact' | 'stack';
+export type TopBarVariant = 'wide' | 'compact' | 'stack' | 'mini';
 
 const SPEED_ORDER: GameSpeed[] = ['santai', 'normal', 'ngebut'];
 const SPEED_ICON: Record<GameSpeed, React.ReactNode> = {
@@ -161,6 +161,18 @@ export function TopBar({ variant }: { variant: TopBarVariant }) {
       <IconButton label="Jeda (Esc)" icon={<Pause size={20} aria-hidden />} onClick={pause} tip={tip} />
     </>
   );
+
+  if (variant === 'mini') {
+    // Short landscape screens: just the round and one menu button (speed, camera and sound live in Jeda → Pengaturan).
+    return (
+      <header className="flex items-center gap-1.5">
+        <RoundPill compact />
+        <div className="ml-auto">
+          <IconButton label="Menu & pengaturan (Esc)" icon={<Pause size={18} aria-hidden />} onClick={pause} tip={false} />
+        </div>
+      </header>
+    );
+  }
 
   if (variant === 'stack') {
     return (

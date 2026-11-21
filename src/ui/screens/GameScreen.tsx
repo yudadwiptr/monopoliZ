@@ -27,7 +27,7 @@ import {
   type Corner,
   type HudLayout,
 } from '@/ui/hud';
-import { RotateGate } from '@/ui/hud/RotateGate';
+import { PlayHint } from '@/ui/hud/PlayHint';
 import { PauseMenu } from './PauseMenu';
 
 const SAFE_PAD = {
@@ -55,15 +55,35 @@ function usePanelFlags() {
 
 function PortraitLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
   const flags = usePanelFlags();
+  // Phones held upright: two players above the board, two below (same seats as the desktop corners),
+  // so names are readable and the tall screen frames the board instead of leaving empty space.
+  const slots = cornerSlots(ids.length);
+  const at = (corner: Corner) => {
+    const seat = slots.indexOf(corner);
+    const id = seat >= 0 ? ids[seat] : undefined;
+    if (!id) return <div />;
+    return (
+      <PlayerPanel
+        playerId={id}
+        size={layout.panelSize}
+        onOpen={onOpenPlayer}
+        align={corner === 'tr' || corner === 'br' ? 'right' : 'left'}
+        {...flags(id)}
+      />
+    );
+  };
   return (
-    <div className="relative z-10 flex h-full flex-col gap-1.5" style={SAFE_PAD}>
+    <div className="relative z-10 flex h-full flex-col gap-2" style={SAFE_PAD}>
       <TopBar variant="compact" />
-      <div className="grid shrink-0 gap-1.5 pt-1" style={{ gridTemplateColumns: `repeat(${ids.length}, minmax(0, 1fr))` }}>
-        {ids.map((id) => (
-          <PlayerPanel key={id} playerId={id} size={layout.panelSize} onOpen={onOpenPlayer} {...flags(id)} />
-        ))}
+      <div className="grid shrink-0 grid-cols-2 gap-2">
+        {at('tl')}
+        {at('tr')}
       </div>
       <BoardStage className="flex-1" compact={layout.denseDock} />
+      <div className="grid shrink-0 grid-cols-2 gap-2">
+        {at('bl')}
+        {at('br')}
+      </div>
     </div>
   );
 }
@@ -102,7 +122,7 @@ function CornerLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
     <div className={clsx('relative z-10 flex h-full flex-col', short ? 'gap-1' : 'gap-2')} style={SAFE_PAD}>
       {fullBleed && <BoardStage className="absolute inset-0 z-0" compact={short} />}
       <div className="pointer-events-none relative z-20 shrink-0 px-1 [&>header>*]:pointer-events-auto">
-        <TopBar variant={short ? 'compact' : 'wide'} />
+        <TopBar variant={layout.tinyTop ? 'mini' : short ? 'compact' : 'wide'} />
       </div>
       {/* Click-through row: only the panels take pointer events, the board below gets the rest. */}
       <div className={clsx('pointer-events-none relative flex min-h-0 flex-1 px-1', short ? 'gap-2' : 'gap-4')}>
@@ -152,7 +172,7 @@ export function GameScreen() {
       <PlayerDetailSheet playerId={detailId} onClose={() => setDetailId(null)} />
       <ErrorToast />
       <PauseMenu />
-      <RotateGate />
+      <PlayHint />
     </div>
   );
 }

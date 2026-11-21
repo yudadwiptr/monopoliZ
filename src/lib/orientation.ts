@@ -1,16 +1,12 @@
 /**
- * Phone landscape helpers.
+ * Phone display helpers.
  *
- * Browsers only let a page lock orientation while it is fullscreen (Android Chrome & co.). iPhone Safari
- * supports neither, so there the game shows a "putar HP" gate instead (see RotateGate).
+ * Nothing here forces an orientation: MonopoliZ plays in portrait and landscape. iPhone Safari cannot go
+ * fullscreen from a web page, so there the real fullscreen is "Tambahkan ke Layar Utama" (standalone mode,
+ * no Safari bars). Android browsers can enter fullscreen on a tap.
  */
 
-type LockableOrientation = ScreenOrientation & {
-  lock?: (orientation: 'landscape' | 'portrait') => Promise<void>;
-  unlock?: () => void;
-};
-
-/** Touch device with a phone-sized short edge (tablets keep their portrait layout). */
+/** Touch device with a phone-sized short edge (tablets are excluded). */
 export function isPhone(): boolean {
   if (typeof window === 'undefined') return false;
   const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
@@ -22,31 +18,33 @@ export function isPortrait(): boolean {
   return typeof window !== 'undefined' && window.innerHeight > window.innerWidth;
 }
 
-/** Whether this browser can go fullscreen and lock to landscape (false on iPhone). */
-export function canLockLandscape(): boolean {
-  if (typeof document === 'undefined') return false;
-  const o = (screen as Screen & { orientation?: LockableOrientation }).orientation;
-  return !!document.fullscreenEnabled && typeof o?.lock === 'function';
+/** iPhone / iPod (iPadOS reports itself as Mac and is not a phone anyway). */
+export function isIOS(): boolean {
+  return typeof navigator !== 'undefined' && /iPhone|iPod/i.test(navigator.userAgent);
 }
 
-/**
- * Fullscreen + landscape lock on phones. Must run soon after a user gesture (tap); failures are silent —
- * the rotate gate covers browsers that refuse.
- */
-export async function enterLandscape(): Promise<void> {
-  if (!isPhone() || !canLockLandscape()) return;
-  try {
-    if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
-    await (screen.orientation as LockableOrientation).lock?.('landscape');
-  } catch {
-    /* refused (no gesture, iframe, desktop…) — the rotate gate handles it */
-  }
+/** Running from the home screen (PWA / standalone), i.e. without browser bars. */
+export function isStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+  const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  return iosStandalone || window.matchMedia?.('(display-mode: standalone)').matches || window.matchMedia?.('(display-mode: fullscreen)').matches;
 }
 
-export function releaseLandscape(): void {
+/** Whether a tap can put the page in fullscreen (Android & desktop browsers; never iPhone). */
+export function canFullscreen(): boolean {
+  return typeof document !== 'undefined' && !!document.fullscreenEnabled && !isIOS();
+}
+
+export function isFullscreen(): boolean {
+  return typeof document !== 'undefined' && !!document.fullscreenElement;
+}
+
+/** Fullscreen without locking the orientation — the player can still turn the phone. Must run on a tap. */
+export async function enterFullscreen(): Promise<void> {
+  if (!canFullscreen() || isFullscreen()) return;
   try {
-    (screen.orientation as LockableOrientation | undefined)?.unlock?.();
+    await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
   } catch {
-    /* ignore */
+    /* refused — nothing else to do */
   }
 }

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { DiceSkin } from '@/data/diceSkins';
 
 export type GameSpeed = 'santai' | 'normal' | 'ngebut';
 export type CameraMode = 'iso' | '3d' | 'top';
@@ -27,12 +28,14 @@ interface SettingsState {
   haptics: boolean;
   /** Zoom & pan to the moving pawn, then back to the whole board. */
   followCam: boolean;
+  diceSkin: DiceSkin;
   setSfxVolume(v: number): void;
   setMusicVolume(v: number): void;
   setSpeed(s: GameSpeed): void;
   setCamera(c: CameraMode): void;
   setHaptics(h: boolean): void;
   setFollowCam(f: boolean): void;
+  setDiceSkin(s: DiceSkin): void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -44,12 +47,14 @@ export const useSettings = create<SettingsState>()(
       camera: 'iso',
       haptics: true,
       followCam: true,
+      diceSkin: 'klasik',
       setSfxVolume: (v) => set({ sfxVolume: Math.max(0, Math.min(1, v)) }),
       setMusicVolume: (v) => set({ musicVolume: Math.max(0, Math.min(1, v)) }),
       setSpeed: (speed) => set({ speed }),
       setCamera: (camera) => set({ camera }),
       setHaptics: (haptics) => set({ haptics }),
       setFollowCam: (followCam) => set({ followCam }),
+      setDiceSkin: (diceSkin) => set({ diceSkin }),
     }),
     {
       name: 'monopoliz.settings.v1',

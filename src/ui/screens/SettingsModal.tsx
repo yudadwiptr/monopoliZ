@@ -2,6 +2,8 @@ import { Box, Diamond, Gauge, LayoutGrid, ScanSearch, Music, Rabbit, Settings, T
 import { Button, Modal } from '@/ui/common';
 import { sfx } from '@/audio';
 import { haptic, SPEED_LABEL, useSettings, type CameraMode, type GameSpeed } from '@/store/settingsStore';
+import clsx from 'clsx';
+import { DICE_SKINS, type DiceSkin } from '@/data/diceSkins';
 import { RangeSlider } from './parts/RangeSlider';
 import { Segmented, type SegOption } from './parts/Segmented';
 import { Toggle } from './parts/Toggle';
@@ -23,6 +25,54 @@ const CAMERA_OPTIONS: SegOption<CameraMode>[] = [
   { value: '3d', label: '3D', icon: <Box size={16} aria-hidden /> },
   { value: 'top', label: 'Atas', icon: <LayoutGrid size={16} aria-hidden /> },
 ];
+
+/** Pip slots (row, col) of a "5" face; the centre pip uses the skin's accent colour. */
+const FIVE: [number, number][] = [
+  [1, 1],
+  [1, 3],
+  [2, 2],
+  [3, 1],
+  [3, 3],
+];
+
+function SkinPicker({ value, onChange }: { value: DiceSkin; onChange: (s: DiceSkin) => void }) {
+  return (
+    <div role="radiogroup" aria-label="Skin dadu" className="grid grid-cols-3 gap-2">
+      {DICE_SKINS.map((skin) => {
+        const active = skin.id === value;
+        return (
+          <button
+            key={skin.id}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => {
+              onChange(skin.id);
+              sfx.play('dice_land');
+              haptic(10);
+            }}
+            className={clsx(
+              'flex flex-col items-center gap-1.5 rounded-2xl border px-2 pb-2 pt-3 outline-none transition-colors focus-visible:ring-4 focus-visible:ring-brand-300/60',
+              active ? 'border-brand-300 bg-brand-500/15' : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08]',
+            )}
+          >
+            <span className="bz-skin-face" data-skin={skin.id} aria-hidden>
+              {FIVE.map(([r, c], i) => (
+                <span
+                  key={i}
+                  className={clsx('bz-pip', i === 2 && 'bz-pip-red')}
+                  style={{ gridRow: r, gridColumn: c }}
+                />
+              ))}
+            </span>
+            <span className="font-display text-xs font-semibold text-white">{skin.name}</span>
+            <span className="line-clamp-1 text-[10px] leading-tight text-ink-300">{skin.tagline}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function Row({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -89,6 +139,10 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               ariaLabel="Mode kamera"
               accent="laut"
             />
+          </Row>
+
+          <Row title="Skin Dadu" hint="Pilih gaya dadu favoritmu — berlaku untuk semua pemain.">
+            <SkinPicker value={s.diceSkin} onChange={s.setDiceSkin} />
           </Row>
 
           <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">

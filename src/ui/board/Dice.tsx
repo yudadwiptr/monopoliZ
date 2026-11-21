@@ -10,7 +10,7 @@ import {
 import clsx from 'clsx';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useGame } from '@/store/gameStore';
-import { speedFactor } from '@/store/settingsStore';
+import { speedFactor, useSettings } from '@/store/settingsStore';
 import { useAnchor, useCam } from './camera';
 
 /**
@@ -137,6 +137,7 @@ function Die({
   doubles: boolean;
 }) {
   const { c } = useCam();
+  const skin = useSettings((s) => s.diceSkin);
   const reduce = useReducedMotion();
   const dir = index === 0 ? -1 : 1;
 
@@ -297,7 +298,7 @@ function Die({
           marginTop: 'calc(var(--c) * -0.27)',
         }}
       >
-        <div className={clsx('bz-die', doubles && !rolling && 'bz-die-double')}>
+        <div className={clsx('bz-die', doubles && !rolling && 'bz-die-double')} data-skin={skin}>
           <div className="bz-die-view">
             <motion.div className="bz-cube" style={{ rotateX: rx, rotateY: ry }}>
               {CORES.map((t) => (

@@ -183,69 +183,55 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
     };
   }, [start, release]);
 
-  // Clean ring gauge embedded directly in the button rim
-  const size = compact ? 70 : 88;
-  const rim = compact ? 6 : 8;
-  const box = size + rim * 2;
-  const stroke = rim - 1.5;
-  const r = box / 2 - rim / 2;
+  // Gauge ring hugging the coin while charging.
+  const size = compact ? 64 : 76; // coin diameter
+  const ring = compact ? 5 : 6;
+  const box = size + ring * 2 + 4;
+  const r = box / 2 - ring / 2;
   const circ = 2 * Math.PI * r;
-  const dash = useTransform(pos, (p) => `${(0.05 + p * 0.95) * circ} ${circ}`);
+  const dash = useTransform(pos, (p) => `${(0.04 + p * 0.96) * circ} ${circ}`);
   const ringColor = useTransform(pos, gaugeColor);
+  const target = useTransform(pos, (p) => String(Math.round(2 + p * 10)));
   const empty = charges <= 0;
+  const capH = compact ? 44 : 50;
 
   return (
-    <div
-      className="flex select-none flex-col items-center gap-1.5"
-      style={{ touchAction: 'none', WebkitUserSelect: 'none' }}
-    >
+    <div className="flex select-none flex-col items-center gap-2" style={{ touchAction: 'none' }}>
       {player && (
-        <span className="rounded-full bg-ink-950/75 px-3 py-0.5 font-display text-xs font-semibold text-ink-100 shadow-glass">
+        <span className="rounded-full bg-ink-950/80 px-3 py-0.5 font-display text-[11px] font-semibold tracking-wide text-ink-100">
           Giliran {player.name}
         </span>
       )}
 
-      {/* Minimalist floating controls inside the center pit */}
-      <div className={clsx('flex items-center', compact ? 'gap-2.5' : 'gap-3.5')}>
-        <ParityButton
+      {/* One slim glass capsule: GENAP · coin · GANJIL. The coin overhangs the capsule a little. */}
+      <div className="relative flex items-center" style={{ height: box }}>
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-ink-950/75 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] backdrop-blur-xl"
+          style={{ height: capH }}
+        />
+        <ParityChip
           label="Genap"
+          side="left"
           active={parity === 'genap'}
           charges={charges}
           compact={compact}
           onClick={() => setParity(parity === 'genap' ? null : 'genap')}
         />
 
-        <div className="relative flex items-center justify-center" style={{ width: box, height: box + 4 }}>
-          <span
-            aria-hidden
-            className={clsx('absolute inset-0 rounded-full bg-gold-400/25 blur-lg', !charging && 'animate-pulse')}
-          />
-          {/* Sleek gold rim */}
-          <span
-            aria-hidden
-            className="absolute left-0 top-0 rounded-full"
-            style={{
-              width: box,
-              height: box,
-              background: 'conic-gradient(from 210deg, #FFF0BF, #E6A200, #FFE08A, #A86F00, #FFD35C, #FFF0BF)',
-              boxShadow: '0 4px 0 #7A4F00, 0 12px 22px -6px rgba(0,0,0,0.65)',
-            }}
-          />
-          {/* Ring gauge only visible while holding */}
-          <svg className="pointer-events-none absolute left-0 top-0 z-10 -rotate-90" width={box} height={box} aria-hidden>
+        <div className="relative mx-1 flex items-center justify-center" style={{ width: box, height: box }}>
+          <svg className="pointer-events-none absolute inset-0 -rotate-90" width={box} height={box} aria-hidden>
+            <circle cx={box / 2} cy={box / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={ring} />
             {charging && (
-              <>
-                <circle cx={box / 2} cy={box / 2} r={r} fill="none" stroke="rgba(5,8,26,0.65)" strokeWidth={stroke} />
-                <motion.circle
-                  cx={box / 2}
-                  cy={box / 2}
-                  r={r}
-                  fill="none"
-                  strokeWidth={stroke}
-                  strokeLinecap="round"
-                  style={{ strokeDasharray: dash, stroke: ringColor }}
-                />
-              </>
+              <motion.circle
+                cx={box / 2}
+                cy={box / 2}
+                r={r}
+                fill="none"
+                strokeWidth={ring}
+                strokeLinecap="round"
+                style={{ strokeDasharray: dash, stroke: ringColor }}
+              />
             )}
           </svg>
           <motion.button
@@ -256,83 +242,58 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
                 ? `Giliran ${player.name}: lempar dadu. Tahan untuk atur kekuatan.`
                 : 'Lempar dadu. Tahan untuk atur kekuatan.'
             }
-            className="absolute z-20 flex touch-none flex-col items-center justify-center overflow-hidden rounded-full text-ink-950 outline-none [-webkit-touch-callout:none] focus-visible:ring-4 focus-visible:ring-brand-300/70"
+            className="relative flex touch-none flex-col items-center justify-center rounded-full text-ink-950 outline-none [-webkit-touch-callout:none] focus-visible:ring-4 focus-visible:ring-gold-300/50"
             style={{
-              left: rim,
-              top: rim,
               width: size,
               height: size,
-              background: 'radial-gradient(circle at 50% 75%, #FFC21F 0%, #FFB020 48%, #E68A00 100%)',
-              boxShadow: 'inset 0 -5px 8px rgba(122,79,0,0.45), inset 0 2px 0 rgba(255,255,255,0.75)',
+              background: 'linear-gradient(180deg, #FFE38A 0%, #FFC83D 48%, #F0A81C 100%)',
+              boxShadow:
+                'inset 0 1.5px 0 rgba(255,255,255,0.75), inset 0 -3px 6px rgba(150,90,0,0.35), 0 0 0 1px rgba(122,79,0,0.55), 0 5px 0 #9A6400, 0 10px 18px -6px rgba(0,0,0,0.7)',
             }}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ y: 3, scale: 0.96 }}
-            animate={charging ? { y: 3, scale: 0.97 } : { y: 0, scale: [1, 1.03, 1] }}
-            transition={
-              charging
-                ? { type: 'spring', stiffness: 520, damping: 26 }
-                : { scale: { duration: 1.9, repeat: Infinity, ease: 'easeInOut' }, y: { type: 'spring', stiffness: 500, damping: 26 } }
-            }
+            whileHover={{ y: -1 }}
+            whileTap={{ y: 3 }}
+            animate={charging ? { y: 3, scale: 0.97 } : { y: 0, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 520, damping: 28 }}
             onPointerDown={(e) => {
               if (e.button !== 0) return;
-              e.currentTarget.setPointerCapture?.(e.pointerId);
+              try {
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+              } catch {
+                /* synthetic events have no capturable pointer */
+              }
               suppressClickRef.current = true;
               start();
             }}
             onPointerUp={() => release()}
-            onLostPointerCapture={() => release()}
             onPointerCancel={() => release(true)}
             onContextMenu={(e) => e.preventDefault()}
             onClick={() => {
+              // Assistive tech "click" without pointer events → quick roll.
               if (suppressClickRef.current) return;
               roll();
             }}
           >
-            {/* Glossy top reflection */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-x-[12%] top-[5%] h-[42%] rounded-[50%]"
-              style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.06))' }}
-            />
-            {!charging && (
-              <motion.span
-                aria-hidden
-                className="pointer-events-none absolute -inset-y-2 w-1/3 -skew-x-12 bg-white/45 blur-[2px]"
-                initial={{ x: -size }}
-                animate={{ x: size * 1.4 }}
-                transition={{ duration: 0.85, repeat: Infinity, repeatDelay: 2.5, ease: 'easeInOut' }}
-              />
+            {charging ? (
+              <>
+                <motion.span className={clsx('num font-bold leading-none', compact ? 'text-2xl' : 'text-[28px]')}>
+                  {target}
+                </motion.span>
+                <span className="mt-0.5 font-display text-[9px] font-bold uppercase tracking-[0.18em] opacity-70">lepas</span>
+              </>
+            ) : (
+              <>
+                <DiceGlyph size={compact ? 24 : 28} />
+                <span className={clsx('mt-0.5 font-display font-bold uppercase tracking-[0.14em]', compact ? 'text-[9px]' : 'text-[10px]')}>
+                  Lempar
+                </span>
+              </>
             )}
-            <span className="relative flex flex-col items-center drop-shadow-[0_1px_0_rgba(255,255,255,0.65)]">
-              {charging ? (
-                <>
-                  <motion.span
-                    key={activeSum}
-                    initial={{ scale: 1.2 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.1 }}
-                    className={clsx('num font-display font-black leading-none', compact ? 'text-2xl' : 'text-3xl')}
-                  >
-                    {activeSum}
-                  </motion.span>
-                  <span className="mt-0.5 font-display text-[9px] font-bold uppercase tracking-wider opacity-80">
-                    Lepas!
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Dices size={compact ? 20 : 25} strokeWidth={2.3} aria-hidden />
-                  <span className={clsx('mt-0.5 font-display font-bold uppercase tracking-wide', compact ? 'text-[11px]' : 'text-xs')}>
-                    Lempar
-                  </span>
-                </>
-              )}
-            </span>
           </motion.button>
         </div>
 
-        <ParityButton
+        <ParityChip
           label="Ganjil"
+          side="right"
           active={parity === 'ganjil'}
           charges={charges}
           compact={compact}
@@ -340,19 +301,20 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
         />
       </div>
 
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} mode="wait">
         {(!hintSeen || parity || empty) && !charging && (
           <motion.span
-            className="pointer-events-none whitespace-nowrap rounded-full bg-ink-950/75 px-2.5 py-0.5 text-[10px] font-semibold text-ink-100 shadow-glass"
-            initial={{ opacity: 0, y: -4 }}
+            key={parity ?? (empty ? 'empty' : 'hint')}
+            className="pointer-events-none whitespace-nowrap text-[11px] font-medium text-ink-200 [text-shadow:0_1px_3px_rgba(0,0,0,0.9)]"
+            initial={{ opacity: 0, y: -3 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
             {parity
-              ? `Peluang ${parity} aktif • sisa ${charges - 1}`
+              ? `Condong ${parity} · sisa ${charges - 1}×`
               : empty
-                ? 'Jatah Genap/Ganjil habis — isi lewat Start'
-                : 'Tahan untuk atur kekuatan dadu'}
+                ? 'Jatah genap/ganjil habis · isi lagi lewat Start'
+                : 'Tahan untuk atur kekuatan'}
           </motion.span>
         )}
       </AnimatePresence>
@@ -360,14 +322,29 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
   );
 }
 
-function ParityButton({
+/** Two small dice, drawn so the coin reads as "roll" at a glance. */
+function DiceGlyph({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
+      <rect x="3" y="9" width="16" height="16" rx="4" fill="#FFF7E0" stroke="#3A2600" strokeWidth="2" transform="rotate(-12 11 17)" />
+      <circle cx="8" cy="14" r="1.6" fill="#3A2600" />
+      <circle cx="13.5" cy="19.5" r="1.6" fill="#3A2600" />
+      <rect x="15" y="5" width="14" height="14" rx="3.5" fill="#FFF7E0" stroke="#3A2600" strokeWidth="2" transform="rotate(14 22 12)" />
+      <circle cx="22" cy="12" r="1.6" fill="#E01E45" />
+    </svg>
+  );
+}
+
+function ParityChip({
   label,
+  side,
   active,
   charges,
   compact,
   onClick,
 }: {
   label: string;
+  side: 'left' | 'right';
   active: boolean;
   charges: number;
   compact?: boolean;
@@ -381,39 +358,26 @@ function ParityButton({
       disabled={disabled}
       aria-label={`Pilih ${label}, sisa jatah ${charges}${active ? ' (aktif, ketuk lagi untuk bebas)' : ''}`}
       onClick={onClick}
-      whileHover={disabled ? undefined : { y: -1.5 }}
-      whileTap={disabled ? undefined : { y: 2, scale: 0.96 }}
-      animate={active ? { scale: 1.05 } : { scale: 1 }}
+      whileTap={disabled ? undefined : { scale: 0.95 }}
       className={clsx(
-        'relative overflow-hidden rounded-full border font-display font-bold uppercase tracking-wider text-white outline-none focus-visible:ring-4 focus-visible:ring-brand-300/60',
-        compact ? 'h-8 min-w-[62px] px-2.5 text-[10px]' : 'h-9 min-w-[78px] px-3 text-[11px]',
-        disabled && 'cursor-not-allowed opacity-40 saturate-0',
+        'relative z-10 flex flex-col items-center justify-center gap-1 rounded-full font-display font-semibold uppercase outline-none transition-colors focus-visible:ring-2 focus-visible:ring-gold-300/60',
+        compact ? 'h-9 w-[62px] text-[10px] tracking-[0.12em]' : 'h-10 w-[74px] text-[11px] tracking-[0.14em]',
+        side === 'left' ? 'ml-1.5' : 'mr-1.5',
+        active ? 'bg-gold-400/15 text-gold-200 ring-1 ring-gold-300/60' : 'text-ink-200 hover:bg-white/5 hover:text-white',
+        disabled && 'cursor-not-allowed opacity-35',
       )}
-      style={{
-        borderColor: active ? '#FFD35C' : 'rgba(69, 227, 214, 0.7)',
-        background: active
-          ? 'linear-gradient(180deg, #A78BFA 0%, #7C3AED 55%, #5B21B6 100%)'
-          : 'linear-gradient(180deg, rgba(99,102,241,0.88) 0%, rgba(55,48,163,0.92) 100%)',
-        boxShadow: active
-          ? '0 3px 0 #3B1A86, 0 0 14px rgba(255,211,92,0.65)'
-          : '0 3px 0 #1E1B4B, 0 6px 14px -4px rgba(0,0,0,0.55)',
-      }}
     >
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-1 top-0.5 h-1/2 rounded-full"
-        style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0))' }}
-      />
-      <span className="relative flex items-center justify-center gap-1.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]">
-        {label}
-        <span className="flex gap-0.5" aria-hidden>
-          {Array.from({ length: PARITY_CHARGES }, (_, i) => (
-            <span
-              key={i}
-              className={clsx('block h-1.5 w-1.5 rounded-full', i < charges ? 'bg-gold-300' : 'bg-white/25')}
-            />
-          ))}
-        </span>
+      <span className="leading-none">{label}</span>
+      <span className="flex gap-1" aria-hidden>
+        {Array.from({ length: PARITY_CHARGES }, (_, i) => (
+          <span
+            key={i}
+            className={clsx(
+              'block h-1 w-1 rounded-full',
+              i < charges ? (active ? 'bg-gold-300' : 'bg-ink-200') : 'bg-white/15',
+            )}
+          />
+        ))}
       </span>
     </motion.button>
   );

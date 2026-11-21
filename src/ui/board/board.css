@@ -861,12 +861,65 @@
   backface-visibility: hidden;
 }
 
+/* Dice skin variables (defaults = Klasik). Skins override them via [data-skin] on .bz-die / .bz-skin-face. */
+.bz-die,
+.bz-skin-face {
+  --die-face: radial-gradient(circle at 30% 25%, #ffffff 0%, #fbf3e4 55%, #e9dcc3 100%);
+  --die-rim: rgba(255, 255, 255, 0.92);
+  --die-shade: rgba(120, 90, 40, 0.28);
+  --die-core: #e2d2b4;
+  --die-pip: radial-gradient(circle at 35% 30%, #3b4b8c, #090d24 72%);
+  --die-pip-red: radial-gradient(circle at 35% 30%, #ff7597, #e11d48 70%);
+  --die-pip-glow: none;
+}
+[data-skin='sultan'] {
+  --die-face: radial-gradient(circle at 30% 22%, #fff3c4 0%, #ffd35c 45%, #e6a200 100%);
+  --die-rim: rgba(255, 246, 214, 0.95);
+  --die-shade: rgba(122, 79, 0, 0.45);
+  --die-core: #c98a00;
+  --die-pip: radial-gradient(circle at 35% 30%, #6b3f00, #2a1600 75%);
+  --die-pip-red: radial-gradient(circle at 35% 30%, #ff6b8b, #b0102f 70%);
+}
+[data-skin='batik'] {
+  --die-face: var(--batik-kawung) center / 70% repeat, radial-gradient(circle at 30% 25%, #34418a 0%, #1b2552 60%, #0f1638 100%);
+  --die-rim: rgba(255, 224, 138, 0.55);
+  --die-shade: rgba(0, 0, 0, 0.45);
+  --die-core: #121a3d;
+  --die-pip: radial-gradient(circle at 35% 30%, #fff0bf, #ffc21f 70%);
+  --die-pip-red: radial-gradient(circle at 35% 30%, #ff8fa3, #e01e45 70%);
+}
+[data-skin='merah-putih'] {
+  --die-face: linear-gradient(180deg, #ff5c7a 0%, #e01e45 49.5%, #fbf7f2 50.5%, #e9e2d8 100%);
+  --die-rim: rgba(255, 255, 255, 0.9);
+  --die-shade: rgba(90, 10, 30, 0.3);
+  --die-core: #c4153a;
+  --die-pip: radial-gradient(circle at 35% 30%, #3a4785, #0b1026 72%);
+  --die-pip-red: radial-gradient(circle at 35% 30%, #ffffff, #d9d9d9 75%);
+}
+[data-skin='giok'] {
+  --die-face: radial-gradient(circle at 30% 25%, #b6f5d8 0%, #2ee59d 45%, #0f8a5c 100%);
+  --die-rim: rgba(220, 255, 238, 0.85);
+  --die-shade: rgba(4, 60, 38, 0.45);
+  --die-core: #0f8a5c;
+  --die-pip: radial-gradient(circle at 35% 30%, #ffffff, #d7f7e8 75%);
+  --die-pip-red: radial-gradient(circle at 35% 30%, #ffe08a, #ffc21f 70%);
+}
+[data-skin='neon'] {
+  --die-face: radial-gradient(circle at 30% 25%, #27336b 0%, #121a3d 55%, #05081a 100%);
+  --die-rim: rgba(69, 227, 214, 0.85);
+  --die-shade: rgba(0, 0, 0, 0.5);
+  --die-core: #05081a;
+  --die-pip: radial-gradient(circle at 40% 35%, #ffffff, #45e3d6 60%);
+  --die-pip-red: radial-gradient(circle at 40% 35%, #ffffff, #ff4fd8 60%);
+  --die-pip-glow: 0 0 calc(var(--c) * 0.06) #45e3d6;
+}
+
 .bz-face {
   border-radius: 11%;
-  background: radial-gradient(circle at 30% 25%, #ffffff 0%, #fbf3e4 55%, #e9dcc3 100%);
+  background: var(--die-face);
   box-shadow:
-    inset 0 0 0 calc(var(--c) * 0.015) rgba(255, 255, 255, 0.92),
-    inset 0 calc(var(--c) * -0.045) calc(var(--c) * 0.08) rgba(120, 90, 40, 0.28);
+    inset 0 0 0 calc(var(--c) * 0.015) var(--die-rim),
+    inset 0 calc(var(--c) * -0.045) calc(var(--c) * 0.08) var(--die-shade);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
@@ -874,7 +927,7 @@
 }
 
 .bz-core {
-  background: #e2d2b4;
+  background: var(--die-core);
   backface-visibility: visible;
 }
 
@@ -886,14 +939,94 @@
   width: 72%;
   height: 72%;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #3b4b8c, #090d24 72%);
-  box-shadow: inset 0 calc(var(--c) * 0.012) calc(var(--c) * 0.02) rgba(0, 0, 0, 0.65);
+  background: var(--die-pip);
+  box-shadow: inset 0 calc(var(--c) * 0.012) calc(var(--c) * 0.02) rgba(0, 0, 0, 0.65), var(--die-pip-glow);
 }
 
 .bz-pip-red {
   width: 90%;
   height: 90%;
-  background: radial-gradient(circle at 35% 30%, #ff7597, #e11d48 70%);
+  background: var(--die-pip-red);
+}
+
+/* Flat 2D face used for skin previews in Pengaturan. */
+.bz-skin-face {
+  --c: 64px;
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 22%;
+  background: var(--die-face);
+  box-shadow:
+    inset 0 0 0 1.5px var(--die-rim),
+    inset 0 -4px 7px var(--die-shade),
+    0 3px 0 var(--die-core);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 15%;
+}
+
+/* ───────────── roll preview: trail + destination ───────────── */
+
+.bz-trail-dot {
+  display: block;
+  width: calc(var(--c) * 0.2);
+  height: calc(var(--c) * 0.2);
+  border-radius: 50%;
+  background: var(--pc);
+  box-shadow:
+    0 0 0 calc(var(--c) * 0.035) rgba(5, 8, 26, 0.55),
+    0 0 calc(var(--c) * 0.22) var(--pc);
+}
+
+.bz-target-ring {
+  display: block;
+  width: calc(var(--c) * 1.05);
+  height: calc(var(--c) * 1.05);
+  border-radius: 50%;
+  border: calc(var(--c) * 0.07) solid var(--pc);
+  box-shadow:
+    0 0 calc(var(--c) * 0.35) var(--pc),
+    inset 0 0 calc(var(--c) * 0.25) var(--pc);
+  animation: bz-target-pulse 1s ease-in-out infinite;
+}
+
+@keyframes bz-target-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+.bz-target-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--c) * 0.58);
+  height: calc(var(--c) * 0.58);
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--pc);
+  border: calc(var(--c) * 0.035) solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 calc(var(--c) * 0.05) 0 rgba(5, 8, 26, 0.6),
+    0 0 calc(var(--c) * 0.35) var(--pc);
+  animation: bz-hint 0.9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bz-target-ring,
+  .bz-target-arrow {
+    animation: none;
+  }
 }
 
 .bz-die-shadow {
@@ -1114,4 +1247,160 @@
 /* Corner art animates (twinkles); give it its own layer so the tilted board plane never repaints. */
 .bz-corner-art {
   will-change: transform;
+}
+
+/* ═══════════════ Light board theme: teak frame, cream tiles, batik cloth centre ═══════════════ */
+
+.bz-ambient {
+  background: radial-gradient(closest-side, rgba(255, 214, 150, 0.1), transparent 72%);
+}
+
+/* Teak wood edge */
+.bz-slab {
+  background: linear-gradient(145deg, #7a4a26 0%, #4a2a14 100%);
+  box-shadow:
+    0 0 0 1.5px rgba(255, 220, 170, 0.18),
+    calc(var(--c) * 0.08) calc(var(--c) * 0.08) 0 #3a2010,
+    calc(var(--c) * 0.16) calc(var(--c) * 0.16) 0 #26140a,
+    0 calc(var(--c) * 0.7) calc(var(--c) * 1.8) rgba(0, 0, 0, 0.7);
+}
+
+/* Teak wood top with grain */
+.bz-plane {
+  background:
+    radial-gradient(120% 90% at 18% 0%, rgba(255, 240, 210, 0.22), transparent 55%),
+    repeating-linear-gradient(97deg, rgba(60, 30, 10, 0.1) 0 2px, transparent 2px 7px, rgba(255, 230, 190, 0.05) 7px 9px, transparent 9px 16px),
+    linear-gradient(145deg, #b47b48 0%, #8c5a32 55%, #6e4424 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 228, 190, 0.35),
+    inset calc(var(--c) * 0.05) calc(var(--c) * 0.05) 0 rgba(255, 236, 205, 0.22),
+    inset calc(var(--c) * -0.06) calc(var(--c) * -0.06) 0 rgba(40, 20, 6, 0.45),
+    calc(var(--c) * 0.09) calc(var(--c) * 0.09) 0 #4a2a14,
+    calc(var(--c) * 0.17) calc(var(--c) * 0.17) 0 #2e180a;
+}
+
+.bz-rimline {
+  border-color: rgba(255, 232, 190, 0.45);
+  box-shadow: none;
+}
+
+.bz-light {
+  background:
+    radial-gradient(90% 70% at 15% 5%, rgba(255, 245, 225, 0.12), transparent 60%),
+    radial-gradient(120% 120% at 50% 50%, transparent 65%, rgba(30, 14, 4, 0.18) 100%);
+}
+
+/* Batik cloth laid in the middle of the board, slightly recessed */
+.bz-center {
+  background-color: #1b2552;
+  background-image:
+    radial-gradient(60% 60% at 50% 50%, rgba(11, 16, 38, 0.15), rgba(11, 16, 38, 0.55) 100%),
+    linear-gradient(rgba(14, 22, 58, 0.5), rgba(14, 22, 58, 0.5)),
+    var(--bz-batik-url, var(--batik-kawung));
+  background-size:
+    100% 100%,
+    100% 100%,
+    cover;
+  background-position: center;
+  box-shadow:
+    inset calc(var(--c) * 0.09) calc(var(--c) * 0.09) 0 rgba(40, 20, 6, 0.55),
+    inset calc(var(--c) * 0.2) calc(var(--c) * 0.2) calc(var(--c) * 0.35) rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px rgba(255, 228, 190, 0.3),
+    0 0 0 calc(var(--c) * 0.03) #4a2a14;
+}
+
+.bz-center-ring {
+  display: none;
+}
+
+/* The cloth already carries the artwork — keep only a faint map name. */
+.bz-emblem,
+.bz-center-head > div:first-child {
+  display: none;
+}
+
+.bz-mapname {
+  color: rgba(255, 255, 255, 0.5);
+  text-shadow: 0 2px 6px rgba(5, 8, 26, 0.9);
+}
+
+.bz-tagline {
+  color: #ffe08a;
+  opacity: 0.7;
+  text-shadow: 0 1px 4px rgba(5, 8, 26, 0.9);
+}
+
+/* Cream tiles */
+.bz-tile {
+  background: linear-gradient(160deg, #fffaf0 0%, #f4ead7 70%, #eadcc2 100%);
+  color: #1b2552;
+}
+
+.bz-lot-zone {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Group colour strip on the edge facing the board centre */
+.bz-band-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(var(--c) * 0.2);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--band) 80%, white), var(--band));
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+}
+.bz-radial-fwd .bz-band-strip {
+  top: 0;
+}
+.bz-radial-rev .bz-band-strip {
+  bottom: 0;
+}
+
+.bz-name {
+  color: #1b2552;
+  text-shadow: none;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+.bz-lot-icon {
+  filter: drop-shadow(0 1px 1px rgba(60, 40, 10, 0.3));
+}
+
+.bz-tourist-tag {
+  background: #0fa89c;
+  color: #ffffff;
+}
+
+/* Price plate: light, with dark numbers (owned tiles keep the owner colour from inline style) */
+.bz-price-zone {
+  background: linear-gradient(180deg, #efe3cb 0%, #e2d2b2 100%);
+  color: #3a2a10;
+  border-top: 1px solid rgba(120, 90, 50, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.bz-price-text {
+  text-shadow: none;
+}
+
+.bz-price-special {
+  background: linear-gradient(180deg, #f6e7c0 0%, #ecd7a0 100%);
+}
+
+.bz-price-tax {
+  background: linear-gradient(180deg, #f9dde2 0%, #f0c7cf 100%);
+}
+
+/* Corner tiles keep their illustrated art: their labels stay white (the cream tile theme sets dark text). */
+.bz-tile.bz-corner {
+  color: #ffffff;
+}
+.bz-tile.bz-corner .bz-corner-title {
+  color: #ffffff;
+}
+.bz-tile.bz-corner .bz-corner-sub {
+  color: #ffffff;
 }

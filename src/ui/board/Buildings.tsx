@@ -49,7 +49,7 @@ const Lot = memo(function Lot({ index, tourist, level, color }: LotProps) {
         </div>
       </motion.div>
       <motion.div className="bz-anchor" style={{ transform: stand, zIndex: z }}>
-        <div className="bz-stand" style={{ width: c * 0.96, height: c * 1.24 }}>
+        <div className="bz-stand" style={{ width: c * 1.14, height: c * 1.47 }}>
           <AnimatePresence initial={false}>
             <motion.div
               key={kind}

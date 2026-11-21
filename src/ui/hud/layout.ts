@@ -17,6 +17,8 @@ export interface HudLayout {
   dockH: number;
   /** Smaller dice button/gauge to save vertical space */
   denseDock: boolean;
+  /** Very short screens: only the round + a menu button in the top bar */
+  tinyTop?: boolean;
   feedLines: number;
 }
 
@@ -28,10 +30,11 @@ export function computeLayout(width: number, height: number, players: number): H
   const n = Math.max(1, players);
 
   if (w / h < 1.15) {
-    const perPanel = (w - 16 - (n - 1) * 6) / n;
+    // Two panels per row (above and below the board).
+    const perPanel = (w - 16 - 8) / 2;
     return {
       mode: 'portrait',
-      panelSize: perPanel >= 150 && h >= 600 ? 'compact' : 'mini',
+      panelSize: perPanel >= 160 ? 'full' : 'compact',
       sideW: 0,
       dockH: 0,
       denseDock: h < 700,
@@ -41,13 +44,15 @@ export function computeLayout(width: number, height: number, players: number): H
 
   if (h < 540) {
     // Phone landscape: the same four-corner strips as desktop, just narrower.
+    const tiny = h < 420;
     return {
       mode: 'short',
-      panelSize: 'full',
-      sideW: clamp(w * 0.24, 168, 210),
+      panelSize: tiny ? 'mini' : 'full',
+      sideW: tiny ? clamp(w * 0.15, 112, 150) : clamp(w * 0.24, 168, 210),
       dockH: 0,
       denseDock: true,
       feedLines: 0,
+      tinyTop: tiny,
     };
   }
 

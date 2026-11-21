@@ -22,6 +22,7 @@ import { mix, rgba } from './color';
 import { Dice } from './Dice';
 import { FxLayer } from './TileFx';
 import { PawnsLayer } from './Pawns';
+import { MovePreview } from './MovePreview';
 import { TileInfo, type TileInfoTarget } from './TileInfo';
 import { TilesLayer } from './TilesLayer';
 
@@ -33,6 +34,7 @@ function themeVars(theme: MapTheme, c: number, camera: CameraMode): CSSPropertie
   return {
     '--c': `${c}px`,
     '--bz-counter-yaw': iso ? '-45deg' : '0deg',
+    '--bz-batik-url': `url(${import.meta.env.BASE_URL}brand/bg-batik.webp)`,
     '--bz-surface': mix(s, '#05081A', 0.28),
     '--bz-tile-hi': mix(s, '#FFFFFF', 0.16),
     '--bz-tile-lo': mix(s, '#05081A', 0.18),
@@ -181,9 +183,11 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
                   <div className="bz-light" aria-hidden />
                 </motion.div>
               </div>
-              <div className="bz-overlay" aria-hidden>
+              {/* Overlay anchors bake the board size into their transforms: rebuild them when it changes (resize / rotate). */}
+              <div className="bz-overlay" aria-hidden key={`${S}:${k}`}>
                 <BuildingsLayer map={map} />
                 <BoardHints />
+                <MovePreview />
                 <PawnsLayer />
                 <Dice />
                 <FxLayer />

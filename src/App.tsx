@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { useGame, type Screen } from '@/store/gameStore';
 import { useSettings } from '@/store/settingsStore';
 import { music, sfx, unlockAudio } from '@/audio';
-import { enterLandscape, releaseLandscape } from '@/lib/orientation';
 import { MainMenu } from '@/ui/screens/MainMenu';
 import { SetupScreen } from '@/ui/screens/SetupScreen';
 import { HowToPlay } from '@/ui/screens/HowToPlay';
@@ -43,10 +42,6 @@ export default function App() {
 
   useEffect(() => {
     if (screen === 'menu' || screen === 'setup' || screen === 'howto') music.play('menu');
-    // Phones: the game screen goes fullscreen + landscape (Android). This runs right after the "Main" tap,
-    // still inside the browser's user-activation window. Menus stay free to rotate.
-    if (screen === 'game') void enterLandscape();
-    else if (screen === 'menu') releaseLandscape();
   }, [screen]);
 
   const Current = SCREENS[screen];
