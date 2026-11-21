@@ -94,27 +94,34 @@ export function Dice() {
             exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.25 } }}
             transition={{ type: 'spring', stiffness: 380, damping: 22 }}
           >
-            <div className={clsx('bz-dice-pair', !rolling && 'bz-dice-idle')} style={{ position: 'relative' }}>
-              <Die value={dice?.[0] ?? null} rolling={rolling} index={0} />
-              <Die value={dice?.[1] ?? null} rolling={rolling} index={1} />
-              <AnimatePresence>
-                {!rolling && dice && (
-                  <motion.div
-                    key={key}
-                    className="bz-sum num"
-                    style={{
-                      fontSize: Math.max(12, c * 0.26),
-                      ...(doubles ? { background: 'linear-gradient(180deg,#FFE08A,#FF4FD8)' } : null),
-                    }}
-                    initial={{ opacity: 0, scale: 0.3, x: '-50%' }}
-                    animate={{ opacity: 1, scale: 1, x: '-50%' }}
-                    exit={{ opacity: 0, scale: 0.5, x: '-50%' }}
-                    transition={{ type: 'spring', stiffness: 520, damping: 20, delay: 0.25 }}
-                  >
-                    {doubles ? `Dobel ${sum}!` : sum}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            <div className="bz-dice-stack">
+              <div className={clsx('bz-dice-pair', !rolling && 'bz-dice-idle')}>
+                <Die value={dice?.[0] ?? null} rolling={rolling} index={0} />
+                <Die value={dice?.[1] ?? null} rolling={rolling} index={1} />
+              </div>
+              {/* Result chip sits in its own row so the dice never cover it. Space is reserved while rolling. */}
+              <div style={{ minHeight: Math.max(26, c * 0.5) }}>
+                <AnimatePresence mode="wait">
+                  {!rolling && dice && (
+                    <motion.div
+                      key={key}
+                      className={clsx('bz-sum', doubles && 'bz-sum-dobel')}
+                      style={{ fontSize: Math.max(15, c * 0.34) }}
+                      initial={{ opacity: 0, scale: 0.4, y: -8 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.6 }}
+                      transition={{ type: 'spring', stiffness: 520, damping: 20, delay: 0.15 }}
+                      aria-label={`Hasil dadu ${dice[0]} dan ${dice[1]}, total ${sum}${doubles ? ', dobel' : ''}`}
+                    >
+                      <span className="bz-sum-parts">
+                        {dice[0]} + {dice[1]} =
+                      </span>
+                      <span className="bz-sum-total">{sum}</span>
+                      {doubles && <span className="bz-sum-parts">DOBEL!</span>}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </motion.div>
         )}
@@ -142,7 +149,7 @@ function Die({ value, rolling, index }: { value: number | null; rolling: boolean
         animate(rx, rx.get() + 720 * dir, { duration: 0.62, ease: 'linear', repeat: Infinity }),
         animate(ry, ry.get() - 540 * dir, { duration: 0.5, ease: 'linear', repeat: Infinity }),
         animate(spin, [0, 14 * dir, -10 * dir, 0], { duration: 0.5, repeat: Infinity }),
-        animate(lift, [0, -c * (0.75 + index * 0.2), 0], {
+        animate(lift, [0, -c * (0.5 + index * 0.14), 0], {
           duration: 0.42 + index * 0.06,
           ease: ['easeOut', 'easeIn'],
           times: [0, 0.5, 1],
@@ -192,7 +199,7 @@ function Die({ value, rolling, index }: { value: number | null; rolling: boolean
           </div>
         </div>
       </motion.div>
-      <div className="bz-die-shadow" style={{ marginTop: -c * 0.22 }} />
+      <div className="bz-die-shadow" style={{ marginTop: -c * 0.15 }} />
     </div>
   );
 }

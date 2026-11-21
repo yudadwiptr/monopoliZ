@@ -23,7 +23,7 @@ export const AddSeatButton = forwardRef<HTMLButtonElement, { onAdd(): void; rema
         sfx.play('click');
         onAdd();
       }}
-      className="group flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-white/15 bg-white/[0.03] p-4 text-ink-200 outline-none transition-colors hover:border-brand-300/60 hover:bg-brand-500/10 hover:text-white focus-visible:ring-4 focus-visible:ring-brand-300/60 sm:min-h-[300px]"
+      className="group flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-3xl border-2 border-white/10 bg-white/[0.03] p-4 text-ink-200 outline-none transition-colors hover:border-brand-300/60 hover:bg-brand-500/10 hover:text-white focus-visible:ring-4 focus-visible:ring-brand-300/60 sm:min-h-[300px]"
     >
       <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-b from-brand-400 to-brand-600 text-white shadow-[0_4px_0_#1C5290] transition-transform group-hover:rotate-90">
         <Plus size={28} strokeWidth={3} aria-hidden />

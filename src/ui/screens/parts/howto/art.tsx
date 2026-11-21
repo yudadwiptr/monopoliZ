@@ -202,7 +202,7 @@ export function TollArt() {
           <span className="text-[11px] font-semibold text-ink-200">Kamu mampir</span>
         </div>
         <div className="relative mb-10 h-10 flex-1">
-          <div className="absolute inset-x-3 top-1/2 border-t-2 border-dashed border-white/20" />
+          <div className="absolute inset-x-3 top-1/2 border-t-2 border-white/15" />
           <div className="absolute left-1/2 top-1/2 -ml-4 -mt-4" style={{ animation: 'mz-pay 1.8s ease-in infinite' }}>
             <RpCoin size={32} />
           </div>

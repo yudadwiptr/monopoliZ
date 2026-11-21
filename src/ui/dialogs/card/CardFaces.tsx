@@ -11,7 +11,7 @@ export function CardBack() {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-[1.6rem] border-2 border-white/35 bg-gradient-to-br from-brand-400 via-brand-600 to-brand-800 shadow-glow-brand">
       <div className="absolute inset-0" style={{ backgroundImage: KAWUNG_STRONG, backgroundSize: '44px 44px' }} aria-hidden />
-      <div className="absolute inset-3 rounded-[1.2rem] border-2 border-dashed border-white/30" aria-hidden />
+      <div className="absolute inset-3 rounded-[1.2rem] border-2 border-white/25" aria-hidden />
       <span className="absolute left-5 top-4 text-xl" aria-hidden>
         🎁
       </span>

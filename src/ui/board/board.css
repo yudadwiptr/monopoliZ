@@ -100,9 +100,7 @@
   height: calc(var(--c) * 4.3);
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: calc(var(--c) * 0.035) dashed var(--bz-accent-soft);
   box-shadow:
-    0 0 0 calc(var(--c) * 0.22) rgba(255, 255, 255, 0.025),
     inset 0 0 calc(var(--c) * 0.6) var(--bz-accent-glow);
 }
 
@@ -721,13 +719,20 @@
 .bz-dice-pair {
   display: flex;
   align-items: flex-end;
-  gap: calc(var(--c) * 0.42);
+  gap: calc(var(--c) * 0.28);
+}
+
+.bz-dice-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--c) * 0.1);
 }
 
 .bz-die {
   position: relative;
-  width: calc(var(--c) * 1.02);
-  height: calc(var(--c) * 1.02);
+  width: calc(var(--c) * 0.7);
+  height: calc(var(--c) * 0.7);
   perspective: calc(var(--c) * 7);
 }
 .bz-die-view {
@@ -777,8 +782,8 @@
   background: radial-gradient(circle at 35% 30%, #ff8fa3, #e01e45 70%);
 }
 .bz-die-shadow {
-  width: calc(var(--c) * 1.25);
-  height: calc(var(--c) * 0.5);
+  width: calc(var(--c) * 0.85);
+  height: calc(var(--c) * 0.34);
   border-radius: 50%;
   background: radial-gradient(closest-side, rgba(0, 0, 0, 0.5), transparent);
 }
@@ -795,20 +800,32 @@
   }
 }
 .bz-sum {
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  margin-top: calc(var(--c) * 0.14);
-  padding: calc(var(--c) * 0.06) calc(var(--c) * 0.16);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.22em 0.6em;
   border-radius: 999px;
   font-family: Fredoka, ui-rounded, system-ui, sans-serif;
   font-weight: 700;
-  font-size: calc(var(--c) * 0.24);
   line-height: 1;
   white-space: nowrap;
   color: #0b1026;
   background: linear-gradient(180deg, #fff0bf, #ffc21f);
-  box-shadow: 0 calc(var(--c) * 0.05) 0 #a86f00;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 calc(var(--c) * 0.05) 0 #a86f00,
+    0 calc(var(--c) * 0.1) calc(var(--c) * 0.3) rgba(0, 0, 0, 0.45);
+}
+.bz-sum-parts {
+  font-weight: 600;
+  opacity: 0.7;
+  font-size: 0.72em;
+}
+.bz-sum-total {
+  font-size: 1.25em;
+}
+.bz-sum-dobel {
+  background: linear-gradient(180deg, #ffe08a, #ff4fd8);
 }
 
 /* ───────────── fx ───────────── */

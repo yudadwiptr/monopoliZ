@@ -176,15 +176,6 @@ function SkyArt({ id }: { id: string }) {
       <rect width="100" height="100" fill={`url(#${id}bg)`} />
       <ellipse cx="24" cy="30" rx="16" ry="6" fill="#fff" opacity="0.2" />
       <ellipse cx="74" cy="60" rx="20" ry="7" fill="#fff" opacity="0.16" />
-      <path
-        d="M8 92 Q30 30 92 14"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="2"
-        strokeDasharray="4 5"
-        strokeLinecap="round"
-        opacity="0.7"
-      />
       <rect x="0" y="88" width="100" height="12" fill="#0B1026" opacity="0.45" />
       {[6, 26, 46, 66, 86].map((x) => (
         <rect key={x} x={x} y="93" width="10" height="2" rx="1" fill="#FFE08A" opacity="0.8" />
