@@ -63,7 +63,7 @@ function PortraitLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
           <PlayerPanel key={id} playerId={id} size={layout.panelSize} onOpen={onOpenPlayer} {...flags(id)} />
         ))}
       </div>
-      <BoardStage className="flex-1" />
+      <BoardStage className="flex-1" compact={layout.denseDock} />
     </div>
   );
 }

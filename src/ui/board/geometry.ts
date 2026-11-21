@@ -20,7 +20,7 @@ export const RIM_N = RIM_K * CELL_N;
 /** Slab thickness (board edge) in normalised units. */
 export const SLAB_N = 0.026;
 /** Space reserved above the far edge for the skyline of top-row buildings. */
-export const HEADROOM_N = 0.1;
+export const HEADROOM_N = 0.045;
 
 export interface Rect {
   x0: number;
@@ -53,21 +53,20 @@ export interface Point {
 }
 
 /**
- * Where a property's building / flag stands. Buildings rise "up" the screen, so they are placed where they
- * never hide tile text: just inside the ring for the bottom row and the side columns, and on the rim
- * behind the far (top) row.
+ * Where a property's 3D isometric building stands: directly on the inner colored lot block of the tile
+ * (about 34% in from the inner pit edge), just like LINE Let's Get Rich.
  */
 export function lotAnchor(index: number): Point {
   const r = TILE_RECTS[index];
   switch (tileSide(index)) {
     case 0:
-      return { u: r.cx, v: r.y0 - 0.12 * CELL_N };
+      return { u: r.cx, v: r.y0 + r.h * 0.34 };
     case 1:
-      return { u: r.x1 + 0.44 * CELL_N, v: r.cy + 0.4 * CELL_N };
-    case 3:
-      return { u: r.x0 - 0.44 * CELL_N, v: r.cy + 0.4 * CELL_N };
+      return { u: r.x1 - r.w * 0.34, v: r.cy };
     case 2:
-      return { u: r.cx, v: r.y0 - RIM_N * 0.45 };
+      return { u: r.cx, v: r.y1 - r.h * 0.34 };
+    case 3:
+      return { u: r.x0 + r.w * 0.34, v: r.cy };
     default:
       return { u: r.cx, v: r.cy };
   }
@@ -88,27 +87,43 @@ const CLUSTER: [number, number][][] = [
     [0.22, 0],
   ],
   [
-    [-0.24, 0.12],
-    [0.24, 0.12],
-    [0, -0.14],
+    [-0.24, 0.1],
+    [0.24, 0.1],
+    [0, -0.12],
   ],
   [
-    [-0.22, -0.13],
-    [0.22, -0.13],
-    [-0.22, 0.15],
-    [0.22, 0.15],
+    [-0.22, -0.11],
+    [0.22, -0.11],
+    [-0.22, 0.13],
+    [0.22, 0.13],
   ],
 ];
 
-/** Standing spot for pawn `slot` of `count` sharing tile `index`. */
+/**
+ * Standing spot for pawn `slot` of `count` sharing tile `index`.
+ * Placed on the outer-middle walkway of side tiles (~68% from the inner pit edge) so pawns never overlap
+ * the 3D buildings standing on the inner lot block.
+ */
 export function pawnSpot(index: number, slot: number, count: number): Point {
   const r = TILE_RECTS[index];
-  const corner = index % 8 === 0;
-  // Stand a little toward the lower part of the tile: the pawn's body rises over the rest of it.
-  const baseV = r.cy + r.h * (corner ? 0.12 : 0.18);
+  const side = tileSide(index);
   const layout = CLUSTER[Math.min(Math.max(count, 1), 4)];
   const [fx, fy] = layout[Math.min(slot, layout.length - 1)] ?? [0, 0];
-  return { u: r.cx + fx * r.w, v: baseV + fy * r.h };
+
+  if (side === 0) {
+    return { u: r.cx + fx * r.w, v: r.y0 + r.h * 0.68 + fy * r.h * 0.45 };
+  }
+  if (side === 2) {
+    return { u: r.cx + fx * r.w, v: r.y1 - r.h * 0.68 + fy * r.h * 0.45 };
+  }
+  if (side === 1) {
+    return { u: r.x1 - r.w * 0.68 + fy * r.w * 0.45, v: r.cy + fx * r.h };
+  }
+  if (side === 3) {
+    return { u: r.x0 + r.w * 0.68 + fy * r.w * 0.45, v: r.cy + fx * r.h };
+  }
+  // Corner tile
+  return { u: r.cx + fx * r.w * 0.85, v: r.cy + r.h * 0.1 + fy * r.h * 0.85 };
 }
 
 // ───────────────────────────── camera ─────────────────────────────

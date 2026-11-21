@@ -44,7 +44,7 @@ export function BoardStage({
     <div ref={ref} className={clsx('flex min-h-0 min-w-0 items-center justify-center', className)} style={style}>
       {Math.min(w, h) > 40 && (
         <motion.div animate={controls} className="relative" style={{ width: w, height: h }}>
-          <Board3D center={<ActionDock compact={compact} />} />
+          <Board3D center={<ActionDock compact={compact || h < 500 || w < 520} />} />
         </motion.div>
       )}
     </div>

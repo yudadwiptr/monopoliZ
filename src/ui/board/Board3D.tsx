@@ -13,7 +13,7 @@ import { sfx } from '@/audio';
 import { mapOf } from '@/engine/selectors';
 import type { MapTheme } from '@/engine/types';
 import { useGame } from '@/store/gameStore';
-import { haptic, speedFactor, useSettings } from '@/store/settingsStore';
+import { haptic, speedFactor, useSettings, type CameraMode } from '@/store/settingsStore';
 import { BoardHints } from './BoardHints';
 import { BuildingsLayer } from './Buildings';
 import { CamContext, useCameraRig, useCamValue, useElementSize, type CameraRig } from './camera';
@@ -26,22 +26,24 @@ import { TileInfo, type TileInfoTarget } from './TileInfo';
 import { TilesLayer } from './TilesLayer';
 
 /** Board colours derived from the active map's theme, exposed as the --bz-* custom properties board.css uses. */
-function themeVars(theme: MapTheme, c: number): CSSProperties {
+function themeVars(theme: MapTheme, c: number, camera: CameraMode): CSSProperties {
   const s = theme.boardSurface;
   const a = theme.accent;
+  const iso = camera === 'iso';
   return {
     '--c': `${c}px`,
-    '--bz-surface': mix(s, '#05081A', 0.25),
-    '--bz-tile-hi': mix(s, '#FFFFFF', 0.13),
-    '--bz-tile-lo': mix(s, '#05081A', 0.12),
-    '--bz-rim-hi': mix(mix(s, a, 0.22), '#FFFFFF', 0.08),
-    '--bz-rim-lo': mix(s, '#05081A', 0.3),
-    '--bz-slab-hi': mix(s, '#05081A', 0.45),
-    '--bz-slab-lo': mix(s, '#000000', 0.78),
+    '--bz-counter-yaw': iso ? '-45deg' : '0deg',
+    '--bz-surface': mix(s, '#05081A', 0.28),
+    '--bz-tile-hi': mix(s, '#FFFFFF', 0.16),
+    '--bz-tile-lo': mix(s, '#05081A', 0.18),
+    '--bz-rim-hi': mix(mix(s, a, 0.26), '#FFFFFF', 0.12),
+    '--bz-rim-lo': mix(s, '#05081A', 0.36),
+    '--bz-slab-hi': mix(s, '#05081A', 0.42),
+    '--bz-slab-lo': mix(s, '#000000', 0.82),
     '--bz-accent': a,
-    '--bz-accent-soft': rgba(a, 0.42),
-    '--bz-accent-glow': rgba(a, 0.24),
-    '--bz-glow': rgba(a, 0.16),
+    '--bz-accent-soft': rgba(a, 0.48),
+    '--bz-accent-glow': rgba(a, 0.28),
+    '--bz-glow': rgba(a, 0.18),
   } as CSSProperties;
 }
 
@@ -121,7 +123,7 @@ function selectableNow(): number[] {
 /**
  * The game board: an isometric diamond, a perspective-tilted, or a flat ('top') 3D slab with the tile ring on its
  * surface, plus an upright billboard overlay for buildings, pawns, dice and effects. Fills its parent and
- * keeps the square board fitted to it for every camera. `center` (the roll button) is pinned to the board's centre.
+ * keeps the square board fitted to it for every camera. `center` (the roll button) sits inside the center pit.
  */
 export function Board3D({ center }: { center?: ReactNode } = {}) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -133,10 +135,10 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
   const followSetting = useSettings((s) => s.followCam);
   const reduce = useReducedMotion();
   const follow = useFollowCamera(rig, followSetting && !reduce);
-  // Screen-space y of the board centre (u=0, v=0) relative to the container centre.
+  // Screen-space y of the board centre (u=0, v=0) relative to the container centre — keeps roll controls inside the pit.
   const centerY = useTransform(
     [rig.tilt, rig.yaw, rig.rigScale, rig.rigY] as MotionValue<number>[],
-    ([t, y, rs, ry]: number[]) => project(0, 0, 0, t, rig.k, y).y * rig.S * rs + ry,
+    ([t, y, rs, ry]: number[]) => project(0.02, 0.02, 0, t, rig.k, y).y * rig.S * rs + ry,
   );
   const [info, setInfo] = useState<TileInfoTarget | null>(null);
 
@@ -152,7 +154,7 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
   }, []);
   const closeInfo = useCallback(() => setInfo(null), []);
 
-  const vars = useMemo(() => (map ? themeVars(map.theme, rig.c) : undefined), [map, rig.c]);
+  const vars = useMemo(() => (map ? themeVars(map.theme, rig.c, camera) : undefined), [map, rig.c, camera]);
   const { S, k } = rig;
   const ready = !!map && w > 0 && h > 0;
 
@@ -162,30 +164,35 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
         <CamContext.Provider value={cam}>
           <div className="bz-ambient" aria-hidden />
           <motion.div className="absolute inset-0" style={{ scale: follow.zoom, x: follow.panX, y: follow.panY }}>
-          <motion.div
-            className="absolute left-1/2 top-1/2"
-            style={{ width: S, height: S, marginLeft: -S / 2, marginTop: -S / 2, scale: rig.rigScale, y: rig.rigY }}
-          >
-            <div className="bz-persp" style={{ perspective: `${(k * S).toFixed(1)}px` }}>
-              <motion.div className="bz-slab" style={{ transform: rig.slabTransform }} aria-hidden />
-              <motion.div className="bz-plane" style={{ transform: rig.planeTransform }} role="group" aria-label={`Papan ${map.name}`}>
-                <div className="bz-rimline" aria-hidden />
-                <TilesLayer map={map} c={rig.c} onPick={onPick} />
-                <div className="bz-light" aria-hidden />
-              </motion.div>
-            </div>
-            <div className="bz-overlay" aria-hidden>
-              <BuildingsLayer map={map} />
-              <BoardHints />
-              <PawnsLayer />
-              <Dice />
-              <FxLayer />
-            </div>
-          </motion.div>
+            <motion.div
+              className="absolute left-1/2 top-1/2"
+              style={{ width: S, height: S, marginLeft: -S / 2, marginTop: -S / 2, scale: rig.rigScale, y: rig.rigY }}
+            >
+              <div className="bz-persp" style={{ perspective: `${(k * S).toFixed(1)}px` }}>
+                <motion.div className="bz-slab" style={{ transform: rig.slabTransform }} aria-hidden />
+                <motion.div
+                  className="bz-plane"
+                  style={{ transform: rig.planeTransform }}
+                  role="group"
+                  aria-label={`Papan ${map.name}`}
+                >
+                  <div className="bz-rimline" aria-hidden />
+                  <TilesLayer map={map} c={rig.c} onPick={onPick} />
+                  <div className="bz-light" aria-hidden />
+                </motion.div>
+              </div>
+              <div className="bz-overlay" aria-hidden>
+                <BuildingsLayer map={map} />
+                <BoardHints />
+                <PawnsLayer />
+                <Dice />
+                <FxLayer />
+              </div>
+            </motion.div>
           </motion.div>
           {center && (
             <motion.div className="pointer-events-none absolute left-1/2 top-1/2 z-30" style={{ y: centerY }}>
-              <div className="pointer-events-auto absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2">{center}</div>
+              <div className="pointer-events-auto absolute left-0 top-0 w-max -translate-x-1/2 -translate-y-1/2">{center}</div>
             </motion.div>
           )}
         </CamContext.Provider>

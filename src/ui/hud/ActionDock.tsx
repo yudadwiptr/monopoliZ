@@ -51,7 +51,7 @@ export function ActionDock({ compact }: ActionDockProps) {
     if (current.isBot) {
       key = `bot-${current.id}`;
       content = (
-        <div className="glass flex items-center gap-2.5 !rounded-full py-1.5 pl-1.5 pr-4" role="status">
+        <div className="glass flex items-center gap-2.5 whitespace-nowrap !rounded-full py-1.5 pl-1.5 pr-4" role="status">
           <Avatar characterId={current.characterId} size={compact ? 28 : 34} active />
           <span className={clsx('font-display font-medium text-ink-100', compact ? 'text-xs' : 'text-sm')}>
             <span className="font-semibold" style={{ color: current.color }}>

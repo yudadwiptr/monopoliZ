@@ -15,7 +15,7 @@ interface TilesLayerProps {
 
 const EMPTY_SET = new Set<number>();
 
-/** The 32 tiles + printed centre, laid out on the (tilted) board plane. */
+/** The 32 tiles + recessed Get Rich center pit, laid out on the (tilted) board plane. */
 export function TilesLayer({ map, c, onPick }: TilesLayerProps) {
   const tiles = useGame((s) => s.view?.tiles);
   const festival = useGame((s) => s.view?.festivalTile ?? null);
@@ -79,18 +79,31 @@ interface CenterProps {
   logoScale: number;
 }
 
-/** Artwork printed on the middle of the board: emblem, map name, wordmark. */
+/**
+ * Recessed 3D Center Pit:
+ * - Stepped 3D cliff walls around the inner perimeter
+ * - Counter-rotated watermark emblem & map wordmark in the middle of the arena floor
+ */
 const BoardCenter = memo(function BoardCenter({ map, logoScale }: CenterProps) {
   return (
     <div className="bz-center" style={{ gridRow: '2 / 9', gridColumn: '2 / 9' }} aria-hidden>
       <div className="bz-center-ring" />
-      <div className="bz-emblem">{map.theme.emblem}</div>
-      <div className="bz-center-head">
-        <div style={{ transform: `scale(${logoScale})`, transformOrigin: '50% 0', marginBottom: `${(logoScale - 1) * 28}px` }}>
-          <Logo size="sm" />
+      <div className="bz-center-arena">
+        <div className="bz-emblem">{map.theme.emblem}</div>
+        <div className="bz-center-head">
+          <div
+            style={{
+              transform: `scale(${logoScale * 0.88})`,
+              transformOrigin: '50% 50%',
+              opacity: 0.35,
+              filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
+            }}
+          >
+            <Logo size="sm" />
+          </div>
+          <div className="bz-mapname">{map.name}</div>
+          <div className="bz-tagline">{map.tagline}</div>
         </div>
-        <div className="bz-mapname">{map.name}</div>
-        <div className="bz-tagline">{map.tagline}</div>
       </div>
     </div>
   );

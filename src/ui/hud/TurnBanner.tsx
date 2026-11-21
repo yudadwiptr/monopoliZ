@@ -76,7 +76,7 @@ export function TurnBanner() {
                   Ronde {banner.round}
                   {player.isBot ? ' · Bot' : ''}
                 </div>
-                <div className="truncate font-display text-3xl font-bold leading-tight drop-shadow-[0_2px_0_rgba(255,255,255,0.35)] sm:text-5xl">
+                <div className="truncate pb-1 font-display text-3xl font-bold leading-[1.2] drop-shadow-[0_2px_0_rgba(255,255,255,0.35)] sm:text-5xl sm:leading-[1.2]">
                   {solo ? 'Giliran kamu, gas!' : `Giliran ${player.name}!`}
                 </div>
                 {hotseat && (

@@ -181,13 +181,13 @@ export const useGame = create<GameStore>()((set, get) => {
       case 'dice': {
         patchView(() => ({ dice: ev.dice, diceRolling: true }));
         sfx.play('dice_shake');
-        await sleep(800);
+        await sleep(880);
         if (!alive()) return;
         patchView(() => ({ diceRolling: false }));
         sfx.play('dice_land');
         haptic(18);
         if (ev.doubles) pushFx({ kind: 'text', text: 'DOUBLE! 🎲', tone: 'good', playerId: ev.playerId });
-        await sleep(ev.doubles ? 600 : 380);
+        await sleep(ev.doubles ? 680 : 500);
         return;
       }
       case 'move': {

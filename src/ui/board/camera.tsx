@@ -73,7 +73,7 @@ function poseFor(mode: CameraMode, width: number, height: number): [number, numb
  * during a camera switch is a transform (tilt, yaw, rig scale, rig offset) — no layout work.
  */
 export function useCameraRig(width: number, height: number, mode: CameraMode): CameraRig {
-  const pad = clamp(Math.min(width, height) * 0.025, 6, 20);
+  const pad = clamp(Math.min(width, height) * (height < 500 ? 0.012 : 0.022), 3, 18);
   const aw = Math.max(1, width - pad * 2);
   const ah = Math.max(1, height - pad * 2);
   const k = perspectiveFor(width);

@@ -5,7 +5,7 @@ import { TAX_RATE } from '@/engine/economy';
 import type { TileDef } from '@/engine/types';
 import { tileGridPos, tileSide } from '@/data/layout';
 import { formatRp } from '@/lib/format';
-import { inkOn, rgba } from './color';
+import { inkOn, mix, rgba } from './color';
 import { CornerArt } from './CornerArt';
 
 export type SelState = 'none' | 'pick' | 'dim';
@@ -35,14 +35,26 @@ const CORNER_SUB: Partial<Record<TileDef['kind'], string>> = {
 };
 
 function ringShadows(p: TileViewProps): string {
-  const s: string[] = [];
-  if (p.ownerColor) s.push(`inset 0 0 0 calc(var(--c) * 0.05) ${p.ownerColor}`);
-  else if (p.def.kind === 'tourist') s.push('inset 0 0 0 calc(var(--c) * 0.035) #22D3C5');
-  s.push('inset 0 1px 0 rgba(255,255,255,0.16)', 'inset 0 -1px 0 rgba(0,0,0,0.35)');
-  if (p.festival) s.push('0 0 0 calc(var(--c) * 0.04) #FFD35C', `0 0 calc(var(--c) * 0.45) ${rgba('#FF4FD8', 0.85)}`);
-  if (p.here) s.push(`0 0 0 calc(var(--c) * 0.045) ${p.here}`, `0 0 calc(var(--c) * 0.45) ${rgba(p.here, 0.75)}`);
-  if (p.sel === 'pick') s.push('0 0 0 calc(var(--c) * 0.055) #8CC4F5', `0 0 calc(var(--c) * 0.55) ${rgba('#3A8CD6', 0.95)}`);
-  if (p.alert) s.push('0 0 0 calc(var(--c) * 0.05) #FF3B5C');
+  const s: string[] = [
+    // 3D physical block extrusion (points straight down on screen in isometric 45deg view)
+    'calc(var(--c) * 0.042) calc(var(--c) * 0.042) 0 #040613',
+    'calc(var(--c) * 0.065) calc(var(--c) * 0.065) calc(var(--c) * 0.12) rgba(0,0,0,0.65)',
+  ];
+  if (p.ownerColor) {
+    s.push(`inset 0 0 0 calc(var(--c) * 0.055) ${p.ownerColor}`);
+  } else if (p.def.kind === 'tourist') {
+    s.push('inset 0 0 0 calc(var(--c) * 0.04) #22D3C5');
+  } else {
+    s.push('inset 0 0 0 1px rgba(255,255,255,0.16)');
+  }
+  s.push(
+    'inset calc(var(--c) * -0.025) calc(var(--c) * -0.025) 0 rgba(0,0,0,0.45)',
+    'inset calc(var(--c) * 0.02) calc(var(--c) * 0.02) 0 rgba(255,255,255,0.2)',
+  );
+  if (p.festival) s.push('0 0 0 calc(var(--c) * 0.045) #FFD35C', `0 0 calc(var(--c) * 0.45) ${rgba('#FF4FD8', 0.85)}`);
+  if (p.here) s.push(`0 0 0 calc(var(--c) * 0.05) ${p.here}`, `0 0 calc(var(--c) * 0.45) ${rgba(p.here, 0.78)}`);
+  if (p.sel === 'pick') s.push('0 0 0 calc(var(--c) * 0.06) #8CC4F5', `0 0 calc(var(--c) * 0.55) ${rgba('#3A8CD6', 0.95)}`);
+  if (p.alert) s.push('0 0 0 calc(var(--c) * 0.055) #FF3B5C');
   return s.join(',');
 }
 
@@ -62,16 +74,36 @@ function ariaFor(p: TileViewProps): string {
   return parts.join('. ');
 }
 
-function Chip({ value, ownerColor }: { value: number; ownerColor: string | null }) {
+/**
+ * Font size that keeps the longest WORD of a tile name on one line (names wrap between words only, never
+ * inside one — "Pekanbaru" must not become "Pekanbar/u").
+ */
+function nameFontSize(name: string): string {
+  const longest = Math.max(...name.split(/\s+/).map((w) => w.length));
+  const fit = 0.82 / (0.6 * Math.max(1, longest)); // lot width ≈ 0.82 cell, Fredoka bold ≈ 0.6em per glyph
+  return `calc(var(--c) * ${Math.min(0.19, fit).toFixed(3)})`;
+}
+
+function PricePlate({ value, ownerColor, festival }: { value: number; ownerColor: string | null; festival: boolean }) {
   return (
-    <span
-      className="bz-chip num"
+    <div
+      className="bz-price-zone"
       data-owned={ownerColor ? 'true' : 'false'}
-      style={ownerColor ? { background: ownerColor, color: inkOn(ownerColor) } : undefined}
+      style={
+        ownerColor
+          ? {
+            background: `linear-gradient(180deg, ${mix(ownerColor, '#FFFFFF', 0.18)}, ${mix(ownerColor, '#05081A', 0.25)})`,
+            color: inkOn(ownerColor),
+          }
+          : undefined
+      }
     >
-      {ownerColor && <span className="bz-coin" aria-hidden />}
-      {formatRp(value, { short: true })}
-    </span>
+      <span className="bz-price-text num">
+        {ownerColor && <span className="bz-coin" aria-hidden />}
+        {formatRp(value, { short: true })}
+        {festival && <span className="bz-price-mult">×2</span>}
+      </span>
+    </div>
   );
 }
 
@@ -123,20 +155,17 @@ function CornerBody({ p }: { p: TileViewProps }) {
   const { def } = p;
   if (def.kind === 'start') {
     return (
-      <>
+      <div className="bz-corner-face">
+        <span className="bz-start-badge">START</span>
         <span className="bz-start-big">GAJI</span>
         <span className="bz-chip num" style={{ background: 'linear-gradient(180deg,#FFF0BF,#FFC21F)', color: '#2A1A00' }}>
           +{formatRp(p.salary, { short: true })}
         </span>
-        <span style={{ flex: 1 }} />
-        <span className="bz-corner-title" style={{ fontSize: 'calc(var(--c) * 0.16)' }}>
-          {def.icon} {def.name}
-        </span>
-      </>
+      </div>
     );
   }
   return (
-    <>
+    <div className="bz-corner-face">
       <span className="bz-corner-title">{def.name}</span>
       <span className="bz-corner-hero" aria-hidden>
         {def.icon}
@@ -147,67 +176,80 @@ function CornerBody({ p }: { p: TileViewProps }) {
       >
         {CORNER_SUB[def.kind] ?? ''}
       </span>
-    </>
+    </div>
   );
 }
 
-function SideBody({ p, landscape }: { p: TileViewProps; landscape: boolean }) {
+/**
+ * Get Rich-style 2-zone tile body:
+ * - Inner Zone (adjacent to center pit): Vibrant 3D colored lot block where buildings stand + City Name.
+ * - Outer Zone (adjacent to board edge): Crisp metallic price/toll plate.
+ * Because side 1 and side 3 are rotated -90deg by `.bz-tile-rot`, all 4 sides share this exact same portrait structure!
+ */
+function SideTileContent({ p, band }: { p: TileViewProps; band: string | null }) {
   const { def } = p;
   if (def.kind === 'chance') {
     return (
-      <div className="bz-body" style={landscape ? { flexDirection: 'row', gap: 'calc(var(--c) * 0.1)' } : undefined}>
-        <span className="bz-cards" aria-hidden>
-          <span />
-          <span />
-          <span>{def.icon}</span>
-        </span>
-        <span style={{ color: '#FFE08A' }}>
-          <SplitLabel text={def.name} size="calc(var(--c) * 0.2)" />
-        </span>
-      </div>
+      <>
+        <div className="bz-lot-zone bz-lot-special">
+          <span className="bz-cards" aria-hidden>
+            <span />
+            <span />
+            <span>{def.icon}</span>
+          </span>
+          <span style={{ color: '#FFE08A' }}>
+            <SplitLabel text={def.name} size="calc(var(--c) * 0.19)" />
+          </span>
+        </div>
+        <div className="bz-price-zone bz-price-special">
+          <span className="bz-price-text" style={{ color: '#FFE08A', letterSpacing: '0.08em' }}>
+            EVENT
+          </span>
+        </div>
+      </>
     );
   }
   if (def.kind === 'tax') {
     return (
-      <div className="bz-body">
-        <span className="bz-icon" aria-hidden>
-          {def.icon}
-        </span>
-        <span style={{ color: '#FF8FA3' }}>
-          <SplitLabel text="Bayar Pajak" size="calc(var(--c) * 0.19)" />
-        </span>
-        <span className="bz-chip num" style={{ color: '#FF8FA3' }}>
-          {Math.round(TAX_RATE * 100)}%
-        </span>
-      </div>
-    );
-  }
-  const isTourist = def.kind === 'tourist';
-  if (landscape) {
-    return (
-      <div className="bz-body">
-        <span className="bz-name">{def.name}</span>
-        <span className="bz-row">
+      <>
+        <div className="bz-lot-zone bz-lot-special">
           <span className="bz-icon" aria-hidden>
             {def.icon}
           </span>
-          <Chip value={p.value} ownerColor={p.ownerColor} />
-        </span>
-      </div>
+          <span style={{ color: '#FF8FA3' }}>
+            <SplitLabel text="Bayar Pajak" size="calc(var(--c) * 0.18)" />
+          </span>
+        </div>
+        <div className="bz-price-zone bz-price-tax">
+          <span className="bz-price-text num" style={{ color: '#FF8FA3' }}>
+            {Math.round(TAX_RATE * 100)}%
+          </span>
+        </div>
+      </>
     );
   }
+
+  const isTourist = def.kind === 'tourist';
+  const isOwned = !!p.ownerColor;
+  const lotColor = band ?? '#5AA6EC';
+  const lotBg = `linear-gradient(180deg, ${mix(lotColor, '#FFFFFF', 0.24)} 0%, ${lotColor} 58%, ${mix(lotColor, '#05081A', 0.35)} 100%)`;
+
   return (
-    <div className="bz-body">
-      {isTourist && (
-        <span className="bz-band-label" style={{ color: '#7FF0E6', fontSize: 'calc(var(--c) * 0.12)' }}>
-          WISATA
+    <>
+      <div className="bz-lot-zone" style={{ background: lotBg, '--band': lotColor } as CSSProperties}>
+        {isTourist && !isOwned && <span className="bz-tourist-tag">WISATA</span>}
+        {/* The lot icon shows until a building stands on the lot. */}
+        {!isOwned && (
+          <span className="bz-lot-icon" aria-hidden>
+            {def.icon}
+          </span>
+        )}
+        <span className="bz-name" style={{ fontSize: nameFontSize(def.name) }}>
+          {def.name}
         </span>
-      )}
-      <span className="bz-icon" aria-hidden>
-        {def.icon}
-      </span>
-      <span className="bz-name">{def.name}</span>
-    </div>
+      </div>
+      <PricePlate value={p.value} ownerColor={p.ownerColor} festival={p.festival} />
+    </>
   );
 }
 
@@ -217,13 +259,11 @@ function TileImpl(p: TileViewProps) {
   const corner = def.index % 8 === 0;
   const side = tileSide(def.index);
   const landscape = side === 1 || side === 3;
-  const isProperty = def.kind === 'city' || def.kind === 'tourist';
+  // Side 0 (bottom) and Side 3 (right, rotated -90deg) have their inner-pit edge at local TOP (column).
+  // Side 2 (top) and Side 1 (left, rotated -90deg) have their inner-pit edge at local BOTTOM (column-reverse).
+  const reverseRadial = side === 1 || side === 2;
   const band = def.kind === 'city' ? p.bandColor ?? '#8C96C9' : def.kind === 'tourist' ? '#22D3C5' : null;
   const lifted = p.sel === 'pick' || p.here || p.festival || p.alert;
-
-  const background = p.ownerColor
-    ? `linear-gradient(180deg, ${rgba(p.ownerColor, 0.5)}, ${rgba(p.ownerColor, 0.14)} 75%), linear-gradient(180deg, var(--bz-tile-hi), var(--bz-tile-lo))`
-    : undefined;
 
   return (
     <button
@@ -239,7 +279,6 @@ function TileImpl(p: TileViewProps) {
         gridRow: row + 1,
         gridColumn: col + 1,
         boxShadow: ringShadows(p),
-        background,
         zIndex: lifted ? 4 : undefined,
       }}
       aria-label={ariaFor(p)}
@@ -251,21 +290,19 @@ function TileImpl(p: TileViewProps) {
           <CornerArt kind={def.kind} icon={def.icon} />
           <CornerBody p={p} />
         </>
+      ) : landscape ? (
+        <div className={clsx('bz-tile-rot', reverseRadial ? 'bz-radial-rev' : 'bz-radial-fwd')}>
+          <SideTileContent p={p} band={band} />
+        </div>
       ) : (
-        <>
-          {band && (
-            <span className="bz-band" style={{ '--band': band } as CSSProperties}>
-              {isProperty && !landscape && <Chip value={p.value} ownerColor={p.ownerColor} />}
-              {def.kind === 'tourist' && landscape && <span className="bz-band-label">WISATA</span>}
-            </span>
-          )}
-          <SideBody p={p} landscape={landscape} />
-        </>
+        <div className={clsx('bz-tile-stack', reverseRadial ? 'bz-radial-rev' : 'bz-radial-fwd')}>
+          <SideTileContent p={p} band={band} />
+        </div>
       )}
       <StateLayers p={p} />
     </button>
   );
 }
 
-/** One board tile, flat on the board plane. Memoised: only re-renders when its own data changes. */
+/** One board tile, styled like a 3D Get Rich block on the board plane. Memoised: only re-renders when its own data changes. */
 export const Tile = memo(TileImpl);
