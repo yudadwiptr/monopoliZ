@@ -54,7 +54,7 @@ export function computeLayout(width: number, height: number, players: number): H
   }
 
   const topH = 64;
-  const dockH = 92;
+  const dockH = 76;
   const boardTarget = h - topH - dockH - 16;
   const side = clamp((w - boardTarget) / 2 - 18, 176, 310);
   return {

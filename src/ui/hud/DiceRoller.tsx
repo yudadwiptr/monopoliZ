@@ -264,7 +264,7 @@ export function DiceRoller({ layout = 'stack', compact = false, dense = false, p
             <Dices size={small ? 20 : 24} aria-hidden />
           )
         }
-        className={clsx('touch-none [-webkit-touch-callout:none]', row && 'min-w-[210px]', compact && '!px-3 !text-base')}
+        className={clsx('touch-none [-webkit-touch-callout:none]', row && (compact ? 'min-w-[168px]' : 'min-w-[210px]'), compact && '!px-3 !text-base')}
         onPointerDown={(e) => {
           if (e.button !== 0) return;
           e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -305,7 +305,7 @@ export function DiceRoller({ layout = 'stack', compact = false, dense = false, p
           </motion.div>
         )}
       </AnimatePresence>
-      <div className={clsx('flex w-full', row ? 'items-center gap-4' : 'flex-col items-stretch gap-2')}>
+      <div className={clsx('flex w-full', row ? (compact ? 'items-center gap-3' : 'items-center gap-4') : 'flex-col items-stretch gap-2')}>
         <div className={clsx(row ? 'min-w-0 flex-1' : 'w-full', 'px-2 pt-1')}>
           <GaugeBar pos={pos} charging={charging} compact={compact} />
         </div>

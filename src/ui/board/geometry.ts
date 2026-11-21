@@ -189,7 +189,7 @@ export function tiltFor(width: number, height: number): number {
 /** Tilt for the isometric (diamond) camera. */
 export function isoTiltFor(width: number, height: number): number {
   const aspect = width / Math.max(1, height);
-  return aspect < 0.8 ? 48 : 54;
+  return aspect < 0.8 ? 52 : 60;
 }
 
 /** Yaw of the isometric camera: the board is turned into a diamond. */

@@ -95,21 +95,26 @@ function WideLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
 
   return (
     <div className="relative z-10 flex h-full flex-col gap-3" style={SAFE_PAD}>
-      <div className="relative z-20 shrink-0 px-1">
+      {fullBleed && (
+        // From the very top of the screen (behind the top bar's empty middle) down to the dock.
+        <BoardStage className="absolute inset-x-0 top-0 z-0" style={{ bottom: layout.dockH + 12 }} />
+      )}
+      <div className="pointer-events-none relative z-20 shrink-0 px-1 [&>header>*]:pointer-events-auto">
         <TopBar variant="wide" />
       </div>
-      <div className="relative flex min-h-0 flex-1 gap-4 px-1">
-        {fullBleed && (
-          <BoardStage className="absolute inset-x-0 top-0" style={{ bottom: layout.dockH + 8 }} />
-        )}
+      {/* Click-through row: only the panels and the dock take pointer events, the board below gets the rest. */}
+      <div className="pointer-events-none relative flex min-h-0 flex-1 gap-4 px-1">
         <aside className={aside} style={{ width: layout.sideW }}>
           {at('tl')}
           {at('bl')}
         </aside>
-        <main className="flex min-w-0 flex-1 flex-col items-center gap-2">
-          {fullBleed ? <div className="flex-1" /> : <BoardStage className="w-full flex-1" />}
-          <div className="relative z-10 flex w-full max-w-xl shrink-0 items-center" style={{ height: layout.dockH }}>
-            <ActionDock layout="row" />
+        <main className="pointer-events-none flex min-w-0 flex-1 flex-col items-center gap-2">
+          {fullBleed ? <div className="flex-1" /> : <BoardStage className="pointer-events-auto w-full flex-1" />}
+          <div
+            className="pointer-events-auto relative z-10 flex w-full max-w-[460px] shrink-0 items-center"
+            style={{ height: layout.dockH }}
+          >
+            <ActionDock layout="row" compact />
           </div>
         </main>
         <aside className={aside} style={{ width: layout.sideW }}>

@@ -174,7 +174,15 @@ export function MainMenu() {
           transition={{ delay: 1 }}
           className="mt-3 shrink-0 text-center text-xs text-ink-300"
         >
-          v0.1 • Dibuat dengan ❤️ untuk Nusantara
+          build by{' '}
+          <a
+            href="https://yumastudio.digital/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-ink-100 underline-offset-2 transition-colors hover:text-brand-300 hover:underline"
+          >
+            yumastudio.digital
+          </a>
         </motion.footer>
       </div>
 

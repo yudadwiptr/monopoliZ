@@ -71,7 +71,8 @@ function RoundPill({ compact }: { compact?: boolean }) {
     <div
       className={clsx(
         'glass relative flex min-w-0 items-center gap-2 overflow-hidden !rounded-2xl',
-        compact ? 'h-11 px-2.5' : 'h-12 px-3',
+        // pb leaves room for the progress line along the bottom edge
+        compact ? 'h-11 px-2.5 pb-1' : 'h-12 px-3 pb-1',
       )}
       aria-label={`Ronde ${round}${maxRounds ? ` dari ${maxRounds}` : ''}, peta ${map?.name ?? ''}`}
     >
@@ -102,7 +103,7 @@ function RoundPill({ compact }: { compact?: boolean }) {
         </div>
       </div>
       {maxRounds !== null && (
-        <div className="absolute inset-x-2 bottom-1 h-[3px] overflow-hidden rounded-full bg-white/10" aria-hidden>
+        <div className="absolute inset-x-0 bottom-0 h-[3px] overflow-hidden bg-white/10" aria-hidden>
           <motion.div
             className={clsx('h-full w-full origin-left rounded-full', final ? 'bg-merah-400' : 'bg-brand-400')}
             initial={false}
