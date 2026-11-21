@@ -15,7 +15,7 @@ import { getCharacter } from '@/data/characters';
 import { forwardDistance } from '@/data/layout';
 import { useGame } from '@/store/gameStore';
 import { speedFactor } from '@/store/settingsStore';
-import { depthZ, flatCss, useAnchor, useCam } from './camera';
+import { depthZ, flatCss, useAnchor, useCam, useLive } from './camera';
 import { mix } from './color';
 import { CELL_N, pawnSpot, project, screenDepth, type Point } from './geometry';
 
@@ -182,19 +182,18 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
     };
   }, [tile, slot, count, base, id, reduce, u, v, h, s, o]);
 
-  const body = useTransform([u, v, h, s, tilt, yaw] as MotionValue<number>[], (vals: number[]) => {
-    const [uu, vv, hh, ss, t, y] = vals;
-    const p = project(uu, vv, 0, t, k, y);
-    return `translate3d(${(p.x * S).toFixed(2)}px,${(p.y * S - hh * S * p.f).toFixed(2)}px,0) scale(${(p.f * ss).toFixed(4)})`;
+  const body = useLive([u, v, h, s, tilt, yaw], () => {
+    const p = project(u.get(), v.get(), 0, tilt.get(), k, yaw.get());
+    const hh = h.get();
+    return `translate3d(${(p.x * S).toFixed(2)}px,${(p.y * S - hh * S * p.f).toFixed(2)}px,0) scale(${(p.f * s.get()).toFixed(4)})`;
   });
-  const ground = useTransform([u, v, h, s, tilt, yaw] as MotionValue<number>[], (vals: number[]) => {
-    const [uu, vv, hh, ss, t, y] = vals;
-    const shrink = 1 - Math.min(0.55, (hh / (CELL_N * 3)) * 0.9);
-    return flatCss(uu, vv, t, k, S, ss * shrink, y);
+  const ground = useLive([u, v, h, s, tilt, yaw], () => {
+    const shrink = 1 - Math.min(0.55, (h.get() / (CELL_N * 3)) * 0.9);
+    return flatCss(u.get(), v.get(), tilt.get(), k, S, s.get() * shrink, yaw.get());
   });
-  const z = useTransform([u, v, h, yaw] as MotionValue<number>[], (vals: number[]) => {
-    const [uu, vv, hh, y] = vals;
-    return depthZ(screenDepth(uu, vv, y), 40) + (hh > CELL_N ? 4000 : 0) + (active ? 5 : 0);
+  const z = useLive([u, v, h, yaw], () => {
+    const lifted = h.get() > CELL_N ? 4000 : 0;
+    return depthZ(screenDepth(u.get(), v.get(), yaw.get()), 40) + lifted + (active ? 5 : 0);
   });
 
   const vars = {

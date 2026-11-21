@@ -1290,22 +1290,19 @@
     radial-gradient(120% 120% at 50% 50%, transparent 65%, rgba(30, 14, 4, 0.18) 100%);
 }
 
-/* Batik cloth laid in the middle of the board, slightly recessed */
+/* Light wood inlay in the middle of the board, slightly recessed, with the logo burned into it */
 .bz-center {
-  background-color: #1b2552;
+  background-color: #b98a57;
   background-image:
-    radial-gradient(60% 60% at 50% 50%, rgba(11, 16, 38, 0.15), rgba(11, 16, 38, 0.55) 100%),
-    linear-gradient(rgba(14, 22, 58, 0.5), rgba(14, 22, 58, 0.5)),
-    var(--bz-batik-url, var(--batik-kawung));
-  background-size:
-    100% 100%,
-    100% 100%,
-    cover;
-  background-position: center;
+    radial-gradient(70% 70% at 50% 50%, rgba(255, 236, 205, 0.18), transparent 75%),
+    repeating-linear-gradient(97deg, rgba(90, 50, 20, 0.12) 0 2px, transparent 2px 9px, rgba(255, 236, 205, 0.06) 9px 11px, transparent 11px 24px),
+    repeating-linear-gradient(95deg, rgba(90, 50, 20, 0.06) 0 1px, transparent 1px 4px),
+    linear-gradient(145deg, #d1a06b 0%, #b98a57 50%, #a3743f 100%);
+  background-size: auto;
   box-shadow:
-    inset calc(var(--c) * 0.09) calc(var(--c) * 0.09) 0 rgba(40, 20, 6, 0.55),
-    inset calc(var(--c) * 0.2) calc(var(--c) * 0.2) calc(var(--c) * 0.35) rgba(0, 0, 0, 0.55),
-    inset 0 0 0 2px rgba(255, 228, 190, 0.3),
+    inset calc(var(--c) * 0.09) calc(var(--c) * 0.09) 0 rgba(60, 30, 10, 0.45),
+    inset calc(var(--c) * 0.2) calc(var(--c) * 0.2) calc(var(--c) * 0.35) rgba(40, 20, 6, 0.35),
+    inset 0 0 0 2px rgba(255, 236, 205, 0.35),
     0 0 0 calc(var(--c) * 0.03) #4a2a14;
 }
 
@@ -1313,21 +1310,26 @@
   display: none;
 }
 
-/* The cloth already carries the artwork — keep only a faint map name. */
-.bz-emblem,
-.bz-center-head > div:first-child {
+.bz-emblem {
   display: none;
 }
 
+/* Logo burned into the wood */
+.bz-center-head > div:first-child {
+  display: block;
+  filter: brightness(0) !important;
+  opacity: 0.22 !important;
+}
+
 .bz-mapname {
-  color: rgba(255, 255, 255, 0.5);
-  text-shadow: 0 2px 6px rgba(5, 8, 26, 0.9);
+  color: rgba(60, 30, 10, 0.42);
+  text-shadow: 0 1px 0 rgba(255, 236, 205, 0.35);
 }
 
 .bz-tagline {
-  color: #ffe08a;
-  opacity: 0.7;
-  text-shadow: 0 1px 4px rgba(5, 8, 26, 0.9);
+  color: rgba(60, 30, 10, 0.5);
+  opacity: 1;
+  text-shadow: 0 1px 0 rgba(255, 236, 205, 0.3);
 }
 
 /* Cream tiles */

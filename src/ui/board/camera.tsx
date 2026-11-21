@@ -158,25 +158,46 @@ export function flatCss(u: number, v: number, tilt: number, k: number, S: number
   return `translate3d(${(p.x * S).toFixed(2)}px,${(p.y * S).toFixed(2)}px,0) scale(${s.toFixed(4)},${(s * cos).toFixed(4)})`;
 }
 
+/**
+ * A motion value recomputed SYNCHRONOUSLY whenever one of `sources` changes (and whenever the component
+ * re-renders), always with the latest `compute` closure.
+ *
+ * framer-motion's multi-input useTransform defers its update to the next frame and only re-subscribes on
+ * re-render; memoised overlay items (buildings!) that rarely re-render could miss the final update of a
+ * camera move and freeze at an old pose. This hook never does.
+ */
+export function useLive<T>(sources: MotionValue<number>[], compute: () => T): MotionValue<T> {
+  const computeRef = useRef(compute);
+  computeRef.current = compute;
+  const mv = useMotionValue<T>(compute());
+  // Keep in sync with fresh props on every render.
+  const next = compute();
+  if (mv.get() !== next) mv.set(next);
+  useEffect(() => {
+    const update = () => mv.set(computeRef.current());
+    update();
+    const subs = sources.map((s) => s.on('change', update));
+    return () => subs.forEach((off) => off());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mv, ...sources]);
+  return mv;
+}
+
 /** Overlay transform for a fixed board point, following camera changes without re-rendering. */
 export function useAnchor(u: number, v: number, h = 0, extraScale = 1): MotionValue<string> {
   const { tilt, yaw, k, S } = useCam();
-  return useTransform([tilt, yaw] as MotionValue<number>[], ([t, y]: number[]) =>
-    anchorCss(u, v, h, t, k, S, extraScale, y),
-  );
+  return useLive([tilt, yaw], () => anchorCss(u, v, h, tilt.get(), k, S, extraScale, yaw.get()));
 }
 
 export function useFlatAnchor(u: number, v: number, extraScale = 1): MotionValue<string> {
   const { tilt, yaw, k, S } = useCam();
-  return useTransform([tilt, yaw] as MotionValue<number>[], ([t, y]: number[]) =>
-    flatCss(u, v, t, k, S, extraScale, y),
-  );
+  return useLive([tilt, yaw], () => flatCss(u, v, tilt.get(), k, S, extraScale, yaw.get()));
 }
 
 /** Reactive paint order for a billboard standing at board point (u, v): nearer the viewer paints on top. */
 export function useDepth(u: number, v: number, bias = 0): MotionValue<number> {
   const { yaw } = useCam();
-  return useTransform(yaw, (y) => depthZ(screenDepth(u, v, y), bias));
+  return useLive([yaw], () => depthZ(screenDepth(u, v, yaw.get()), bias));
 }
 
 /** z-index for an overlay billboard at screen depth d (see screenDepth; nearer paints on top). */

@@ -16,7 +16,7 @@ import { useGame } from '@/store/gameStore';
 import { haptic, speedFactor, useSettings, type CameraMode } from '@/store/settingsStore';
 import { BoardHints } from './BoardHints';
 import { BuildingsLayer } from './Buildings';
-import { CamContext, useCameraRig, useCamValue, useElementSize, type CameraRig } from './camera';
+import { CamContext, useCameraRig, useCamValue, useElementSize, useLive, type CameraRig } from './camera';
 import { CELL_N, clamp, pawnSpot, project } from './geometry';
 import { mix, rgba } from './color';
 import { Dice } from './Dice';
@@ -34,7 +34,6 @@ function themeVars(theme: MapTheme, c: number, camera: CameraMode): CSSPropertie
   return {
     '--c': `${c}px`,
     '--bz-counter-yaw': iso ? '-45deg' : '0deg',
-    '--bz-batik-url': `url(${import.meta.env.BASE_URL}brand/bg-batik.webp)`,
     '--bz-surface': mix(s, '#05081A', 0.28),
     '--bz-tile-hi': mix(s, '#FFFFFF', 0.16),
     '--bz-tile-lo': mix(s, '#05081A', 0.18),
@@ -138,9 +137,9 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
   const reduce = useReducedMotion();
   const follow = useFollowCamera(rig, followSetting && !reduce);
   // Screen-space y of the board centre (u=0, v=0) relative to the container centre — keeps roll controls inside the pit.
-  const centerY = useTransform(
-    [rig.tilt, rig.yaw, rig.rigScale, rig.rigY] as MotionValue<number>[],
-    ([t, y, rs, ry]: number[]) => project(0.02, 0.02, 0, t, rig.k, y).y * rig.S * rs + ry,
+  const centerY = useLive(
+    [rig.tilt, rig.yaw, rig.rigScale, rig.rigY],
+    () => project(0.02, 0.02, 0, rig.tilt.get(), rig.k, rig.yaw.get()).y * rig.S * rig.rigScale.get() + rig.rigY.get(),
   );
   const [info, setInfo] = useState<TileInfoTarget | null>(null);
 
@@ -165,7 +164,7 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
       {ready && map && (
         <CamContext.Provider value={cam}>
           <div className="bz-ambient" aria-hidden />
-          <motion.div className="absolute inset-0" style={{ scale: follow.zoom, x: follow.panX, y: follow.panY }}>
+          <motion.div className="absolute inset-0 will-change-transform" style={{ scale: follow.zoom, x: follow.panX, y: follow.panY }}>
             <motion.div
               className="absolute left-1/2 top-1/2"
               style={{ width: S, height: S, marginLeft: -S / 2, marginTop: -S / 2, scale: rig.rigScale, y: rig.rigY }}

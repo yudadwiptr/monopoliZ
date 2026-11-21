@@ -91,3 +91,18 @@ textarea {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* In-game: no backdrop blur over the constantly animating board (it re-blurs every frame and causes jank).
+   Slightly more opaque surfaces keep the same look. */
+.mz-game .glass,
+.mz-game .glass-strong,
+.mz-game [class*='backdrop-blur'] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.mz-game .glass {
+  background-color: rgba(18, 26, 61, 0.9);
+}
+.mz-game .glass-strong {
+  background-color: rgba(18, 26, 61, 0.96);
+}

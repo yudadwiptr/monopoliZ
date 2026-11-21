@@ -157,7 +157,7 @@ export function GameScreen() {
   };
 
   return (
-    <div ref={rootRef} className={clsx('relative h-[100dvh] w-full overflow-hidden text-ink-100')}>
+    <div ref={rootRef} className={clsx('mz-game relative h-[100dvh] w-full overflow-hidden text-ink-100')}>
       <GameBackdrop />
       {ready && (
         <>
