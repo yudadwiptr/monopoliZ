@@ -4,11 +4,13 @@ import {
   motion,
   useMotionValue,
   useReducedMotion,
+  useTransform,
   type AnimationPlaybackControls,
 } from 'framer-motion';
 import clsx from 'clsx';
 import { useEffect, useRef, type CSSProperties } from 'react';
 import { useGame } from '@/store/gameStore';
+import { speedFactor } from '@/store/settingsStore';
 import { useAnchor, useCam } from './camera';
 import { CELL_N } from './geometry';
 
@@ -95,18 +97,18 @@ export function Dice() {
             transition={{ type: 'spring', stiffness: 380, damping: 22 }}
           >
             <div className="bz-dice-stack">
-              <div className={clsx('bz-dice-pair', !rolling && 'bz-dice-idle')}>
+              <div className="bz-dice-pair">
                 <Die value={dice?.[0] ?? null} rolling={rolling} index={0} />
                 <Die value={dice?.[1] ?? null} rolling={rolling} index={1} />
               </div>
               {/* Result chip sits in its own row so the dice never cover it. Space is reserved while rolling. */}
-              <div style={{ minHeight: Math.max(26, c * 0.5) }}>
+              <div style={{ minHeight: Math.max(20, c * 0.36) }}>
                 <AnimatePresence mode="wait">
                   {!rolling && dice && (
                     <motion.div
                       key={key}
                       className={clsx('bz-sum', doubles && 'bz-sum-dobel')}
-                      style={{ fontSize: Math.max(15, c * 0.34) }}
+                      style={{ fontSize: Math.max(11, c * 0.22) }}
                       initial={{ opacity: 0, scale: 0.4, y: -8 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.6 }}
@@ -130,54 +132,97 @@ export function Dice() {
   );
 }
 
+/** Forward-rotating target: the smallest angle >= `cur + minTurns*360` that lands on `to` (mod 360). */
+function forwardTo(cur: number, to: number, minTurns: number): number {
+  const base = cur + minTurns * 360;
+  return base + ((((to - base) % 360) + 360) % 360);
+}
+
+/**
+ * One die. A roll is a single continuous "throw": it slides in from the side, tumbles while
+ * decelerating so it settles exactly on the rolled face, and bounces three times with a small
+ * squash on each impact. The result is known when the roll starts, so there is no spin-then-snap.
+ */
 function Die({ value, rolling, index }: { value: number | null; rolling: boolean; index: number }) {
   const { c } = useCam();
   const reduce = useReducedMotion();
   const rx = useMotionValue(value ? FACE_ROT[value][0] : -30);
   const ry = useMotionValue(value ? FACE_ROT[value][1] : 30);
   const lift = useMotionValue(0);
+  const slide = useMotionValue(0);
   const spin = useMotionValue(0);
-  const first = useRef(true);
+  const squash = useMotionValue(1);
+  const stretch = useTransform(squash, (v) => 2 - v);
+  const shadowScale = useTransform(lift, [-c * 1.1, 0], [0.45, 1]);
+  const shadowOpacity = useTransform(lift, [-c * 1.1, 0], [0.35, 1]);
+  const running = useRef<AnimationPlaybackControls[]>([]);
+  const thrown = useRef(false);
+
+  useEffect(() => () => running.current.forEach((a) => a.stop()), []);
 
   useEffect(() => {
-    const ctl: AnimationPlaybackControls[] = [];
-    const wasFirst = first.current;
-    first.current = false;
-    if (rolling) {
-      const dir = index === 0 ? 1 : -1;
-      ctl.push(
-        animate(rx, rx.get() + 720 * dir, { duration: 0.62, ease: 'linear', repeat: Infinity }),
-        animate(ry, ry.get() - 540 * dir, { duration: 0.5, ease: 'linear', repeat: Infinity }),
-        animate(spin, [0, 14 * dir, -10 * dir, 0], { duration: 0.5, repeat: Infinity }),
-        animate(lift, [0, -c * (0.5 + index * 0.14), 0], {
-          duration: 0.42 + index * 0.06,
-          ease: ['easeOut', 'easeIn'],
-          times: [0, 0.5, 1],
-          repeat: Infinity,
-        }),
-      );
-    } else if (value) {
-      const [tx, ty] = FACE_ROT[value];
-      if (wasFirst || reduce) {
+    if (!value) return;
+    const [tx, ty] = FACE_ROT[value];
+    // Small resting yaw so the pair never looks machine-aligned; derived from the value so it is stable.
+    const restYaw = (((value * 37 + index * 53) % 15) - 7) * (index === 0 ? 1 : -1);
+
+    if (!rolling) {
+      // Landed (or loaded mid-game): only snap if no throw is in flight.
+      if (!thrown.current) {
         rx.set(tx);
         ry.set(ty);
-      } else {
-        const fwd = (cur: number, to: number) => Math.ceil((cur - to) / 360) * 360 + 360 + to;
-        const spring = { type: 'spring' as const, stiffness: 140, damping: 14, mass: 0.9 };
-        ctl.push(
-          animate(rx, fwd(rx.get(), tx), spring),
-          animate(ry, fwd(ry.get(), ty), spring),
-          animate(spin, 0, { duration: 0.3 }),
-          animate(lift, [lift.get(), -c * 0.18, 0], { duration: 0.45, times: [0, 0.4, 1] }),
-        );
+        spin.set(restYaw);
       }
+      return;
     }
-    return () => ctl.forEach((a) => a.stop());
-  }, [rolling, value, index, c, reduce, rx, ry, lift, spin]);
+
+    running.current.forEach((a) => a.stop());
+    thrown.current = true;
+    if (reduce) {
+      rx.set(tx);
+      ry.set(ty);
+      spin.set(restYaw);
+      return;
+    }
+
+    const sf = speedFactor();
+    const d = 1.05 * sf;
+    const dir = index === 0 ? -1 : 1;
+    const delay = index * 0.05 * sf;
+    const decel = [0.12, 0.62, 0.2, 1] as const; // fast throw, long gentle settle
+    const h = c * (0.95 + index * 0.12);
+    const impacts = [0.3, 0.58, 0.78, 0.92];
+
+    slide.set(dir * c * 0.9);
+    lift.set(-h * 0.6);
+    running.current = [
+      animate(rx, forwardTo(rx.get(), tx, 2 + index), { duration: d, delay, ease: decel }),
+      animate(ry, forwardTo(ry.get(), ty, 1), { duration: d, delay, ease: decel }),
+      animate(slide, 0, { duration: d * 0.8, delay, ease: [0.2, 0.7, 0.3, 1] }),
+      animate(spin, [dir * 40, -dir * 14, dir * 6, restYaw], {
+        duration: d,
+        delay,
+        times: [0, impacts[0], impacts[1], 1],
+      }),
+      animate(lift, [-h * 0.6, 0, -h * 0.42, 0, -h * 0.14, 0, -h * 0.03, 0], {
+        duration: d,
+        delay,
+        times: [0, impacts[0], 0.44, impacts[1], 0.68, impacts[2], 0.86, impacts[3]],
+        ease: ['easeIn', 'easeOut', 'easeIn', 'easeOut', 'easeIn', 'easeOut', 'easeIn'],
+      }),
+      animate(squash, [1, 0.82, 1, 0.9, 1, 0.96, 1], {
+        duration: d,
+        delay,
+        times: [0, impacts[0], impacts[0] + 0.06, impacts[1], impacts[1] + 0.05, impacts[2], impacts[2] + 0.04],
+      }),
+    ];
+    const done = setTimeout(() => (thrown.current = false), (d + delay) * 1000 + 50);
+    return () => clearTimeout(done);
+  }, [rolling, value, index, c, reduce, rx, ry, lift, slide, spin, squash]);
 
   return (
     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <motion.div style={{ y: lift, rotate: spin }}>
+      <motion.div style={{ x: slide, y: lift, rotate: spin, scaleY: squash, scaleX: stretch, transformOrigin: '50% 100%' }}>
         <div className="bz-die">
           <div className="bz-die-view">
             <motion.div className="bz-cube" style={{ rotateX: rx, rotateY: ry }}>
@@ -199,7 +244,10 @@ function Die({ value, rolling, index }: { value: number | null; rolling: boolean
           </div>
         </div>
       </motion.div>
-      <div className="bz-die-shadow" style={{ marginTop: -c * 0.15 }} />
+      <motion.div
+        className="bz-die-shadow"
+        style={{ marginTop: -c * 0.15, x: slide, scale: shadowScale, opacity: shadowOpacity }}
+      />
     </div>
   );
 }
