@@ -34,6 +34,9 @@ Player ids are `p1..p4` in seat order. Player 0 starts. Round 1.
 1. Pending `roll` → `ROLL{power}`. Two dice d6. `power` (0..1, optional) comes from the dice gauge: with
    probability 0.5 the engine re-samples up to 3 times and keeps the roll whose sum is closest to
    `2 + power*10`; otherwise pure random. Bots use the same gauge.
+   Optional `parity` (`genap` | `ganjil`): a result whose sum does not match is re-rolled once with the
+   same gauge and the second throw stands (~75 % match). Each pick spends one of the player's
+   `PARITY_CHARGES` (3); passing start gives one back (max 3). Picking with no charges left is illegal.
 2. Doubles → after the turn resolves the same player rolls again (`end_turn{extraRoll:true}`).
    The 3rd consecutive double (`MAX_DOUBLES`) sends the player straight to the island (no move by dice).
 3. Walk forward tile by tile. **Passing or landing on start** pays `salary` and increments `laps`.

@@ -2,13 +2,14 @@
  * Token movement: walking (with salary when passing/landing on start), jumping and flying.
  */
 import { BOARD_SIZE, wrap } from '@/data/layout';
-import { ISLAND_MAX_TURNS } from '../economy';
+import { ISLAND_MAX_TURNS, PARITY_CHARGES, parityChargesOf } from '../economy';
 import { cur, emit, log, rp, tileIndexOf, tileName, transfer, type Ctx } from './context';
 
 export function paySalary(ctx: Ctx): void {
   const p = cur(ctx);
   const salary = ctx.s.config.salary;
   p.laps += 1;
+  p.parityCharges = Math.min(PARITY_CHARGES, parityChargesOf(p) + 1);
   transfer(ctx, null, p.id, salary, 'salary', 0);
   log(ctx, `💸 ${p.name} lewat ${tileName(ctx, 0)}, gajian ${rp(salary)}!`, 'good', p.id);
 }

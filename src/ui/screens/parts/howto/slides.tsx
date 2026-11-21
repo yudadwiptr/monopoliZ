@@ -5,6 +5,7 @@ import {
   DEFAULT_SALARY,
   FESTIVAL_MULT,
   MAX_DOUBLES,
+  PARITY_CHARGES,
 } from '@/engine/economy';
 import { formatRp } from '@/lib/format';
 import { BuildArt, GoalArt, SpecialTilesArt, TipsArt, TollArt, TurnArt, WinArt } from './art';
@@ -42,11 +43,12 @@ export const SLIDES: Slide[] = [
   {
     id: 'giliran',
     kicker: 'Giliran',
-    title: 'Dadu & Gas Meter',
+    title: 'Dadu, Gas Meter & Genap/Ganjil',
     accent: '#3A8CD6',
     art: <TurnArt />,
     points: [
       { icon: '⚡', text: <>Lempar dua dadu pakai <B>Gas Meter</B> — makin penuh, makin gede peluang angka besar. Tapi tetap ada hokinya!</> },
+      { icon: '🎯', text: <>Pilih <B>Genap</B> atau <B>Ganjil</B> biar peluangnya condong ke situ. Jatahnya cuma <B>{PARITY_CHARGES}×</B>, tambah 1 tiap lewat Titik Nol.</> },
       { icon: '🎲', text: <>Dapat <B>double</B>? Habis jalan, kamu lempar lagi.</> },
       { icon: '🏝️', text: <><B>{MAX_DOUBLES}× double</B> beruntun = langsung terdampar di pulau. Jangan serakah!</> },
       { icon: '💰', text: <>Tiap lewat Titik Nol kamu gajian <B>{formatRp(DEFAULT_SALARY)}</B>.</> },

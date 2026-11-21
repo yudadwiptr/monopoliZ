@@ -1,6 +1,14 @@
 import './board.css';
-import { animate, motion, useMotionValue, useReducedMotion, type AnimationPlaybackControls } from 'framer-motion';
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+  type AnimationPlaybackControls,
+  type MotionValue,
+} from 'framer-motion';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { sfx } from '@/audio';
 import { mapOf } from '@/engine/selectors';
 import type { MapTheme } from '@/engine/types';
@@ -113,9 +121,9 @@ function selectableNow(): number[] {
 /**
  * The game board: an isometric diamond, a perspective-tilted, or a flat ('top') 3D slab with the tile ring on its
  * surface, plus an upright billboard overlay for buildings, pawns, dice and effects. Fills its parent and
- * keeps the square board fitted to it for both cameras.
+ * keeps the square board fitted to it for every camera. `center` (the roll button) is pinned to the board's centre.
  */
-export function Board3D() {
+export function Board3D({ center }: { center?: ReactNode } = {}) {
   const rootRef = useRef<HTMLDivElement>(null);
   const { w, h } = useElementSize(rootRef);
   const camera = useSettings((s) => s.camera);
@@ -125,6 +133,11 @@ export function Board3D() {
   const followSetting = useSettings((s) => s.followCam);
   const reduce = useReducedMotion();
   const follow = useFollowCamera(rig, followSetting && !reduce);
+  // Screen-space y of the board centre (u=0, v=0) relative to the container centre.
+  const centerY = useTransform(
+    [rig.tilt, rig.yaw, rig.rigScale, rig.rigY] as MotionValue<number>[],
+    ([t, y, rs, ry]: number[]) => project(0, 0, 0, t, rig.k, y).y * rig.S * rs + ry,
+  );
   const [info, setInfo] = useState<TileInfoTarget | null>(null);
 
   const onPick = useCallback((index: number, el: HTMLElement) => {
@@ -170,6 +183,11 @@ export function Board3D() {
             </div>
           </motion.div>
           </motion.div>
+          {center && (
+            <motion.div className="pointer-events-none absolute left-1/2 top-1/2 z-30" style={{ y: centerY }}>
+              <div className="pointer-events-auto absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2">{center}</div>
+            </motion.div>
+          )}
         </CamContext.Provider>
       )}
       {map && <TileInfo map={map} target={info} onClose={closeInfo} />}

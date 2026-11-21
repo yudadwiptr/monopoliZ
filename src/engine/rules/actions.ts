@@ -5,6 +5,7 @@ import {
   ISLAND_ESCAPE_FEE,
   LANDMARK_LEVEL,
   MAX_DOUBLES,
+  parityChargesOf,
   applyDiscount,
   levelCost,
   purchaseCost,
@@ -12,7 +13,7 @@ import {
   upgradeCost,
 } from '../economy';
 import { random, rollDie } from '../rng';
-import type { Action, Pending } from '../types';
+import type { Action, Parity, Pending } from '../types';
 import { applyCard } from './cards';
 import { consumeCard, cur, emit, fail, log, rp, tileIndexOf, tileName, transfer, type Ctx } from './context';
 import { emitBuild, levelLabel, offerBuild, resolveLanding } from './landing';
@@ -37,8 +38,8 @@ export function dispatchAction(ctx: Ctx, action: Action): void {
   if (!action || typeof action !== 'object') fail(INVALID);
   switch (action.type) {
     case 'ROLL':
-      if (ctx.s.pending.kind === 'island') islandRoll(ctx, action.power);
-      else normalRoll(ctx, action.power);
+      if (ctx.s.pending.kind === 'island') islandRoll(ctx, action.power, action.parity);
+      else normalRoll(ctx, action.power, action.parity);
       return;
     case 'PAY_ESCAPE':
       payEscape(ctx);
@@ -99,19 +100,36 @@ export function rollDice(ctx: Ctx, power: number | undefined): [number, number] 
   return best;
 }
 
-function throwDice(ctx: Ctx, power: number | undefined): { dice: [number, number]; doubles: boolean; sum: number } {
-  const dice = rollDice(ctx, power);
+export function matchesParity(dice: [number, number], parity: Parity): boolean {
+  return ((dice[0] + dice[1]) % 2 === 0) === (parity === 'genap');
+}
+
+/** Gauge roll, plus the Genap/Ganjil pick: a non-matching result is re-rolled once (~75% match). */
+function throwDice(
+  ctx: Ctx,
+  power: number | undefined,
+  parity: Parity | undefined,
+): { dice: [number, number]; doubles: boolean; sum: number } {
+  const pick = parity === 'genap' || parity === 'ganjil' ? parity : undefined;
+  if (pick) {
+    const p = cur(ctx);
+    const left = parityChargesOf(p);
+    if (left <= 0) fail('Jatah Genap/Ganjil habis — isi lagi dengan lewat Start');
+    p.parityCharges = left - 1;
+  }
+  let dice = rollDice(ctx, power);
+  if (pick && !matchesParity(dice, pick)) dice = rollDice(ctx, power);
   const doubles = dice[0] === dice[1];
   ctx.s.lastDice = dice;
   emit(ctx, { type: 'dice', playerId: cur(ctx).id, dice, doubles });
   return { dice, doubles, sum: dice[0] + dice[1] };
 }
 
-function normalRoll(ctx: Ctx, power: number | undefined): void {
+function normalRoll(ctx: Ctx, power: number | undefined, parity?: Parity): void {
   expect(ctx, 'roll');
   const s = ctx.s;
   const p = cur(ctx);
-  const { dice, doubles, sum } = throwDice(ctx, power);
+  const { dice, doubles, sum } = throwDice(ctx, power, parity);
   s.doublesInRow = doubles ? s.doublesInRow + 1 : 0;
   log(ctx, `🎲 ${p.name} lempar ${dice[0]} + ${dice[1]} = ${sum}${doubles ? ' (DOUBLE!)' : ''}`, 'info', p.id);
   if (doubles && s.doublesInRow >= MAX_DOUBLES) {
@@ -132,11 +150,11 @@ function escapeIsland(ctx: Ctx): void {
   emit(ctx, { type: 'island', playerId: p.id, turnsLeft: 0, escaped: true });
 }
 
-function islandRoll(ctx: Ctx, power: number | undefined): void {
+function islandRoll(ctx: Ctx, power: number | undefined, parity?: Parity): void {
   expect(ctx, 'island');
   const s = ctx.s;
   const p = cur(ctx);
-  const { dice, doubles, sum } = throwDice(ctx, power);
+  const { dice, doubles, sum } = throwDice(ctx, power, parity);
   s.doublesInRow = 0;
   s._extraRoll = false;
   if (doubles) {

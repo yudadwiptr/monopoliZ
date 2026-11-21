@@ -1,3 +1,5 @@
+import type { Parity } from '@/engine/types';
+
 /**
  * Probability model of a 2d6 roll, including the dice gauge.
  *
@@ -97,6 +99,19 @@ export function rollOutcomes(power?: number): readonly DiceOutcome[] {
   }));
   cache.set(key, out);
   return out;
+}
+
+/**
+ * Outcome distribution of ROLL{power, parity}: a result whose sum doesn't match the Genap/Ganjil pick is
+ * re-rolled once with the same gauge, and the second throw stands.
+ */
+export function rollOutcomesWithParity(power: number | undefined, parity?: Parity): readonly DiceOutcome[] {
+  const base = rollOutcomes(power);
+  if (!parity) return base;
+  const match = (o: DiceOutcome) => (o.sum % 2 === 0) === (parity === 'genap');
+  let miss = 0;
+  for (const o of base) if (!match(o)) miss += o.p;
+  return base.map((o) => ({ ...o, p: match(o) ? o.p * (1 + miss) : o.p * miss }));
 }
 
 /** P(sum) for ROLL{power}, indexed by sum (0..12). */

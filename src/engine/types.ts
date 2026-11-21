@@ -134,6 +134,8 @@ export interface PlayerState {
   islandTurns: number; // >0 while stuck on the island (turns left)
   pendingFlight: boolean; // landed on airport → next turn may fly
   cards: KeepCard[];
+  /** Genap/Ganjil picks left (see PARITY_CHARGES). Missing in old saves = full. */
+  parityCharges?: number;
 }
 
 export interface TileState {
@@ -198,8 +200,11 @@ export type Pending =
   | { kind: 'end_turn'; extraRoll: boolean } // → END_TURN (UI/store dispatches automatically)
   | { kind: 'game_over' };
 
+/** Genap/Ganjil pick on a roll: a non-matching result is re-rolled once (the second throw stands). */
+export type Parity = 'genap' | 'ganjil';
+
 export type Action =
-  | { type: 'ROLL'; power?: number } // power 0..1 from the dice gauge (biases the sum)
+  | { type: 'ROLL'; power?: number; parity?: Parity } // power 0..1 from the dice gauge; parity = Genap/Ganjil pick
   | { type: 'PAY_ESCAPE' }
   | { type: 'USE_ESCAPE_CARD' }
   | { type: 'BUY'; level: number }

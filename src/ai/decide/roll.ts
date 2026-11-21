@@ -1,9 +1,10 @@
 /**
  * Dice gauge + island decisions.
  */
-import type { Action, Pending } from '@/engine/types';
+import { parityChargesOf } from '@/engine/economy';
+import type { Action, Parity, Pending } from '@/engine/types';
 import type { BotContext } from '../context';
-import { TARGET_SUMS, doubleProbability, powerForTarget } from '../dice';
+import { TARGET_SUMS, doubleProbability, powerForTarget, rollOutcomesWithParity } from '../dice';
 import { sedangReserve, spendRisk } from '../risk';
 import { simpleTileScore } from '../simple';
 import {
@@ -13,6 +14,7 @@ import {
   islandValue,
   landingValue,
   memoTileValue,
+  rollValue,
   type RollModel,
   type TileValueFn,
 } from '../valuation';
@@ -36,26 +38,60 @@ function normalModel(ctx: BotContext): RollModel {
     : {};
 }
 
-/** Gauge power for a normal roll. */
-export function chooseRollPower(ctx: BotContext): number {
+const PARITIES: (Parity | undefined)[] = [undefined, 'genap', 'ganjil'];
+/** A Genap/Ganjil charge is scarce: only spend it when it beats the plain roll by this much EV. */
+const PARITY_MIN_GAIN = 12;
+
+/** Best (gauge power, Genap/Ganjil pick) for a roll from `from`, by expected landing value. */
+function bestRoll(
+  from: number,
+  valueAt: TileValueFn,
+  model: RollModel,
+  canPick: boolean,
+): { power: number; parity?: Parity; ev: number } {
+  let plain: { power: number; ev: number } = { power: 0.5, ev: -Infinity };
+  let picked: { power: number; parity?: Parity; ev: number } = { power: 0.5, ev: -Infinity };
+  for (const parity of canPick ? PARITIES : [undefined]) {
+    for (const target of TARGET_SUMS) {
+      const power = powerForTarget(target);
+      const ev = rollValue(from, rollOutcomesWithParity(power, parity), valueAt, model);
+      if (!parity && ev > plain.ev + 1e-9) plain = { power, ev };
+      if (parity && ev > picked.ev + 1e-9) picked = { power, parity, ev };
+    }
+  }
+  return picked.ev > plain.ev + PARITY_MIN_GAIN ? picked : plain;
+}
+
+/** Gauge power + Genap/Ganjil pick for a normal roll. */
+export function chooseRoll(ctx: BotContext): { power: number; parity?: Parity } {
   const from = ctx.me.position;
+  const canPick = parityChargesOf(ctx.me) > 0;
   switch (ctx.level) {
-    case 'mudah':
-      return round3(ctx.rng.next());
+    case 'mudah': {
+      const parity: Parity | undefined =
+        canPick && ctx.rng.chance(0.2) ? (ctx.rng.chance(0.5) ? 'genap' : 'ganjil') : undefined;
+      return { power: round3(ctx.rng.next()), parity };
+    }
     case 'sedang': {
-      if (ctx.rng.chance(0.25)) return round3(ctx.rng.next());
-      const best = bestRollTarget(from, TARGET_SUMS, simpleValueFn(ctx), normalModel(ctx), powerForTarget);
-      return powerForTarget(best.target);
+      if (ctx.rng.chance(0.25)) return { power: round3(ctx.rng.next()) };
+      const best = bestRoll(from, simpleValueFn(ctx), normalModel(ctx), canPick);
+      return { power: best.power, parity: best.parity };
     }
     default: {
-      const best = bestRollTarget(from, TARGET_SUMS, strongValueFn(ctx), normalModel(ctx), powerForTarget);
-      return powerForTarget(best.target);
+      const best = bestRoll(from, strongValueFn(ctx), normalModel(ctx), canPick);
+      return { power: best.power, parity: best.parity };
     }
   }
 }
 
+/** Gauge power for a normal roll (kept for callers that only need the power). */
+export function chooseRollPower(ctx: BotContext): number {
+  return chooseRoll(ctx).power;
+}
+
 export function decideRoll(ctx: BotContext): Action {
-  return { type: 'ROLL', power: chooseRollPower(ctx) };
+  const { power, parity } = chooseRoll(ctx);
+  return parity ? { type: 'ROLL', power, parity } : { type: 'ROLL', power };
 }
 
 /** Power that maximises the chance of rolling doubles (escape attempt). */

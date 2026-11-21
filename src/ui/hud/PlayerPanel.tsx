@@ -21,6 +21,8 @@ export interface PlayerPanelProps {
   isYou?: boolean;
   leader?: boolean;
   className?: string;
+  /** Which screen edge the panel hugs: the avatar sits on the outer side ('full' size only). */
+  align?: 'left' | 'right';
 }
 
 interface GroupChip {
@@ -141,7 +143,7 @@ function BankruptStamp({ small }: { small?: boolean }) {
  * One player's HUD card. Tap to open their detail sheet.
  * Reads displayed values from `view` so numbers move in sync with the board animation.
  */
-export function PlayerPanel({ playerId, size, onOpen, isYou, leader, className }: PlayerPanelProps) {
+export function PlayerPanel({ playerId, size, onOpen, isYou, leader, className, align = 'left' }: PlayerPanelProps) {
   const map = useMapDef();
   const player = useGame((s) => s.game?.players.find((p) => p.id === playerId));
   const cash = useGame((s) => s.view?.cash[playerId] ?? 0);
@@ -177,11 +179,80 @@ export function PlayerPanel({ playerId, size, onOpen, isYou, leader, className }
     .filter(Boolean)
     .join(', ');
 
+  const label = `${player.name}${player.isBot ? `, bot ${BOT_LEVEL_LABEL[player.botLevel]}` : ''}, kas ${formatRp(cash)}, ${stats.count} properti${statusText ? `, ${statusText}` : ''}. Ketuk untuk detail.`;
+
+  if (full) {
+    // Slim corner strip: avatar on the outer edge, name row + big cash row. Details live in the sheet.
+    const right = align === 'right';
+    return (
+      <motion.button
+        type="button"
+        onClick={() => onOpen(playerId)}
+        aria-label={label}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        className={clsx(
+          'group relative flex w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-ink-900/70 py-2 shadow-glass outline-none backdrop-blur-xl focus-visible:ring-4 focus-visible:ring-brand-300/60',
+          right ? 'flex-row-reverse pl-3.5 pr-2 text-right' : 'pl-2 pr-3.5 text-left',
+          className,
+        )}
+        style={isActive ? { borderColor: color } : undefined}
+      >
+        {isActive && (
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute -inset-px rounded-[inherit]"
+            style={{ boxShadow: `0 0 0 2px ${color}, 0 0 22px ${color}77` }}
+            animate={{ opacity: [0.55, 1, 0.55] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        )}
+        <span
+          aria-hidden
+          className={clsx('absolute inset-y-3 w-1 rounded-full', right ? 'right-0' : 'left-0')}
+          style={{ background: color, opacity: bankrupt ? 0.3 : 0.9 }}
+        />
+        <AnimatePresence>{isActive && <TurnTag color={color} />}</AnimatePresence>
+
+        <Avatar characterId={player.characterId} size={44} active={isActive} dimmed={bankrupt} />
+        <span className={clsx('min-w-0 flex-1', bankrupt && 'opacity-45 grayscale')}>
+          <span className={clsx('flex items-center gap-1', right && 'flex-row-reverse')}>
+            <span className="truncate font-display text-sm font-semibold leading-tight text-white">{player.name}</span>
+            {leader && !bankrupt && <Crown size={13} className="shrink-0 fill-gold-400 text-gold-300" aria-label="Paling tajir" />}
+            {player.isBot && (
+              <span className="shrink-0 text-[11px] leading-none opacity-75" title={`Bot ${BOT_LEVEL_LABEL[player.botLevel]}`}>
+                🤖
+              </span>
+            )}
+            {isYou && (
+              <span className="shrink-0 rounded-full bg-brand-500/35 px-1.5 font-display text-[9px] font-bold uppercase leading-4 text-brand-100">
+                Kamu
+              </span>
+            )}
+            {island > 0 && <span className="num shrink-0 text-[11px] leading-none text-laut-300">🏝️{island}</span>}
+            {flight && !bankrupt && <span className="shrink-0 text-[11px] leading-none">✈️</span>}
+          </span>
+          <span className={clsx('mt-1 flex items-baseline gap-2', right && 'flex-row-reverse')}>
+            <Money value={cash} className="truncate text-xl font-bold leading-none text-gold-300" />
+            <span className="num shrink-0 text-[11px] leading-none text-ink-300">🏠{stats.count}</span>
+            <span className={clsx('flex min-w-0 overflow-hidden', right ? 'mr-auto' : 'ml-auto')}>
+              <KeptCards cards={cards} size="mini" />
+            </span>
+          </span>
+        </span>
+
+        {bankrupt && <BankruptStamp small />}
+        <PanelPops playerId={playerId} small />
+      </motion.button>
+    );
+  }
+
   return (
     <motion.button
       type="button"
       onClick={() => onOpen(playerId)}
-      aria-label={`${player.name}${player.isBot ? `, bot ${BOT_LEVEL_LABEL[player.botLevel]}` : ''}, kas ${formatRp(cash)}, ${stats.count} properti${statusText ? `, ${statusText}` : ''}. Ketuk untuk detail.`}
+      aria-label={label}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 500, damping: 30 }}

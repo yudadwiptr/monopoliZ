@@ -1,8 +1,8 @@
 /**
  * Responsive layout maths for the game screen.
- *  - portrait: top bar, panel strip, board, feed, dock stacked vertically (phones / tablets upright)
- *  - wide:     top bar across, panels in the four screen corners, board centred, dock under the board
- *  - short:    phone landscape — panels in the left column, board centred, controls in the right column
+ *  - portrait: top bar, panel row, board stacked vertically (tablets upright; phones are asked to rotate)
+ *  - wide:     top bar across, slim panels in the four screen corners, board centred / full-bleed
+ *  - short:    phone landscape — same as wide with narrower panels and a compact top bar
  */
 export type HudMode = 'portrait' | 'wide' | 'short';
 export type PanelSize = 'full' | 'compact' | 'mini';
@@ -33,37 +33,31 @@ export function computeLayout(width: number, height: number, players: number): H
       mode: 'portrait',
       panelSize: perPanel >= 150 && h >= 600 ? 'compact' : 'mini',
       sideW: 0,
-      dockH: h < 700 ? 114 : 128,
+      dockH: 0,
       denseDock: h < 700,
-      feedLines: h < 740 ? 2 : 3,
+      feedLines: 0,
     };
   }
 
   if (h < 540) {
-    const colW = clamp((w - (h - 16)) / 2 - 12, 132, 230);
-    const perPanel = (h - 16 - (n - 1) * 6) / n;
+    // Phone landscape: the same four-corner strips as desktop, just narrower.
     return {
       mode: 'short',
-      // compact panels are ~115px tall; anything less must use mini or the column overflows
-      panelSize: colW >= 160 && perPanel >= 120 ? 'compact' : 'mini',
-      sideW: colW,
+      panelSize: 'full',
+      sideW: clamp(w * 0.24, 168, 210),
       dockH: 0,
       denseDock: true,
-      feedLines: 2,
+      feedLines: 0,
     };
   }
 
-  const topH = 64;
-  const dockH = 76;
-  const boardTarget = h - topH - dockH - 16;
-  const side = clamp((w - boardTarget) / 2 - 18, 176, 310);
   return {
     mode: 'wide',
-    panelSize: side >= 224 ? 'full' : 'compact',
-    sideW: side,
-    dockH,
+    panelSize: 'full',
+    sideW: clamp(w * 0.15, 210, 260),
+    dockH: 0,
     denseDock: false,
-    feedLines: 3,
+    feedLines: 0,
   };
 }
 

@@ -17,14 +17,18 @@ import { CELL_N } from './geometry';
 /** Board point the dice stand on: centre, a little toward the viewer (below the printed logo). */
 const DICE_V = CELL_N * 1.15;
 
-/** Cube rotation [x, y] (deg) that brings face `n` to the front. Faces: front 1, top 2, right 3, left 4, bottom 5, back 6. */
+/**
+ * Cube rotation [x, y] (deg) that turns face `n` UP — the rolled value is read on the top face, like real
+ * dice on a table. Faces: front 1, top 2, right 3, left 4, bottom 5, back 6. The cube transform is
+ * `rotateX(x) rotateY(y)`, i.e. a face normal is rotated by Y first, then by X.
+ */
 const FACE_ROT: Record<number, [number, number]> = {
-  1: [0, 0],
-  2: [-90, 0],
-  3: [0, -90],
-  4: [0, 90],
-  5: [90, 0],
-  6: [0, 180],
+  1: [90, 0],
+  2: [0, 0],
+  3: [-90, 90],
+  4: [-90, -90],
+  5: [180, 0],
+  6: [-90, 0],
 };
 
 const FACE_TRANSFORM: Record<number, string> = {
@@ -101,29 +105,11 @@ export function Dice() {
                 <Die value={dice?.[0] ?? null} rolling={rolling} index={0} />
                 <Die value={dice?.[1] ?? null} rolling={rolling} index={1} />
               </div>
-              {/* Result chip sits in its own row so the dice never cover it. Space is reserved while rolling. */}
-              <div style={{ minHeight: Math.max(20, c * 0.36) }}>
-                <AnimatePresence mode="wait">
-                  {!rolling && dice && (
-                    <motion.div
-                      key={key}
-                      className={clsx('bz-sum', doubles && 'bz-sum-dobel')}
-                      style={{ fontSize: Math.max(11, c * 0.22) }}
-                      initial={{ opacity: 0, scale: 0.4, y: -8 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.6 }}
-                      transition={{ type: 'spring', stiffness: 520, damping: 20, delay: 0.15 }}
-                      aria-label={`Hasil dadu ${dice[0]} dan ${dice[1]}, total ${sum}${doubles ? ', dobel' : ''}`}
-                    >
-                      <span className="bz-sum-parts">
-                        {dice[0]} + {dice[1]} =
-                      </span>
-                      <span className="bz-sum-total">{sum}</span>
-                      {doubles && <span className="bz-sum-parts">DOBEL!</span>}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              {!rolling && dice && (
+                <span className="sr-only" aria-live="polite">
+                  {`Hasil dadu ${dice[0]} dan ${dice[1]}, total ${sum}${doubles ? ', dobel' : ''}`}
+                </span>
+              )}
             </div>
           </motion.div>
         )}
@@ -227,7 +213,7 @@ function Die({ value, rolling, index }: { value: number | null; rolling: boolean
           <div className="bz-die-view">
             <motion.div className="bz-cube" style={{ rotateX: rx, rotateY: ry }}>
               {CORES.map((t) => (
-                <div key={t} className="bz-core" style={{ transform: t, inset: '6%' }} />
+                <div key={t} className="bz-core" style={{ transform: t, inset: '2%' }} />
               ))}
               {[1, 2, 3, 4, 5, 6].map((n) => (
                 <div key={n} className="bz-face" style={{ transform: FACE_TRANSFORM[n] }}>

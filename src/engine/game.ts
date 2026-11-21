@@ -12,7 +12,7 @@ import { buildDeck } from '@/data/cards';
 import { getCharacter } from '@/data/characters';
 import { getMap } from '@/data/maps';
 import { BOARD_SIZE } from '@/data/layout';
-import { DEFAULT_MAX_ROUNDS, DEFAULT_SALARY, DEFAULT_START_CASH } from './economy';
+import { DEFAULT_MAX_ROUNDS, DEFAULT_SALARY, DEFAULT_START_CASH, PARITY_CHARGES } from './economy';
 import { seedState, shuffle } from './rng';
 import { dispatchAction } from './rules/actions';
 import { log, makeCtx, rp, type EngineState } from './rules/context';
@@ -79,6 +79,7 @@ export function createGame(config: GameConfig): GameState {
       islandTurns: 0,
       pendingFlight: false,
       cards: [],
+      parityCharges: PARITY_CHARGES,
     };
   });
 

@@ -8,7 +8,6 @@ import { useGame } from '@/store/gameStore';
 import { useSettings } from '@/store/settingsStore';
 import { DecisionLayer } from '@/ui/dialogs/DecisionLayer';
 import {
-  ActionDock,
   BoardStage,
   CenterToasts,
   ErrorToast,
@@ -28,6 +27,7 @@ import {
   type Corner,
   type HudLayout,
 } from '@/ui/hud';
+import { RotateGate } from '@/ui/hud/RotateGate';
 import { PauseMenu } from './PauseMenu';
 
 const SAFE_PAD = {
@@ -64,18 +64,19 @@ function PortraitLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
         ))}
       </div>
       <BoardStage className="flex-1" />
-      <div className="mx-auto flex w-full max-w-md shrink-0 items-center" style={{ height: layout.dockH }}>
-        <ActionDock layout="stack" dense={layout.denseDock} />
-      </div>
     </div>
   );
 }
 
-function WideLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
+/**
+ * Desktop / landscape: slim player strips in the four screen corners, the roll button in the middle of the
+ * board. In the isometric camera the board fills the whole screen behind everything (like a mobile board
+ * game); its diamond tips sit at mid-height, in the gap between the top and bottom strips.
+ */
+function CornerLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
   const flags = usePanelFlags();
-  // The isometric diamond is 1.41× wider than the board: let it span the whole row behind the corner
-  // panels — its left/right tips sit at mid-height, in the gap between the top and bottom panels.
   const fullBleed = useSettings((s) => s.camera === 'iso');
+  const short = layout.mode === 'short';
   const slots = cornerSlots(ids.length);
   const at = (corner: Corner) => {
     const seat = slots.indexOf(corner);
@@ -86,65 +87,37 @@ function WideLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
         playerId={id}
         size={layout.panelSize}
         onOpen={onOpenPlayer}
+        align={corner === 'tr' || corner === 'br' ? 'right' : 'left'}
         className="pointer-events-auto"
         {...flags(id)}
       />
     );
   };
-  const aside = 'pointer-events-none relative z-10 flex shrink-0 flex-col justify-between gap-3 pb-1 pt-2';
+  const aside = clsx(
+    'pointer-events-none relative z-10 flex shrink-0 flex-col justify-between',
+    short ? 'gap-2 pb-0.5 pt-1' : 'gap-3 pb-1 pt-2',
+  );
 
   return (
-    <div className="relative z-10 flex h-full flex-col gap-3" style={SAFE_PAD}>
-      {fullBleed && (
-        // From the very top of the screen (behind the top bar's empty middle) down to the dock.
-        <BoardStage className="absolute inset-x-0 top-0 z-0" style={{ bottom: layout.dockH + 12 }} />
-      )}
+    <div className={clsx('relative z-10 flex h-full flex-col', short ? 'gap-1' : 'gap-2')} style={SAFE_PAD}>
+      {fullBleed && <BoardStage className="absolute inset-0 z-0" compact={short} />}
       <div className="pointer-events-none relative z-20 shrink-0 px-1 [&>header>*]:pointer-events-auto">
-        <TopBar variant="wide" />
+        <TopBar variant={short ? 'compact' : 'wide'} />
       </div>
-      {/* Click-through row: only the panels and the dock take pointer events, the board below gets the rest. */}
-      <div className="pointer-events-none relative flex min-h-0 flex-1 gap-4 px-1">
+      {/* Click-through row: only the panels take pointer events, the board below gets the rest. */}
+      <div className={clsx('pointer-events-none relative flex min-h-0 flex-1 px-1', short ? 'gap-2' : 'gap-4')}>
         <aside className={aside} style={{ width: layout.sideW }}>
           {at('tl')}
           {at('bl')}
         </aside>
-        <main className="pointer-events-none flex min-w-0 flex-1 flex-col items-center gap-2">
-          {fullBleed ? <div className="flex-1" /> : <BoardStage className="pointer-events-auto w-full flex-1" />}
-          <div
-            className="pointer-events-auto relative z-10 flex w-full max-w-[460px] shrink-0 items-center"
-            style={{ height: layout.dockH }}
-          >
-            <ActionDock layout="row" compact />
-          </div>
+        <main className="flex min-w-0 flex-1">
+          {!fullBleed && <BoardStage className="pointer-events-auto w-full flex-1" compact={short} />}
         </main>
         <aside className={aside} style={{ width: layout.sideW }}>
           {at('tr')}
           {at('br')}
         </aside>
       </div>
-    </div>
-  );
-}
-
-function ShortLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
-  const flags = usePanelFlags();
-  return (
-    <div className="relative z-10 flex h-full gap-3" style={SAFE_PAD}>
-      <aside
-        className="scrollbar-thin flex min-h-0 shrink-0 flex-col gap-2 overflow-y-auto py-2"
-        style={{ width: layout.sideW, justifyContent: 'safe center' }}
-      >
-        {ids.map((id) => (
-          <PlayerPanel key={id} playerId={id} size={layout.panelSize} onOpen={onOpenPlayer} {...flags(id)} />
-        ))}
-      </aside>
-      <BoardStage className="flex-1" />
-      <aside className="flex shrink-0 flex-col gap-2" style={{ width: layout.sideW }}>
-        <TopBar variant="stack" />
-        <div className="mt-auto flex shrink-0 items-end pt-6">
-          <ActionDock layout="stack" compact />
-        </div>
-      </aside>
     </div>
   );
 }
@@ -169,8 +142,7 @@ export function GameScreen() {
       {ready && (
         <>
           {layout.mode === 'portrait' && <PortraitLayout {...props} />}
-          {layout.mode === 'wide' && <WideLayout {...props} />}
-          {layout.mode === 'short' && <ShortLayout {...props} />}
+          {layout.mode !== 'portrait' && <CornerLayout {...props} />}
           <MonopolyAlertBanner />
           <CenterToasts />
           <TurnBanner />
@@ -180,6 +152,7 @@ export function GameScreen() {
       <PlayerDetailSheet playerId={detailId} onClose={() => setDetailId(null)} />
       <ErrorToast />
       <PauseMenu />
+      <RotateGate />
     </div>
   );
 }

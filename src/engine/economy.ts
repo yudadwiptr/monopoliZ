@@ -29,6 +29,12 @@ export const DEFAULT_SALARY = 200;
 export const DEFAULT_MAX_ROUNDS = 25;
 export const MONOPOLY_COLOR_SETS_TO_WIN = 3;
 export const MAX_DOUBLES = 3;
+/** Genap/Ganjil picks per player; one is earned back each time the player passes start (up to the max). */
+export const PARITY_CHARGES = 3;
+
+export function parityChargesOf(player: Pick<PlayerState, 'parityCharges'>): number {
+  return player.parityCharges ?? PARITY_CHARGES;
+}
 
 const r = (n: number) => Math.round(n);
 
