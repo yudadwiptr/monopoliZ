@@ -1,14 +1,15 @@
 import './board.css';
-import { motion } from 'framer-motion';
-import { useCallback, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { animate, motion, useMotionValue, useReducedMotion, type AnimationPlaybackControls } from 'framer-motion';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { sfx } from '@/audio';
 import { mapOf } from '@/engine/selectors';
 import type { MapTheme } from '@/engine/types';
 import { useGame } from '@/store/gameStore';
-import { haptic, useSettings } from '@/store/settingsStore';
+import { haptic, speedFactor, useSettings } from '@/store/settingsStore';
 import { BoardHints } from './BoardHints';
 import { BuildingsLayer } from './Buildings';
-import { CamContext, useCameraRig, useCamValue, useElementSize } from './camera';
+import { CamContext, useCameraRig, useCamValue, useElementSize, type CameraRig } from './camera';
+import { CELL_N, clamp, pawnSpot, project } from './geometry';
 import { mix, rgba } from './color';
 import { Dice } from './Dice';
 import { FxLayer } from './TileFx';
@@ -36,6 +37,69 @@ function themeVars(theme: MapTheme, c: number): CSSProperties {
   } as CSSProperties;
 }
 
+/** On-screen size (px) a tile should reach while the camera follows a pawn. */
+const FOLLOW_CELL_PX = 76;
+
+/**
+ * Follow camera: while a pawn moves, zoom in and pan so it stays centred; shortly after it lands, ease back
+ * to the whole board. Drives three motion values on a wrapper around the rig — no React re-renders.
+ */
+function useFollowCamera(rig: CameraRig, enabled: boolean) {
+  const zoom = useMotionValue(1);
+  const panX = useMotionValue(0);
+  const panY = useMotionValue(0);
+  const { S, c, k, tilt, yaw, rigScale, rigY } = rig;
+
+  useEffect(() => {
+    const ctl: AnimationPlaybackControls[] = [];
+    let back: ReturnType<typeof setTimeout> | null = null;
+    const go = (z: number, x: number, y: number, soft: boolean) => {
+      ctl.splice(0).forEach((a) => a.stop());
+      const t = soft
+        ? { type: 'spring' as const, stiffness: 70, damping: 20 }
+        : { type: 'spring' as const, stiffness: 140, damping: 24 };
+      ctl.push(animate(zoom, z, t), animate(panX, x, t), animate(panY, y, t));
+    };
+    const overview = () => go(1, 0, 0, true);
+    if (!enabled) {
+      overview();
+      return () => ctl.forEach((a) => a.stop());
+    }
+
+    const focus = () => {
+      const v = useGame.getState().view;
+      const mv = v?.moving;
+      if (!v || !mv) {
+        if (!back && zoom.get() !== 1) back = setTimeout(() => ((back = null), overview()), 700 * speedFactor());
+        return;
+      }
+      if (back) {
+        clearTimeout(back);
+        back = null;
+      }
+      const spot = pawnSpot(v.positions[mv.playerId] ?? 0, 0, 1);
+      const p = project(spot.u, spot.v, CELL_N * 0.35, tilt.get(), k, yaw.get());
+      const rs = rigScale.get();
+      const ox = p.x * S * rs;
+      const oy = p.y * S * rs + rigY.get();
+      const z = clamp(FOLLOW_CELL_PX / Math.max(1, c * rs), 1.12, 2.1);
+      go(z, -ox * z, -oy * z, false);
+    };
+
+    const unsub = useGame.subscribe((s, prev) => {
+      if (s.view?.moving !== prev.view?.moving || s.view?.positions !== prev.view?.positions) focus();
+    });
+    focus();
+    return () => {
+      unsub();
+      if (back) clearTimeout(back);
+      ctl.forEach((a) => a.stop());
+    };
+  }, [enabled, S, c, k, tilt, yaw, rigScale, rigY, zoom, panX, panY]);
+
+  return { zoom, panX, panY };
+}
+
 /** Candidates the human may pick right now (read imperatively so the board never re-renders for it). */
 function selectableNow(): number[] {
   const s = useGame.getState();
@@ -47,7 +111,7 @@ function selectableNow(): number[] {
 }
 
 /**
- * The game board: a perspective-tilted (or flat, in 'top' camera) 3D slab with the tile ring on its
+ * The game board: an isometric diamond, a perspective-tilted, or a flat ('top') 3D slab with the tile ring on its
  * surface, plus an upright billboard overlay for buildings, pawns, dice and effects. Fills its parent and
  * keeps the square board fitted to it for both cameras.
  */
@@ -58,6 +122,9 @@ export function Board3D() {
   const map = useGame((s) => (s.game ? mapOf(s.game) : null));
   const rig = useCameraRig(w, h, camera);
   const cam = useCamValue(rig);
+  const followSetting = useSettings((s) => s.followCam);
+  const reduce = useReducedMotion();
+  const follow = useFollowCamera(rig, followSetting && !reduce);
   const [info, setInfo] = useState<TileInfoTarget | null>(null);
 
   const onPick = useCallback((index: number, el: HTMLElement) => {
@@ -77,10 +144,11 @@ export function Board3D() {
   const ready = !!map && w > 0 && h > 0;
 
   return (
-    <div ref={rootRef} className="relative h-full w-full select-none" style={vars}>
+    <div ref={rootRef} className="relative h-full w-full select-none overflow-hidden" style={vars}>
       {ready && map && (
         <CamContext.Provider value={cam}>
           <div className="bz-ambient" aria-hidden />
+          <motion.div className="absolute inset-0" style={{ scale: follow.zoom, x: follow.panX, y: follow.panY }}>
           <motion.div
             className="absolute left-1/2 top-1/2"
             style={{ width: S, height: S, marginLeft: -S / 2, marginTop: -S / 2, scale: rig.rigScale, y: rig.rigY }}
@@ -100,6 +168,7 @@ export function Board3D() {
               <Dice />
               <FxLayer />
             </div>
+          </motion.div>
           </motion.div>
         </CamContext.Provider>
       )}

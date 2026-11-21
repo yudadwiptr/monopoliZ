@@ -15,9 +15,9 @@ import { getCharacter } from '@/data/characters';
 import { forwardDistance } from '@/data/layout';
 import { useGame } from '@/store/gameStore';
 import { speedFactor } from '@/store/settingsStore';
-import { anchorCss, depthZ, flatCss, useCam } from './camera';
+import { depthZ, flatCss, useAnchor, useCam } from './camera';
 import { mix } from './color';
-import { CELL_N, pawnSpot, project, type Point } from './geometry';
+import { CELL_N, pawnSpot, project, screenDepth, type Point } from './geometry';
 
 /** Pawn scale by how many pawns share the tile, so a cluster never overlaps. */
 const CLUSTER_SCALE = [1, 1, 0.74, 0.7, 0.66];
@@ -95,7 +95,7 @@ interface Poof {
 let poofSeq = 1;
 
 const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, active, island, boost }: PawnProps) {
-  const { tilt, k, S } = useCam();
+  const { tilt, yaw, k, S } = useCam();
   const reduce = useReducedMotion();
   const base = (CLUSTER_SCALE[Math.min(count, 4)] ?? 0.66) * boost;
   const start = pawnSpot(tile, slot, count);
@@ -182,19 +182,19 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
     };
   }, [tile, slot, count, base, id, reduce, u, v, h, s, o]);
 
-  const body = useTransform([u, v, h, s, tilt] as MotionValue<number>[], (vals: number[]) => {
-    const [uu, vv, hh, ss, t] = vals;
-    const p = project(uu, vv, 0, t, k);
+  const body = useTransform([u, v, h, s, tilt, yaw] as MotionValue<number>[], (vals: number[]) => {
+    const [uu, vv, hh, ss, t, y] = vals;
+    const p = project(uu, vv, 0, t, k, y);
     return `translate3d(${(p.x * S).toFixed(2)}px,${(p.y * S - hh * S * p.f).toFixed(2)}px,0) scale(${(p.f * ss).toFixed(4)})`;
   });
-  const ground = useTransform([u, v, h, s, tilt] as MotionValue<number>[], (vals: number[]) => {
-    const [uu, vv, hh, ss, t] = vals;
+  const ground = useTransform([u, v, h, s, tilt, yaw] as MotionValue<number>[], (vals: number[]) => {
+    const [uu, vv, hh, ss, t, y] = vals;
     const shrink = 1 - Math.min(0.55, (hh / (CELL_N * 3)) * 0.9);
-    return flatCss(uu, vv, t, k, S, ss * shrink);
+    return flatCss(uu, vv, t, k, S, ss * shrink, y);
   });
-  const z = useTransform([v, h] as MotionValue<number>[], (vals: number[]) => {
-    const [vv, hh] = vals;
-    return depthZ(vv, 40) + (hh > CELL_N ? 4000 : 0) + (active ? 5 : 0);
+  const z = useTransform([u, v, h, yaw] as MotionValue<number>[], (vals: number[]) => {
+    const [uu, vv, hh, y] = vals;
+    return depthZ(screenDepth(uu, vv, y), 40) + (hh > CELL_N ? 4000 : 0) + (active ? 5 : 0);
   });
 
   const vars = {
@@ -242,7 +242,7 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
       </motion.div>
 
       {poofs.map((pf) => (
-        <PoofBurst key={pf.id} u={pf.u} v={pf.v} tilt={tilt} k={k} S={S} />
+        <PoofBurst key={pf.id} u={pf.u} v={pf.v} />
       ))}
     </>
   );
@@ -251,8 +251,8 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
 const PUFFS = Array.from({ length: 8 }, (_, i) => (i / 8) * Math.PI * 2);
 
 /** Smoke puff used when a pawn teleports ('jump' moves). */
-function PoofBurst({ u, v, tilt, k, S }: { u: number; v: number; tilt: MotionValue<number>; k: number; S: number }) {
-  const t = useTransform(tilt, (tt) => anchorCss(u, v, 0, tt, k, S));
+function PoofBurst({ u, v }: { u: number; v: number }) {
+  const t = useAnchor(u, v, 0);
   const { c } = useCam();
   return (
     <motion.div className="bz-anchor" style={{ transform: t, zIndex: 9000 }}>

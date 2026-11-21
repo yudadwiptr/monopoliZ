@@ -120,15 +120,33 @@ export interface Projected {
   f: number;
 }
 
-/** Project a board point (u, v, h) through rotateX(tilt) + perspective(k). Matches the CSS rendering. */
-export function project(u: number, v: number, h: number, tiltDeg: number, k: number): Projected {
+/** Rotate a board point around the board centre by `yawDeg` (CSS rotateZ: clockwise on screen). */
+export function yawPoint(u: number, v: number, yawDeg: number): Point {
+  if (!yawDeg) return { u, v };
+  const a = (yawDeg * Math.PI) / 180;
+  const cos = Math.cos(a);
+  const sin = Math.sin(a);
+  return { u: u * cos - v * sin, v: u * sin + v * cos };
+}
+
+/**
+ * Project a board point (u, v, h) through rotateX(tilt) · rotateZ(yaw) + perspective(k).
+ * Matches the CSS rendering of the board plane (`rotateX(t) rotateZ(yaw)`).
+ */
+export function project(u: number, v: number, h: number, tiltDeg: number, k: number, yawDeg = 0): Projected {
+  const r = yawPoint(u, v, yawDeg);
   const t = (tiltDeg * Math.PI) / 180;
   const cos = Math.cos(t);
   const sin = Math.sin(t);
-  const y = v * cos - h * sin;
-  const z = v * sin + h * cos;
+  const y = r.v * cos - h * sin;
+  const z = r.v * sin + h * cos;
   const f = k / (k - z);
-  return { x: u * f, y: y * f, f };
+  return { x: r.u * f, y: y * f, f };
+}
+
+/** How far "down the screen" (toward the viewer) a board point is after yaw. Used for paint order. */
+export function screenDepth(u: number, v: number, yawDeg = 0): number {
+  return yawPoint(u, v, yawDeg).v;
 }
 
 export interface Bounds {
@@ -137,24 +155,24 @@ export interface Bounds {
   centerY: number;
 }
 
-/** Normalised screen bounds of the whole board (incl. slab and far-row skyline) at a given tilt. */
-export function boardBounds(tiltDeg: number, k: number): Bounds {
-  const pts = [
-    project(-0.5, -0.5, 0, tiltDeg, k),
-    project(0.5, -0.5, 0, tiltDeg, k),
-    project(-0.5, 0.5, 0, tiltDeg, k),
-    project(0.5, 0.5, 0, tiltDeg, k),
-    project(-0.5, 0.5, -SLAB_N, tiltDeg, k),
-    project(0.5, 0.5, -SLAB_N, tiltDeg, k),
+/** Normalised screen bounds of the whole board (incl. slab and skyline headroom) for a camera pose. */
+export function boardBounds(tiltDeg: number, k: number, yawDeg = 0): Bounds {
+  const corners: [number, number][] = [
+    [-0.5, -0.5],
+    [0.5, -0.5],
+    [-0.5, 0.5],
+    [0.5, 0.5],
   ];
-  const far = project(0, -0.5 + RIM_N * 0.5, 0, tiltDeg, k);
   let maxX = 0;
-  let minY = far.y - HEADROOM_N * far.f;
+  let minY = Infinity;
   let maxY = -Infinity;
-  for (const p of pts) {
-    maxX = Math.max(maxX, Math.abs(p.x));
-    minY = Math.min(minY, p.y);
-    maxY = Math.max(maxY, p.y);
+  for (const [u, v] of corners) {
+    const top = project(u, v, 0, tiltDeg, k, yawDeg);
+    const under = project(u, v, -SLAB_N, tiltDeg, k, yawDeg);
+    // Buildings on the far edge rise above the board: reserve headroom above every corner.
+    minY = Math.min(minY, top.y - HEADROOM_N * top.f);
+    maxY = Math.max(maxY, top.y, under.y);
+    maxX = Math.max(maxX, Math.abs(top.x), Math.abs(under.x));
   }
   return { width: maxX * 2, height: maxY - minY, centerY: (maxY + minY) / 2 };
 }
@@ -167,6 +185,15 @@ export function tiltFor(width: number, height: number): number {
   if (aspect < 1.15) return 36;
   return 42;
 }
+
+/** Tilt for the isometric (diamond) camera. */
+export function isoTiltFor(width: number, height: number): number {
+  const aspect = width / Math.max(1, height);
+  return aspect < 0.8 ? 48 : 54;
+}
+
+/** Yaw of the isometric camera: the board is turned into a diamond. */
+export const ISO_YAW = 45;
 
 /** Perspective distance as a multiple of the board size (larger = flatter, less distortion). */
 export function perspectiveFor(width: number): number {

@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { memo } from 'react';
 import { useGame, useSelectableTiles } from '@/store/gameStore';
-import { depthZ, useAnchor, useCam } from './camera';
+import { useAnchor, useCam, useDepth } from './camera';
 import { lotAnchor, tileCenter } from './geometry';
 
 /** Chevrons are only drawn for short candidate lists — the tile highlight alone covers "anywhere" picks. */
@@ -27,11 +27,12 @@ export function BoardHints() {
 const FestivalFlag = memo(function FestivalFlag({ index }: { index: number }) {
   const a = lotAnchor(index);
   const t = useAnchor(a.u, a.v, 0);
+  const z = useDepth(a.u, a.v, 30);
   const { c } = useCam();
   return (
     <motion.div
       className="bz-anchor"
-      style={{ transform: t, zIndex: depthZ(a.v, 30) }}
+      style={{ transform: t, zIndex: z }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

@@ -1,4 +1,4 @@
-import { Box, Gauge, LayoutGrid, Music, Rabbit, Settings, Turtle, Vibrate, Volume2, VolumeX, X } from 'lucide-react';
+import { Box, Diamond, Gauge, LayoutGrid, ScanSearch, Music, Rabbit, Settings, Turtle, Vibrate, Volume2, VolumeX, X } from 'lucide-react';
 import { Button, Modal } from '@/ui/common';
 import { sfx } from '@/audio';
 import { haptic, SPEED_LABEL, useSettings, type CameraMode, type GameSpeed } from '@/store/settingsStore';
@@ -19,6 +19,7 @@ const SPEED_OPTIONS: SegOption<GameSpeed>[] = [
 ];
 
 const CAMERA_OPTIONS: SegOption<CameraMode>[] = [
+  { value: 'iso', label: 'Isometrik', icon: <Diamond size={16} aria-hidden /> },
   { value: '3d', label: '3D', icon: <Box size={16} aria-hidden /> },
   { value: 'top', label: 'Atas', icon: <LayoutGrid size={16} aria-hidden /> },
 ];
@@ -80,7 +81,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <Segmented options={SPEED_OPTIONS} value={s.speed} onChange={s.setSpeed} ariaLabel="Kecepatan animasi" />
           </Row>
 
-          <Row title="Kamera Papan" hint="3D biar sinematik, Atas biar gampang dibaca.">
+          <Row title="Kamera Papan" hint="Isometrik paling seru (apalagi landscape), Atas paling gampang dibaca.">
             <Segmented
               options={CAMERA_OPTIONS}
               value={s.camera}
@@ -89,6 +90,17 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               accent="laut"
             />
           </Row>
+
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="flex items-center gap-3">
+              <ScanSearch size={20} className="shrink-0 text-brand-300" aria-hidden />
+              <div>
+                <div className="font-display text-base font-semibold text-white">Kamera Ikut Pion</div>
+                <div className="text-xs text-ink-300">Zoom ke pion yang jalan, lalu balik lihat seluruh papan.</div>
+              </div>
+            </div>
+            <Toggle checked={s.followCam} label="Kamera ikut pion" onChange={s.setFollowCam} />
+          </div>
 
           <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
             <div className="flex items-center gap-3">

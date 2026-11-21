@@ -5,6 +5,7 @@
 import clsx from 'clsx';
 import { useState } from 'react';
 import { useGame } from '@/store/gameStore';
+import { useSettings } from '@/store/settingsStore';
 import { DecisionLayer } from '@/ui/dialogs/DecisionLayer';
 import {
   ActionDock,
@@ -72,31 +73,46 @@ function PortraitLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
 
 function WideLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
   const flags = usePanelFlags();
+  // The isometric diamond is 1.41× wider than the board: let it span the whole row behind the corner
+  // panels — its left/right tips sit at mid-height, in the gap between the top and bottom panels.
+  const fullBleed = useSettings((s) => s.camera === 'iso');
   const slots = cornerSlots(ids.length);
   const at = (corner: Corner) => {
     const seat = slots.indexOf(corner);
     const id = seat >= 0 ? ids[seat] : undefined;
     if (!id) return <div className="min-h-0" />;
-    return <PlayerPanel playerId={id} size={layout.panelSize} onOpen={onOpenPlayer} {...flags(id)} />;
+    return (
+      <PlayerPanel
+        playerId={id}
+        size={layout.panelSize}
+        onOpen={onOpenPlayer}
+        className="pointer-events-auto"
+        {...flags(id)}
+      />
+    );
   };
+  const aside = 'pointer-events-none relative z-10 flex shrink-0 flex-col justify-between gap-3 pb-1 pt-2';
 
   return (
     <div className="relative z-10 flex h-full flex-col gap-3" style={SAFE_PAD}>
-      <div className="shrink-0 px-1">
+      <div className="relative z-20 shrink-0 px-1">
         <TopBar variant="wide" />
       </div>
-      <div className="flex min-h-0 flex-1 gap-4 px-1">
-        <aside className="flex shrink-0 flex-col justify-between gap-3 pb-1 pt-2" style={{ width: layout.sideW }}>
+      <div className="relative flex min-h-0 flex-1 gap-4 px-1">
+        {fullBleed && (
+          <BoardStage className="absolute inset-x-0 top-0" style={{ bottom: layout.dockH + 8 }} />
+        )}
+        <aside className={aside} style={{ width: layout.sideW }}>
           {at('tl')}
           {at('bl')}
         </aside>
         <main className="flex min-w-0 flex-1 flex-col items-center gap-2">
-          <BoardStage className="w-full flex-1" />
-          <div className="flex w-full max-w-xl shrink-0 items-center" style={{ height: layout.dockH }}>
+          {fullBleed ? <div className="flex-1" /> : <BoardStage className="w-full flex-1" />}
+          <div className="relative z-10 flex w-full max-w-xl shrink-0 items-center" style={{ height: layout.dockH }}>
             <ActionDock layout="row" />
           </div>
         </main>
-        <aside className="flex shrink-0 flex-col justify-between gap-3 pb-1 pt-2" style={{ width: layout.sideW }}>
+        <aside className={aside} style={{ width: layout.sideW }}>
           {at('tr')}
           {at('br')}
         </aside>

@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
-import { Box, Gauge, Grid2x2, Pause, Rabbit, Turtle, Volume2, VolumeX } from 'lucide-react';
+import { Box, Diamond, Gauge, Grid2x2, Pause, Rabbit, Turtle, Volume2, VolumeX } from 'lucide-react';
 import { useGame } from '@/store/gameStore';
-import { SPEED_LABEL, useSettings, type GameSpeed } from '@/store/settingsStore';
+import { CAMERA_LABEL, SPEED_LABEL, useSettings, type CameraMode, type GameSpeed } from '@/store/settingsStore';
 import { Logo } from '@/ui/common';
 import { IconButton } from './IconButton';
 import { useMapDef } from './hooks';
@@ -14,6 +14,13 @@ const SPEED_ICON: Record<GameSpeed, React.ReactNode> = {
   santai: <Turtle size={20} aria-hidden />,
   normal: <Gauge size={20} aria-hidden />,
   ngebut: <Rabbit size={20} aria-hidden />,
+};
+
+const CAMERA_ORDER: CameraMode[] = ['iso', '3d', 'top'];
+const CAMERA_ICON: Record<CameraMode, React.ReactNode> = {
+  iso: <Diamond size={20} aria-hidden />,
+  '3d': <Box size={20} aria-hidden />,
+  top: <Grid2x2 size={20} aria-hidden />,
 };
 
 const UNMUTE_KEY = 'monopoliz.hud.unmute';
@@ -117,12 +124,15 @@ export function TopBar({ variant }: { variant: TopBarVariant }) {
     const i = SPEED_ORDER.indexOf(speed);
     useSettings.getState().setSpeed(SPEED_ORDER[(i + 1) % SPEED_ORDER.length]);
   };
-  const toggleCamera = () => useSettings.getState().setCamera(camera === '3d' ? 'top' : '3d');
+  const toggleCamera = () => {
+    const i = CAMERA_ORDER.indexOf(camera);
+    useSettings.getState().setCamera(CAMERA_ORDER[(i + 1) % CAMERA_ORDER.length]);
+  };
   const pause = () => useGame.getState().setPaused(true);
 
   const wide = variant === 'wide';
   const tip = variant !== 'stack';
-  const cameraName = camera === '3d' ? '3D' : 'Atas';
+  const cameraName = CAMERA_LABEL[camera] ?? '3D';
 
   const buttons = (
     <>
@@ -135,7 +145,7 @@ export function TopBar({ variant }: { variant: TopBarVariant }) {
       />
       <IconButton
         label={`Kamera: ${cameraName} (ketuk untuk ganti)`}
-        icon={camera === '3d' ? <Box size={20} aria-hidden /> : <Grid2x2 size={20} aria-hidden />}
+        icon={CAMERA_ICON[camera] ?? CAMERA_ICON['3d']}
         text={wide ? cameraName : undefined}
         onClick={toggleCamera}
         tip={tip}

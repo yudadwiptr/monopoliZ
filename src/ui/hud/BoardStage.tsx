@@ -6,12 +6,13 @@ import { Board3D } from '@/ui/board/Board3D';
 import { useMeasure } from './hooks';
 
 /**
- * Measures the free area it is given and places the board in the largest centred square.
- * Shakes the board whenever `useGame().shake` increments.
+ * Gives the board the whole free area it is given (Board3D fits itself to any rectangle — the isometric
+ * diamond in particular needs the extra width). Shakes the board whenever `useGame().shake` increments.
  */
-export function BoardStage({ className }: { className?: string }) {
+export function BoardStage({ className, style }: { className?: string; style?: React.CSSProperties }) {
   const [ref, size] = useMeasure<HTMLDivElement>();
-  const side = Math.floor(Math.min(size.width, size.height));
+  const w = Math.floor(size.width);
+  const h = Math.floor(size.height);
   const controls = useAnimationControls();
   const shake = useGame((s) => s.shake);
   const reduce = useReducedMotion();
@@ -30,9 +31,9 @@ export function BoardStage({ className }: { className?: string }) {
   }, [shake, reduce, controls]);
 
   return (
-    <div ref={ref} className={clsx('relative flex min-h-0 min-w-0 items-center justify-center', className)}>
-      {side > 40 && (
-        <motion.div animate={controls} className="relative" style={{ width: side, height: side }}>
+    <div ref={ref} className={clsx('flex min-h-0 min-w-0 items-center justify-center', className)} style={style}>
+      {Math.min(w, h) > 40 && (
+        <motion.div animate={controls} className="relative" style={{ width: w, height: h }}>
           <Board3D />
         </motion.div>
       )}

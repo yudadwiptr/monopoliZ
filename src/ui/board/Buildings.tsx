@@ -3,7 +3,7 @@ import { memo, useId } from 'react';
 import { isProperty } from '@/engine/economy';
 import type { MapDef } from '@/engine/types';
 import { useGame } from '@/store/gameStore';
-import { depthZ, useAnchor, useFlatAnchor, useCam } from './camera';
+import { useAnchor, useCam, useDepth, useFlatAnchor } from './camera';
 import { mix } from './color';
 import { CELL_N, lotAnchor } from './geometry';
 
@@ -36,6 +36,7 @@ const Lot = memo(function Lot({ index, tourist, level, color }: LotProps) {
   const a = lotAnchor(index);
   const stand = useAnchor(a.u, a.v, 0);
   const shadow = useFlatAnchor(a.u, a.v - CELL_N * 0.08, 0.8);
+  const z = useDepth(a.u, a.v, 10);
   const reduce = useReducedMotion();
   const { c } = useCam();
   const kind = tourist ? 'tourist' : `l${Math.max(0, Math.min(4, level))}`;
@@ -47,7 +48,7 @@ const Lot = memo(function Lot({ index, tourist, level, color }: LotProps) {
           <div className="bz-shadow" style={{ opacity: 0.8 }} />
         </div>
       </motion.div>
-      <motion.div className="bz-anchor" style={{ transform: stand, zIndex: depthZ(a.v, 10) }}>
+      <motion.div className="bz-anchor" style={{ transform: stand, zIndex: z }}>
         <div className="bz-stand" style={{ width: c * 0.74, height: c * 1.18 }}>
           <AnimatePresence initial={false}>
             <motion.div

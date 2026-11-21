@@ -2,7 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type GameSpeed = 'santai' | 'normal' | 'ngebut';
-export type CameraMode = '3d' | 'top';
+export type CameraMode = 'iso' | '3d' | 'top';
+
+export const CAMERA_LABEL: Record<CameraMode, string> = { iso: 'Isometrik', '3d': '3D', top: 'Atas' };
 
 /** Multiplier applied to every animation duration. */
 export const SPEED_FACTOR: Record<GameSpeed, number> = {
@@ -23,11 +25,14 @@ interface SettingsState {
   speed: GameSpeed;
   camera: CameraMode;
   haptics: boolean;
+  /** Zoom & pan to the moving pawn, then back to the whole board. */
+  followCam: boolean;
   setSfxVolume(v: number): void;
   setMusicVolume(v: number): void;
   setSpeed(s: GameSpeed): void;
   setCamera(c: CameraMode): void;
   setHaptics(h: boolean): void;
+  setFollowCam(f: boolean): void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -36,15 +41,25 @@ export const useSettings = create<SettingsState>()(
       sfxVolume: 0.7,
       musicVolume: 0.35,
       speed: 'normal',
-      camera: '3d',
+      camera: 'iso',
       haptics: true,
+      followCam: true,
       setSfxVolume: (v) => set({ sfxVolume: Math.max(0, Math.min(1, v)) }),
       setMusicVolume: (v) => set({ musicVolume: Math.max(0, Math.min(1, v)) }),
       setSpeed: (speed) => set({ speed }),
       setCamera: (camera) => set({ camera }),
       setHaptics: (haptics) => set({ haptics }),
+      setFollowCam: (followCam) => set({ followCam }),
     }),
-    { name: 'monopoliz.settings.v1' },
+    {
+      name: 'monopoliz.settings.v1',
+      version: 2,
+      // v2: new isometric camera becomes the default; follow camera added.
+      migrate: (old, from) => {
+        const prev = (old ?? {}) as Partial<SettingsState>;
+        return from < 2 ? { ...prev, camera: 'iso', followCam: true } : prev;
+      },
+    },
   ),
 );
 
