@@ -23,13 +23,18 @@ export function useMeasure<T extends HTMLElement>(): [(el: T | null) => void, Si
       setSize((s) => (s.width === width && s.height === height ? s : { width, height }));
     };
     update();
-    if (typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', update);
-      return () => window.removeEventListener('resize', update);
-    }
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
+    // Window events as well as ResizeObserver: some mobile browsers only settle 100dvh after an
+    // orientation change, so the observer alone can miss phone rotation.
+    const late = () => requestAnimationFrame(update);
+    window.addEventListener('resize', late);
+    window.addEventListener('orientationchange', late);
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    ro?.observe(el);
+    return () => {
+      window.removeEventListener('resize', late);
+      window.removeEventListener('orientationchange', late);
+      ro?.disconnect();
+    };
   }, [el]);
 
   return [setEl, size];

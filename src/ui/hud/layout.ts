@@ -44,7 +44,8 @@ export function computeLayout(width: number, height: number, players: number): H
     const perPanel = (h - 16 - (n - 1) * 6) / n;
     return {
       mode: 'short',
-      panelSize: colW >= 160 && perPanel >= 84 ? 'compact' : 'mini',
+      // compact panels are ~115px tall; anything less must use mini or the column overflows
+      panelSize: colW >= 160 && perPanel >= 120 ? 'compact' : 'mini',
       sideW: colW,
       dockH: 0,
       denseDock: true,

@@ -11,9 +11,7 @@ import {
   BoardStage,
   CenterToasts,
   ErrorToast,
-  EventFeed,
   GameBackdrop,
-  LogSheet,
   MonopolyAlertBanner,
   PlayerDetailSheet,
   PlayerPanel,
@@ -42,7 +40,6 @@ interface LayoutProps {
   layout: HudLayout;
   ids: string[];
   onOpenPlayer: (id: string) => void;
-  onOpenLog: () => void;
 }
 
 function usePanelFlags() {
@@ -55,7 +52,7 @@ function usePanelFlags() {
   });
 }
 
-function PortraitLayout({ layout, ids, onOpenPlayer, onOpenLog }: LayoutProps) {
+function PortraitLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
   const flags = usePanelFlags();
   return (
     <div className="relative z-10 flex h-full flex-col gap-1.5" style={SAFE_PAD}>
@@ -66,7 +63,6 @@ function PortraitLayout({ layout, ids, onOpenPlayer, onOpenLog }: LayoutProps) {
         ))}
       </div>
       <BoardStage className="flex-1" />
-      <EventFeed variant="ticker" lines={layout.feedLines} onOpen={onOpenLog} className="shrink-0" />
       <div className="mx-auto flex w-full max-w-md shrink-0 items-center" style={{ height: layout.dockH }}>
         <ActionDock layout="stack" dense={layout.denseDock} />
       </div>
@@ -74,7 +70,7 @@ function PortraitLayout({ layout, ids, onOpenPlayer, onOpenLog }: LayoutProps) {
   );
 }
 
-function WideLayout({ layout, ids, onOpenPlayer, onOpenLog }: LayoutProps) {
+function WideLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
   const flags = usePanelFlags();
   const slots = cornerSlots(ids.length);
   const at = (corner: Corner) => {
@@ -92,7 +88,6 @@ function WideLayout({ layout, ids, onOpenPlayer, onOpenLog }: LayoutProps) {
       <div className="flex min-h-0 flex-1 gap-4 px-1">
         <aside className="flex shrink-0 flex-col justify-between gap-3 pb-1 pt-2" style={{ width: layout.sideW }}>
           {at('tl')}
-          <EventFeed variant="card" lines={layout.feedLines} onOpen={onOpenLog} />
           {at('bl')}
         </aside>
         <main className="flex min-w-0 flex-1 flex-col items-center gap-2">
@@ -110,11 +105,14 @@ function WideLayout({ layout, ids, onOpenPlayer, onOpenLog }: LayoutProps) {
   );
 }
 
-function ShortLayout({ layout, ids, onOpenPlayer, onOpenLog }: LayoutProps) {
+function ShortLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
   const flags = usePanelFlags();
   return (
     <div className="relative z-10 flex h-full gap-3" style={SAFE_PAD}>
-      <aside className="flex shrink-0 flex-col justify-center gap-2 pt-2" style={{ width: layout.sideW }}>
+      <aside
+        className="scrollbar-thin flex min-h-0 shrink-0 flex-col gap-2 overflow-y-auto py-2"
+        style={{ width: layout.sideW, justifyContent: 'safe center' }}
+      >
         {ids.map((id) => (
           <PlayerPanel key={id} playerId={id} size={layout.panelSize} onOpen={onOpenPlayer} {...flags(id)} />
         ))}
@@ -122,7 +120,6 @@ function ShortLayout({ layout, ids, onOpenPlayer, onOpenLog }: LayoutProps) {
       <BoardStage className="flex-1" />
       <aside className="flex shrink-0 flex-col gap-2" style={{ width: layout.sideW }}>
         <TopBar variant="stack" />
-        <EventFeed variant="ticker" lines={layout.feedLines} onOpen={onOpenLog} className="min-h-0 shrink" />
         <div className="mt-auto flex shrink-0 items-end pt-6">
           <ActionDock layout="stack" compact />
         </div>
@@ -136,7 +133,6 @@ export function GameScreen() {
   const ids = usePlayerIds();
   const [rootRef, size] = useMeasure<HTMLDivElement>();
   const [detailId, setDetailId] = useState<string | null>(null);
-  const [logOpen, setLogOpen] = useState(false);
   useEscPause();
 
   const layout = computeLayout(size.width, size.height, ids.length);
@@ -144,7 +140,6 @@ export function GameScreen() {
     layout,
     ids,
     onOpenPlayer: setDetailId,
-    onOpenLog: () => setLogOpen(true),
   };
 
   return (
@@ -162,7 +157,6 @@ export function GameScreen() {
       )}
       <DecisionLayer />
       <PlayerDetailSheet playerId={detailId} onClose={() => setDetailId(null)} />
-      <LogSheet open={logOpen} onClose={() => setLogOpen(false)} />
       <ErrorToast />
       <PauseMenu />
     </div>

@@ -26,12 +26,12 @@ const FACE_ROT: Record<number, [number, number]> = {
 };
 
 const FACE_TRANSFORM: Record<number, string> = {
-  1: 'translateZ(calc(var(--c) * 0.51))',
-  6: 'rotateY(180deg) translateZ(calc(var(--c) * 0.51))',
-  3: 'rotateY(90deg) translateZ(calc(var(--c) * 0.51))',
-  4: 'rotateY(-90deg) translateZ(calc(var(--c) * 0.51))',
-  2: 'rotateX(90deg) translateZ(calc(var(--c) * 0.51))',
-  5: 'rotateX(-90deg) translateZ(calc(var(--c) * 0.51))',
+  1: 'translateZ(calc(var(--die) * 0.5))',
+  6: 'rotateY(180deg) translateZ(calc(var(--die) * 0.5))',
+  3: 'rotateY(90deg) translateZ(calc(var(--die) * 0.5))',
+  4: 'rotateY(-90deg) translateZ(calc(var(--die) * 0.5))',
+  2: 'rotateX(90deg) translateZ(calc(var(--die) * 0.5))',
+  5: 'rotateX(-90deg) translateZ(calc(var(--die) * 0.5))',
 };
 
 /** Pip positions [row, col] on a 3×3 grid. */
