@@ -1,0 +1,18 @@
+{
+  "name": "monopoliz-brand-tools",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Generates MonopoliZ logo, favicons, app icons, OG image and SEO files into /public",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "@fontsource/anton": "5.1.0",
+    "@fontsource/fredoka": "5.1.0",
+    "@fontsource/plus-jakarta-sans": "5.1.0",
+    "@resvg/resvg-js": "2.6.2",
+    "opentype.js": "1.3.4",
+    "png-to-ico": "2.1.8"
+  }
+}

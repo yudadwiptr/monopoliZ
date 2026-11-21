@@ -1,0 +1,93 @@
+@import '@fontsource/fredoka/400.css';
+@import '@fontsource/fredoka/500.css';
+@import '@fontsource/fredoka/600.css';
+@import '@fontsource/fredoka/700.css';
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+@import '@fontsource/plus-jakarta-sans/800.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg-0: #05081a;
+  --bg-1: #0b1026;
+  --bg-2: #121a3d;
+  --gold: #ffc21f;
+  --merah: #ff3b5c;
+  --laut: #22d3c5;
+  /* Kawung batik motif — four ellipses around a dot, tiled. Used as a subtle texture. */
+  --batik-kawung: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.055' stroke-width='1.2'%3E%3Cellipse cx='28' cy='14' rx='7' ry='12'/%3E%3Cellipse cx='28' cy='42' rx='7' ry='12'/%3E%3Cellipse cx='14' cy='28' rx='12' ry='7'/%3E%3Cellipse cx='42' cy='28' rx='12' ry='7'/%3E%3Ccircle cx='28' cy='28' r='2.2'/%3E%3Ccircle cx='0' cy='0' r='2.2'/%3E%3Ccircle cx='56' cy='0' r='2.2'/%3E%3Ccircle cx='0' cy='56' r='2.2'/%3E%3Ccircle cx='56' cy='56' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  @apply bg-ink-900 font-sans text-ink-100 antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+input,
+textarea {
+  user-select: text;
+}
+
+@layer components {
+  /* Frosted glass surface used for panels, cards and dialogs */
+  .glass {
+    @apply rounded-3xl border border-white/10 bg-ink-800/60 shadow-glass backdrop-blur-xl;
+  }
+  .glass-strong {
+    @apply rounded-3xl border border-white/15 bg-ink-800/85 shadow-glass backdrop-blur-2xl;
+  }
+  .batik-bg {
+    background-image: var(--batik-kawung);
+    background-size: 56px 56px;
+  }
+  .text-gradient-gold {
+    @apply bg-gradient-to-b from-gold-200 via-gold-400 to-gold-600 bg-clip-text text-transparent;
+  }
+  .text-gradient-z {
+    background-image: linear-gradient(135deg, #ffe08a 0%, #ffc21f 30%, #ff3b5c 70%, #ff4fd8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .num {
+    @apply font-display tabular-nums;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-white/15;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

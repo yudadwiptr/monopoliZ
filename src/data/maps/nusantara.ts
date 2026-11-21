@@ -1,0 +1,73 @@
+import type { MapDef } from '@/engine/types';
+import { city, indexTiles, special, tourist } from './builder';
+
+const CHANCE = special('chance', 'Kartu Rezeki', '🎁', 'Ambil satu Kartu Rezeki. Bisa cuan, bisa apes!');
+
+export const NUSANTARA: MapDef = {
+  id: 'nusantara',
+  name: 'Nusantara',
+  tagline: 'Dari Sabang sampai Merauke',
+  description:
+    'Jelajahi 20 kota dan 4 destinasi wisata ikonik Indonesia. Bangun landmark di Jakarta, kuasai Raja Ampat!',
+  theme: {
+    background: 'radial-gradient(1200px 800px at 50% 35%, #1B2A6B 0%, #0B1026 55%, #05081A 100%)',
+    boardSurface: '#14204A',
+    accent: '#22D3C5',
+    emblem: '🌏',
+  },
+  groups: [
+    { id: 0, name: 'Serambi Sumatra', color: '#FF7A59' },
+    { id: 1, name: 'Ranah Andalas', color: '#FFB020' },
+    { id: 2, name: 'Borneo', color: '#9BE15D' },
+    { id: 3, name: 'Celebes', color: '#2EC4B6' },
+    { id: 4, name: 'Jogja–Solo', color: '#4D9DFF' },
+    { id: 5, name: 'Tanah Jawa', color: '#7C6CFF' },
+    { id: 6, name: 'Nusa Tenggara', color: '#E056FD' },
+    { id: 7, name: 'Primadona', color: '#FFC83D' },
+  ],
+  tiles: indexTiles([
+    special(
+      'start',
+      'Titik Nol',
+      '🏁',
+      'Titik Nol Kilometer Indonesia ada di Sabang. Lewati untuk terima gaji; mendarat pas untuk upgrade satu kotamu!',
+      'Sabang',
+    ),
+    city('Banda Aceh', 'Aceh', 0, 50, '🕌', 'Kota Serambi Mekkah, terkenal dengan Masjid Raya Baiturrahman dan kopi Gayo.'),
+    city('Medan', 'Sumatera Utara', 0, 60, '🍜', 'Ibu kota Sumut — durian Ucok dan bika ambon jadi oleh-oleh wajib.'),
+    CHANCE,
+    city('Padang', 'Sumatera Barat', 1, 70, '🍛', 'Rumah gadang dan rendang, makanan yang sering dinobatkan terenak sedunia.'),
+    tourist('Danau Toba', 'Sumatera Utara', 100, '🏞️', 'Danau vulkanik terbesar di Asia Tenggara dengan Pulau Samosir di tengahnya.'),
+    city('Pekanbaru', 'Riau', 1, 75, '🛢️', 'Kota minyak di jantung Sumatra, gerbang menuju Selat Malaka.'),
+    city('Palembang', 'Sumatera Selatan', 1, 85, '🌉', 'Jembatan Ampera yang megah dan pempek kapal selam!'),
+    special(
+      'island',
+      'Pulau Terdampar',
+      '🏝️',
+      'Terdampar! Lempar dadu kembar untuk kabur, bayar ongkos kapal, atau tunggu maksimal 3 giliran.',
+    ),
+    city('Pontianak', 'Kalimantan Barat', 2, 100, '🧭', 'Kota Khatulistiwa — saat ekuinoks, bayanganmu menghilang di siang bolong!'),
+    city('IKN Nusantara', 'Kalimantan Timur', 2, 115, '🏙️', 'Ibu Kota Nusantara, kota masa depan di tengah hutan Kalimantan.'),
+    tourist('Derawan', 'Kalimantan Timur', 120, '🐢', 'Surga penyu hijau dan danau ubur-ubur tak menyengat di Kakaban.'),
+    city('Makassar', 'Sulawesi Selatan', 3, 125, '⛵', 'Pantai Losari, coto Makassar, dan kapal pinisi yang mendunia.'),
+    CHANCE,
+    city('Palu', 'Sulawesi Tengah', 3, 130, '🌅', 'Kota di teluk yang dikelilingi pegunungan dengan Jembatan Kuning ikoniknya.'),
+    city('Manado', 'Sulawesi Utara', 3, 145, '🤿', 'Gerbang Taman Laut Bunaken dan tinutuan yang bikin nagih.'),
+    special('festival', 'Pesta Rakyat', '🎆', 'Pilih salah satu propertimu jadi tuan rumah pesta — sewanya jadi 2× lipat!'),
+    city('Solo', 'Jawa Tengah', 4, 150, '🎎', 'Kota batik dan keraton, plus serabi Notosuman yang legendaris.'),
+    city('Yogyakarta', 'DI Yogyakarta', 4, 165, '🏯', 'Malioboro, gudeg, dan keistimewaan yang selalu bikin rindu pulang.'),
+    CHANCE,
+    city('Semarang', 'Jawa Tengah', 5, 170, '🏛️', 'Lawang Sewu dan lumpia — kota lama yang makin kece.'),
+    tourist('Borobudur', 'Jawa Tengah', 160, '🛕', 'Candi Buddha terbesar di dunia dan Warisan Dunia UNESCO.'),
+    city('Malang', 'Jawa Timur', 5, 180, '🍎', 'Kota apel yang sejuk, gerbang menuju Gunung Bromo.'),
+    city('Bandung', 'Jawa Barat', 5, 195, '🌄', 'Paris van Java — surganya kuliner, kreativitas, dan factory outlet.'),
+    special('airport', 'Bandara', '🛫', 'Siap terbang! Di giliran berikutnya kamu boleh memilih tujuan ke petak mana pun.'),
+    city('Mataram', 'Nusa Tenggara Barat', 6, 200, '🏖️', 'Pintu masuk Lombok — Mandalika dan tiga Gili sudah menanti.'),
+    city('Labuan Bajo', 'Nusa Tenggara Timur', 6, 220, '🦎', 'Rumah sang Komodo dan pemandangan Pulau Padar yang ikonik.'),
+    tourist('Raja Ampat', 'Papua Barat Daya', 200, '🐠', 'Sekitar 75% spesies karang dunia ada di sini. Surga bawah laut!'),
+    city('Denpasar', 'Bali', 7, 250, '🌺', 'Jantung Pulau Dewata — pura, pantai, dan senja sejauh mata memandang.'),
+    special('tax', 'Pajak Negara', '🧾', 'Bayar 10% dari total nilai propertimu. Orang bijak taat pajak!'),
+    city('Surabaya', 'Jawa Timur', 7, 270, '🦈', 'Kota Pahlawan — Suro dan Boyo jadi lambangnya.'),
+    city('Jakarta', 'DKI Jakarta', 7, 300, '🗼', 'Monas, gedung pencakar langit, dan macet yang legendaris.'),
+  ]),
+};

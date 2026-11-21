@@ -1,0 +1,5 @@
+# MonopoliZ — semua crawler dipersilakan main
+User-agent: *
+Allow: /
+
+Sitemap: https://yudadwiptr.github.io/monopoliZ/sitemap.xml
