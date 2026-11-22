@@ -64,8 +64,6 @@ export interface CameraRig extends BoardCam {
 /** Target pose (tilt, yaw) for a camera mode at a container size. */
 function poseFor(mode: CameraMode, width: number, height: number): [number, number] {
   if (mode === 'top') return [0, 0];
-  // On tall screens the diamond would be width-bound and ~30% smaller: use the tilted square instead.
-  if (mode === 'iso' && width / Math.max(1, height) < 0.8) return [tiltFor(width, height), 0];
   if (mode === 'iso') return [isoTiltFor(width, height), ISO_YAW];
   return [tiltFor(width, height), 0];
 }

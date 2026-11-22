@@ -48,6 +48,9 @@ function themeVars(theme: MapTheme, c: number, camera: CameraMode): CSSPropertie
   } as CSSProperties;
 }
 
+/** Width (px) of the centre controls at full size — the roll capsule with its Genap/Ganjil chips. */
+const CENTER_DESIGN_W = 280;
+
 /** On-screen size (px) a tile should reach while the camera follows a pawn. */
 const FOLLOW_CELL_PX = 76;
 
@@ -141,6 +144,8 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
     [rig.tilt, rig.yaw, rig.rigScale, rig.rigY],
     () => project(0.02, 0.02, 0, rig.tilt.get(), rig.k, rig.yaw.get()).y * rig.S * rig.rigScale.get() + rig.rigY.get(),
   );
+  // Shrink the centre controls so they always sit inside the middle of the board (phones!).
+  const centerScale = useLive([rig.rigScale], () => clamp((rig.c * 6.2 * rig.rigScale.get()) / CENTER_DESIGN_W, 0.5, 1));
   const [info, setInfo] = useState<TileInfoTarget | null>(null);
 
   const onPick = useCallback((index: number, el: HTMLElement) => {
@@ -194,7 +199,7 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
             </motion.div>
           </motion.div>
           {center && (
-            <motion.div className="pointer-events-none absolute left-1/2 top-1/2 z-30" style={{ y: centerY }}>
+            <motion.div className="pointer-events-none absolute left-1/2 top-1/2 z-30" style={{ y: centerY, scale: centerScale }}>
               <div className="pointer-events-auto absolute left-0 top-0 w-max -translate-x-1/2 -translate-y-1/2">{center}</div>
             </motion.div>
           )}

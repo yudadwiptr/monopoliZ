@@ -234,7 +234,7 @@ export function PlayerPanel({ playerId, size, onOpen, isYou, leader, className, 
             {flight && !bankrupt && <span className="shrink-0 text-[11px] leading-none">✈️</span>}
           </span>
           <span className={clsx('mt-1 flex items-baseline gap-2', right && 'flex-row-reverse')}>
-            <Money value={cash} className="truncate text-xl font-bold leading-none text-gold-300" />
+            <Money value={cash} className="whitespace-nowrap text-lg font-bold leading-none text-gold-300 sm:text-xl" />
             <span className="num shrink-0 text-[11px] leading-none text-ink-300">🏠{stats.count}</span>
             <span className={clsx('flex min-w-0 overflow-hidden', right ? 'mr-auto' : 'ml-auto')}>
               <KeptCards cards={cards} size="mini" />
