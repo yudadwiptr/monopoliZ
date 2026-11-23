@@ -5,6 +5,7 @@ import { useSettings } from '@/store/settingsStore';
 import { music, sfx, unlockAudio } from '@/audio';
 import { MainMenu } from '@/ui/screens/MainMenu';
 import { SetupScreen } from '@/ui/screens/SetupScreen';
+import { OnlineLobbyScreen } from '@/ui/screens/OnlineLobbyScreen';
 import { HowToPlay } from '@/ui/screens/HowToPlay';
 import { GameScreen } from '@/ui/screens/GameScreen';
 import { ResultsScreen } from '@/ui/screens/ResultsScreen';
@@ -12,6 +13,7 @@ import { ResultsScreen } from '@/ui/screens/ResultsScreen';
 const SCREENS: Record<Screen, () => JSX.Element> = {
   menu: MainMenu,
   setup: SetupScreen,
+  online: OnlineLobbyScreen,
   howto: HowToPlay,
   game: GameScreen,
   results: ResultsScreen,
@@ -40,8 +42,20 @@ export default function App() {
   useEffect(() => sfx.setVolume(sfxVolume), [sfxVolume]);
   useEffect(() => music.setVolume(musicVolume), [musicVolume]);
 
+  // If opened with an invite link (?room=XXXXX), jump straight into the Online Lobby.
   useEffect(() => {
-    if (screen === 'menu' || screen === 'setup' || screen === 'howto') music.play('menu');
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('room')) {
+        useGame.getState().setScreen('online');
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (screen === 'menu' || screen === 'setup' || screen === 'online' || screen === 'howto') music.play('menu');
   }, [screen]);
 
   const Current = SCREENS[screen];

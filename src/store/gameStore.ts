@@ -17,7 +17,8 @@ import { BOARD_SIZE } from '@/data/layout';
 import { speedFactor, haptic } from './settingsStore';
 import type { Action, GameConfig, GameEvent, GameState, WinReason } from '@/engine/types';
 
-export type Screen = 'menu' | 'setup' | 'game' | 'howto' | 'results';
+export type Screen = 'menu' | 'setup' | 'online' | 'game' | 'howto' | 'results';
+export type OnlineRole = 'offline' | 'host' | 'guest';
 
 export interface ViewTile {
   owner: string | null;
@@ -79,9 +80,14 @@ interface GameStore {
   error: string | null;
   /** Bumps on every "big moment" (bankrupt, landmark, huge toll) — UI can shake the screen. */
   shake: number;
+  /** In online multiplayer, the playerId ('p1'..'p4') controlled by this device; null for offline/hotseat. */
+  localPlayerId: string | null;
+  onlineRole: OnlineRole;
 
   setScreen(s: Screen): void;
   startGame(config: GameConfig): void;
+  startOnlineGame(config: GameConfig, localPlayerId: string, role: 'host' | 'guest'): void;
+  receiveRemoteAction(action: Action): void;
   restartSame(): void;
   continueGame(): boolean;
   hasSave(): boolean;
@@ -96,6 +102,12 @@ let generation = 0; // bumps to cancel running loops/timers when a game ends or 
 let fxSeq = 1;
 let running = false;
 let botFailures = 0;
+let lastAimedSum: number | null = null;
+let outboundListener: ((action: Action) => void) | null = null;
+
+export function setOutboundActionListener(fn: ((action: Action) => void) | null) {
+  outboundListener = fn;
+}
 
 const sleep = (ms: number) => new Promise<void>((res) => setTimeout(res, Math.max(0, ms * speedFactor())));
 
@@ -186,6 +198,18 @@ export const useGame = create<GameStore>()((set, get) => {
         patchView(() => ({ diceRolling: false }));
         sfx.play('dice_land');
         haptic(18);
+        const aimed = lastAimedSum;
+        lastAimedSum = null;
+        const sum = ev.dice[0] + ev.dice[1];
+        const pos = get().view?.positions[ev.playerId];
+        if (aimed !== null) {
+          const diff = Math.abs(sum - aimed);
+          if (diff === 0) {
+            pushFx({ kind: 'text', text: 'GREAT! 🎯', tone: 'good', playerId: ev.playerId, tile: pos });
+          } else if (diff === 1) {
+            pushFx({ kind: 'text', text: 'GOOD! ✨', tone: 'info', playerId: ev.playerId, tile: pos });
+          }
+        }
         if (ev.doubles) pushFx({ kind: 'text', text: 'DOUBLE! 🎲', tone: 'good', playerId: ev.playerId });
         await sleep(ev.doubles ? 680 : 500);
         return;
@@ -414,6 +438,8 @@ export const useGame = create<GameStore>()((set, get) => {
       return;
     }
     if (player?.isBot) {
+      // In online games, only the Host decides bot actions and broadcasts them to Guests.
+      if (get().onlineRole === 'guest') return;
       const think = pending.kind === 'roll' || pending.kind === 'island' ? 650 : 900;
       setTimeout(() => {
         if (gen !== generation || get().paused || get().busy) return;
@@ -431,9 +457,20 @@ export const useGame = create<GameStore>()((set, get) => {
     }
   }
 
-  function dispatch(action: Action, by: 'human' | 'bot' | 'auto') {
-    const game = get().game;
+  function dispatch(action: Action, by: 'human' | 'bot' | 'auto' | 'remote') {
+    let game = get().game;
     if (!game || game.winner) return;
+    // If a remote action arrives slightly before our local END_TURN timer fired, fast-forward END_TURN first.
+    if (by === 'remote' && game.pending.kind === 'end_turn' && action.type !== 'END_TURN') {
+      try {
+        const endRes = applyAction(game, { type: 'END_TURN' });
+        game = endRes.state;
+        set({ game, queue: [...get().queue, ...endRes.events] });
+      } catch {
+        /* ignore */
+      }
+    }
+    let appliedAction = action;
     let result;
     try {
       result = applyAction(game, action);
@@ -441,9 +478,11 @@ export const useGame = create<GameStore>()((set, get) => {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.warn(`[engine] illegal ${by} action`, action, msg);
-      if (by === 'human') {
-        sfx.play('error');
-        set({ error: msg });
+      if (by === 'human' || by === 'remote') {
+        if (by === 'human') {
+          sfx.play('error');
+          set({ error: msg });
+        }
         return;
       }
       // Bots/auto: fall back to the first legal action to avoid a stuck game.
@@ -451,6 +490,7 @@ export const useGame = create<GameStore>()((set, get) => {
       const fallback = listLegalActions(game).find((a) => a.type !== action.type) ?? listLegalActions(game)[0];
       if (fallback && botFailures < 5) {
         try {
+          appliedAction = fallback;
           result = applyAction(game, fallback);
         } catch (e2) {
           console.error('[engine] fallback failed', e2);
@@ -460,6 +500,9 @@ export const useGame = create<GameStore>()((set, get) => {
         set({ error: msg });
         return;
       }
+    }
+    if (get().onlineRole !== 'offline' && (by === 'human' || (by === 'bot' && get().onlineRole === 'host'))) {
+      outboundListener?.(appliedAction);
     }
     set({ game: result.state, queue: [...get().queue, ...result.events] });
     if (result.events.length === 0) {
@@ -482,6 +525,8 @@ export const useGame = create<GameStore>()((set, get) => {
     paused: false,
     error: null,
     shake: 0,
+    localPlayerId: null,
+    onlineRole: 'offline',
 
     setScreen: (screen) => set({ screen }),
 
@@ -501,11 +546,40 @@ export const useGame = create<GameStore>()((set, get) => {
         alert: null,
         paused: false,
         error: null,
+        localPlayerId: null,
+        onlineRole: 'offline',
         screen: 'game',
       });
       music.play('game');
       saveGame(game);
       void runQueue();
+    },
+
+    startOnlineGame: (config, localPlayerId, role) => {
+      generation++;
+      running = false;
+      const game = createGame(config);
+      const first = game.players[game.current];
+      set({
+        game,
+        view: viewFromState(game),
+        queue: [{ type: 'turn_start', playerId: first.id, round: game.round }],
+        currentEvent: null,
+        busy: false,
+        fx: [],
+        alert: null,
+        paused: false,
+        error: null,
+        localPlayerId,
+        onlineRole: role,
+        screen: 'game',
+      });
+      music.play('game');
+      void runQueue();
+    },
+
+    receiveRemoteAction: (action) => {
+      dispatch(action, 'remote');
     },
 
     restartSame: () => {
@@ -539,10 +613,14 @@ export const useGame = create<GameStore>()((set, get) => {
     hasSave: () => loadGame() !== null,
 
     act: (action) => {
-      const { game, busy, paused } = get();
+      const { game, busy, paused, localPlayerId } = get();
       if (!game || busy || paused || game.winner) return;
       const p = game.players[game.current];
       if (p.isBot) return;
+      if (localPlayerId && p.id !== localPlayerId) return;
+      if (action.type === 'ROLL') {
+        lastAimedSum = action.power !== undefined ? Math.round(2 + action.power * 10) : null;
+      }
       sfx.play('click');
       dispatch(action, 'human');
     },
@@ -556,7 +634,19 @@ export const useGame = create<GameStore>()((set, get) => {
       generation++;
       running = false;
       saveGame(get().game);
-      set({ screen: 'menu', game: null, view: null, queue: [], currentEvent: null, busy: false, fx: [], alert: null, paused: false });
+      set({
+        screen: 'menu',
+        game: null,
+        view: null,
+        queue: [],
+        currentEvent: null,
+        busy: false,
+        fx: [],
+        alert: null,
+        paused: false,
+        localPlayerId: null,
+        onlineRole: 'offline',
+      });
       music.play('menu');
     },
 
@@ -573,6 +663,7 @@ export function useHumanPending() {
     if (!g || s.busy || s.paused || g.winner) return null;
     const p = g.players[g.current];
     if (!p || p.isBot) return null;
+    if (s.localPlayerId && p.id !== s.localPlayerId) return null;
     return g.pending;
   });
 }

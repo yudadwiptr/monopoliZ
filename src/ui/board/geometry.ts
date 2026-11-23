@@ -20,7 +20,7 @@ export const RIM_N = RIM_K * CELL_N;
 /** Slab thickness (board edge) in normalised units. */
 export const SLAB_N = 0.026;
 /** Space reserved above the far edge for the skyline of top-row buildings. */
-export const HEADROOM_N = 0.045;
+export const HEADROOM_N = 0.015;
 
 export interface Rect {
   x0: number;
@@ -172,11 +172,14 @@ export interface Bounds {
 
 /** Normalised screen bounds of the whole board (incl. slab and skyline headroom) for a camera pose. */
 export function boardBounds(tiltDeg: number, k: number, yawDeg = 0): Bounds {
+  // The physical board slab has rounded corners (border-radius 0.42c), so in isometric 45deg view the left/right
+  // visual tips sit at ±0.48 rather than sharp ±0.5. Using 0.48 avoids wasting horizontal margin on phones.
+  const e = yawDeg ? 0.48 : 0.5;
   const corners: [number, number][] = [
-    [-0.5, -0.5],
-    [0.5, -0.5],
-    [-0.5, 0.5],
-    [0.5, 0.5],
+    [-e, -e],
+    [e, -e],
+    [-e, e],
+    [e, e],
   ];
   let maxX = 0;
   let minY = Infinity;
@@ -201,10 +204,16 @@ export function tiltFor(width: number, height: number): number {
   return 42;
 }
 
-/** Tilt for the isometric (diamond) camera. */
+/**
+ * Tilt for the isometric (diamond) camera:
+ * - Portrait phones (aspect < 0.85): flatter tilt (36 deg) so the diamond isn't squashed vertically and fills the tall screen!
+ * - Landscape (aspect >= 0.85): 58 deg Get Rich table angle.
+ */
 export function isoTiltFor(width: number, height: number): number {
   const aspect = width / Math.max(1, height);
-  return aspect < 0.8 ? 52 : 60;
+  if (aspect < 0.75) return 35;
+  if (aspect < 1.05) return 44;
+  return 58;
 }
 
 /** Yaw of the isometric camera: the board is turned into a diamond. */

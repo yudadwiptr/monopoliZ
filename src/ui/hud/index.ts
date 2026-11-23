@@ -18,5 +18,5 @@ export type { TopBarVariant } from './TopBar';
 export { TurnBanner } from './TurnBanner';
 export { computeLayout, cornerSlots } from './layout';
 export type { Corner, HudLayout, HudMode, PanelSize } from './layout';
-export { useHumanCount, useLeaderId, useMapDef, useMeasure, usePlayerIds, useSettled } from './hooks';
+export { useHumanCount, useLeaderId, useMapDef, useMeasure, usePlayerIds, usePlayerRanks, useSettled } from './hooks';
 export { useEscPause } from './useEscPause';

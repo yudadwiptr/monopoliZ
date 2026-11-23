@@ -48,10 +48,15 @@ export function expectedLandings(ctx: BotContext, tile: number, horizon = ctx.ho
   return ctx.opponentNextLanding(tile) + Math.max(0, horizon - 1) * ctx.opponents.length * BASE_LAND_RATE;
 }
 
-/** Tiles whose toll can change when `tile` changes hands (tourist tolls depend on how many you own). */
+/** Tiles whose toll can change when `tile` changes hands (tourist set or same colour group). */
 function affectedTiles(ctx: BotContext, tile: number): number[] {
-  if (ctx.defs[tile]?.kind !== 'tourist') return [tile];
-  return ctx.defs.filter((d) => d.kind === 'tourist').map((d) => d.index);
+  const def = ctx.defs[tile];
+  if (!def) return [tile];
+  if (def.kind === 'tourist') return ctx.defs.filter((d) => d.kind === 'tourist').map((d) => d.index);
+  if (def.kind === 'city' && def.group !== undefined) {
+    return ctx.defs.filter((d) => d.kind === 'city' && d.group === def.group).map((d) => d.index);
+  }
+  return [tile];
 }
 
 /** Change in the bot's discounted toll income when the board goes from `before` to `after`. */

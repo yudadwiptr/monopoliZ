@@ -20,11 +20,11 @@ const RAJA_AMPAT = 27;
 const JAKARTA = 31;
 
 describe('buying', () => {
-  it('caps the purchase at Rumah before the first lap', () => {
+  it('caps the purchase at Ruko (level 2) before the first lap', () => {
     const g = newGame();
     const r = rollTo(g, PADANG);
-    expect(r.state.pending).toEqual({ kind: 'buy', tile: PADANG, maxLevel: 1, discount: false });
-    expect(() => act(r.state, { type: 'BUY', level: 2 })).toThrow('Level tidak valid');
+    expect(r.state.pending).toEqual({ kind: 'buy', tile: PADANG, maxLevel: 2, discount: false });
+    expect(() => act(r.state, { type: 'BUY', level: 3 })).toThrow('Level tidak valid');
     const r2 = act(r.state, { type: 'BUY', level: 1 });
     const cost = purchaseCost(defs[PADANG], 1);
     expect(cost).toBe(105);
@@ -87,7 +87,7 @@ describe('buying', () => {
     const g = newGame();
     g.players[0].cards = ['discount'];
     const r = rollTo(g, PADANG);
-    expect(r.state.pending).toEqual({ kind: 'buy', tile: PADANG, maxLevel: 1, discount: true });
+    expect(r.state.pending).toEqual({ kind: 'buy', tile: PADANG, maxLevel: 2, discount: true });
     const r2 = act(r.state, { type: 'BUY', level: 1 });
     const cost = applyDiscount(purchaseCost(defs[PADANG], 1), true);
     expect(cost).toBe(53);
@@ -125,9 +125,9 @@ describe('building on own city', () => {
     expect(r2.state.tiles[PADANG].level).toBe(3);
   });
 
-  it('no build prompt before the first lap once Rumah is built', () => {
+  it('no build prompt before the first lap once Ruko is built', () => {
     const g = newGame();
-    own(g, PADANG, 'p1', 1);
+    own(g, PADANG, 'p1', 2);
     const r = rollTo(g, PADANG);
     expect(r.state.pending).toEqual({ kind: 'end_turn', extraRoll: false });
   });
@@ -284,7 +284,7 @@ describe('acquisition', () => {
 
   it('festival stays on the acquired tile', () => {
     const g = newGame();
-    own(g, PADANG, 'p2', 1);
+    own(g, PADANG, 'p2', 2);
     g.festivalTile = PADANG;
     const r = act(rollTo(g, PADANG).state, { type: 'ACQUIRE' });
     expect(r.state.festivalTile).toBe(PADANG);

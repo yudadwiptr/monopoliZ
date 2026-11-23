@@ -107,32 +107,22 @@ function UpgradeBuild({ map, def, me, pending, festival }: InnerProps) {
         }
       />
 
-      <div className="mt-3 flex items-baseline justify-between px-0.5">
-        <p className="font-display text-base font-semibold text-white">Gas upgrade? 🏗️</p>
-        <p className="hidden text-xs text-ink-300 min-[420px]:block">Biaya dari level sekarang</p>
+      <div className="mt-2.5 flex items-baseline justify-between px-0.5">
+        <p className="font-display text-sm font-semibold text-white">Upgrade gedung 🏗️</p>
+        {lapLocked.length > 0 ? (
+          <span className="flex items-center gap-1 text-[11px] text-ink-300">
+            <Lock size={11} className="shrink-0" aria-hidden />
+            {lapLocked.join(' & ')}: putaran 2
+          </span>
+        ) : (
+          <span className="text-[11px] text-gold-300">🏛️ Hotel → Landmark</span>
+        )}
       </div>
-      <div className="mt-2">
+      <div className="mt-1.5">
         <LevelStepper options={options} selected={selected} onSelect={setSelected} label="Pilih level bangunan" />
       </div>
 
-      <div className="mt-2.5 space-y-1.5">
-        {lapLocked.length > 0 && (
-          <p className="flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-2 text-xs text-ink-200">
-            <Lock size={13} className="shrink-0 text-ink-300" aria-hidden />
-            <span>
-              <b className="font-semibold text-white">{lapLocked.join(' & ')}</b> terbuka setelah 1 putaran.
-            </span>
-          </p>
-        )}
-        {lapLocked.length === 0 && (
-          <p className="flex items-center gap-1.5 rounded-xl bg-gold-400/[0.08] px-3 py-2 text-xs text-gold-200">
-            <span aria-hidden>🏛️</span>
-            <span>Mampir lagi saat sudah Hotel buat bangun Landmark — anti-akuisisi!</span>
-          </p>
-        )}
-      </div>
-
-      <div className="mt-3 flex gap-2">
+      <div className="mt-2.5 flex gap-2">
         <Stat
           label="Sewa baru"
           tone="daun"

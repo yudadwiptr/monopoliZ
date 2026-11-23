@@ -75,7 +75,7 @@ export function LevelStepper({ options, selected, onSelect, label, cumulative }:
         Gunakan panah kiri/kanan untuk memilih level, Enter untuk konfirmasi.
       </span>
       {n > 1 && (
-        <div aria-hidden className="absolute top-[31px] h-1.5 rounded-full bg-white/10" style={{ left: inset, right: inset }}>
+        <div aria-hidden className="absolute top-[25px] h-1.5 rounded-full bg-white/10" style={{ left: inset, right: inset }}>
           <motion.div
             className="h-full origin-left rounded-full bg-gradient-to-r from-brand-400 to-gold-400"
             initial={false}
@@ -84,7 +84,7 @@ export function LevelStepper({ options, selected, onSelect, label, cumulative }:
           />
         </div>
       )}
-      <div className="relative grid gap-1.5 sm:gap-2" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+      <div className="relative grid gap-1.5" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
         {options.map((o, i) => {
           const isSel = o.level === selected;
           const included = !!cumulative && selIdx >= 0 && i < selIdx && o.status === 'ok';
@@ -105,12 +105,12 @@ export function LevelStepper({ options, selected, onSelect, label, cumulative }:
               tabIndex={i === focusIdx ? 0 : -1}
               onClick={() => pick(o)}
               onKeyDown={(e) => onKeyDown(e, i)}
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 420, damping: 26, delay: 0.05 + i * 0.05 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 26, delay: 0.04 + i * 0.04 }}
               whileTap={disabled ? undefined : { scale: 0.95 }}
               className={clsx(
-                'group relative flex min-h-[8.5rem] flex-col items-center rounded-2xl border px-1 pb-2 pt-2 text-center outline-none transition-colors',
+                'group relative flex min-h-[6.2rem] flex-col items-center rounded-2xl border px-1 pb-1.5 pt-1.5 text-center outline-none transition-colors',
                 'focus-visible:ring-4 focus-visible:ring-brand-300/60',
                 disabled && 'cursor-not-allowed border-white/5 bg-white/[0.03]',
                 !disabled && !isSel && !landmark && 'border-white/10 bg-white/[0.06] hover:bg-white/10',
@@ -132,60 +132,60 @@ export function LevelStepper({ options, selected, onSelect, label, cumulative }:
               )}
               <motion.span
                 className={clsx(
-                  'relative grid h-[3.25rem] w-[3.25rem] place-items-center rounded-full border',
+                  'relative grid h-10 w-10 place-items-center rounded-full border',
                   isSel || included ? 'border-white/25 bg-ink-800' : 'border-white/10 bg-ink-900',
                   landmark && !disabled && 'border-gold-400/70',
                 )}
-                animate={isSel ? { y: -3, scale: 1.1 } : { y: 0, scale: 1 }}
+                animate={isSel ? { y: -2, scale: 1.08 } : { y: 0, scale: 1 }}
                 transition={{ type: 'spring', stiffness: 520, damping: 18 }}
               >
-                <LevelArt level={o.level} size={38} muted={disabled} />
+                <LevelArt level={o.level} size={30} muted={disabled} />
                 {o.status === 'locked' && (
-                  <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-ink-700 text-ink-200 ring-2 ring-ink-900">
-                    <Lock size={11} strokeWidth={2.6} />
+                  <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-ink-700 text-ink-200 ring-1 ring-ink-900">
+                    <Lock size={9} strokeWidth={2.6} />
                   </span>
                 )}
                 {(included || isSel) && (
                   <span
                     className={clsx(
-                      'absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full ring-2 ring-ink-900',
+                      'absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full ring-1 ring-ink-900',
                       isSel ? (landmark ? 'bg-gold-400 text-ink-950' : 'bg-brand-400 text-white') : 'bg-daun-500 text-ink-950',
                     )}
                   >
-                    <Check size={12} strokeWidth={3.4} />
+                    <Check size={10} strokeWidth={3.4} />
                   </span>
                 )}
               </motion.span>
               <span
                 className={clsx(
-                  'mt-1.5 font-display text-[13px] font-semibold leading-none',
+                  'mt-1 font-display text-xs font-semibold leading-none',
                   disabled ? 'text-ink-400' : landmark ? 'text-gold-300' : 'text-white',
                 )}
               >
                 {LEVEL_NAMES[o.level]}
               </span>
-              <span className="mt-1 flex h-3 items-center">
-                {discounted && <s className="num text-[10px] leading-none text-ink-400">{formatRp(o.baseCost, { short: true })}</s>}
-              </span>
+              {discounted && (
+                <s className="num mt-0.5 text-[9px] leading-none text-ink-400">{formatRp(o.baseCost, { short: true })}</s>
+              )}
               <span
                 className={clsx(
-                  'num whitespace-nowrap text-[13px] font-bold leading-tight sm:text-sm',
+                  'num mt-0.5 whitespace-nowrap text-xs font-bold leading-tight',
                   o.status === 'poor' ? 'text-merah-400' : disabled ? 'text-ink-400' : isSel || landmark ? 'text-gold-300' : 'text-ink-100',
                 )}
               >
-                {formatRp(o.cost)}
+                {formatRp(o.cost, { short: true })}
               </span>
               {disabled && o.reason ? (
                 <span
                   className={clsx(
-                    'mt-0.5 text-[10px] font-semibold leading-tight',
+                    'mt-0.5 text-[9.5px] font-semibold leading-tight',
                     o.status === 'poor' ? 'text-merah-300' : 'text-ink-300',
                   )}
                 >
                   {o.reason}
                 </span>
               ) : (
-                <span className="mt-0.5 whitespace-nowrap text-[10.5px] font-semibold leading-tight text-daun-400">
+                <span className="mt-0.5 whitespace-nowrap text-[10px] font-semibold leading-tight text-daun-400">
                   Sewa <span className="num">{formatRp(o.toll, { short: true })}</span>
                 </span>
               )}

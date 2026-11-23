@@ -45,8 +45,8 @@ export function PawnsLayer() {
     list.push(p.id);
     byTile.set(t, list);
   });
-  // Phones: slightly larger pawns so the emoji stays legible.
-  const boost = c < 40 ? 1.2 : c < 56 ? 1.08 : 1;
+  // Phones: larger, chunkier Get Rich character standees so pawns pop out clearly on mobile screens.
+  const boost = c < 42 ? 1.32 : c < 58 ? 1.18 : 1.08;
 
   return (
     <AnimatePresence>

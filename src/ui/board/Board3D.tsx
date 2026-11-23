@@ -121,6 +121,7 @@ function selectableNow(): number[] {
   if (!g || s.busy || s.paused || g.winner) return [];
   const p = g.players[g.current];
   if (!p || p.isBot || g.pending.kind !== 'choose_tile') return [];
+  if (s.localPlayerId && p.id !== s.localPlayerId) return [];
   return g.pending.candidates;
 }
 

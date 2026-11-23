@@ -7,20 +7,20 @@ import { Logo } from '@/ui/common';
 import { IconButton } from './IconButton';
 import { useMapDef } from './hooks';
 
-export type TopBarVariant = 'wide' | 'compact' | 'stack' | 'mini';
+export type TopBarVariant = 'wide' | 'compact' | 'stack' | 'mini' | 'floating';
 
 const SPEED_ORDER: GameSpeed[] = ['santai', 'normal', 'ngebut'];
 const SPEED_ICON: Record<GameSpeed, React.ReactNode> = {
-  santai: <Turtle size={20} aria-hidden />,
-  normal: <Gauge size={20} aria-hidden />,
-  ngebut: <Rabbit size={20} aria-hidden />,
+  santai: <Turtle size={18} aria-hidden />,
+  normal: <Gauge size={18} aria-hidden />,
+  ngebut: <Rabbit size={18} aria-hidden />,
 };
 
 const CAMERA_ORDER: CameraMode[] = ['iso', '3d', 'top'];
 const CAMERA_ICON: Record<CameraMode, React.ReactNode> = {
-  iso: <Diamond size={20} aria-hidden />,
-  '3d': <Box size={20} aria-hidden />,
-  top: <Grid2x2 size={20} aria-hidden />,
+  iso: <Diamond size={18} aria-hidden />,
+  '3d': <Box size={18} aria-hidden />,
+  top: <Grid2x2 size={18} aria-hidden />,
 };
 
 const UNMUTE_KEY = 'monopoliz.hud.unmute';
@@ -60,24 +60,38 @@ function toggleMute() {
   s.setMusicVolume(0);
 }
 
-function RoundPill({ compact }: { compact?: boolean }) {
+function RoundPill({ compact, mini }: { compact?: boolean; mini?: boolean }) {
   const round = useGame((s) => s.game?.round ?? 1);
   const maxRounds = useGame((s) => s.game?.config.maxRounds ?? null);
   const map = useMapDef();
   const final = maxRounds !== null && round >= maxRounds - 1;
   const progress = maxRounds ? Math.min(1, round / maxRounds) : 0;
 
+  if (mini) {
+    return (
+      <div
+        className="glass relative flex items-center gap-1.5 overflow-hidden !rounded-full px-2.5 py-1 text-xs font-display font-bold"
+        aria-label={`Ronde ${round}${maxRounds ? ` dari ${maxRounds}` : ''}`}
+      >
+        <span className="text-ink-300">Ronde</span>
+        <span className={clsx('num', final ? 'text-merah-300' : 'text-gold-300')}>
+          {round}
+          {maxRounds !== null && <span className="text-ink-300">/{maxRounds}</span>}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
       className={clsx(
         'glass relative flex min-w-0 items-center gap-2 overflow-hidden !rounded-2xl',
-        // pb leaves room for the progress line along the bottom edge
-        compact ? 'h-11 px-2.5 pb-1' : 'h-12 px-3 pb-1',
+        compact ? 'h-10 px-2.5 pb-1' : 'h-12 px-3 pb-1',
       )}
       aria-label={`Ronde ${round}${maxRounds ? ` dari ${maxRounds}` : ''}, peta ${map?.name ?? ''}`}
     >
       {map && (
-        <span className={clsx('shrink-0 leading-none', compact ? 'text-lg' : 'text-2xl')} aria-hidden>
+        <span className={clsx('shrink-0 leading-none', compact ? 'text-base' : 'text-2xl')} aria-hidden>
           {map.theme.emblem}
         </span>
       )}
@@ -87,7 +101,7 @@ function RoundPill({ compact }: { compact?: boolean }) {
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.span
               key={round}
-              className={clsx('num inline-block', compact ? 'text-base' : 'text-lg', final ? 'text-merah-300' : 'text-white')}
+              className={clsx('num inline-block', compact ? 'text-sm' : 'text-lg', final ? 'text-merah-300' : 'text-white')}
               initial={{ scale: 1.8, opacity: 0, y: -6 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
@@ -98,8 +112,8 @@ function RoundPill({ compact }: { compact?: boolean }) {
           </AnimatePresence>
           {maxRounds !== null && <span className={clsx('num text-ink-300', compact ? 'text-xs' : 'text-sm')}>/{maxRounds}</span>}
         </div>
-        <div className="truncate text-[11px] font-medium text-ink-300">
-          {final ? <span className="font-semibold text-merah-300">Ronde terakhir, gas pol!</span> : map?.name}
+        <div className="truncate text-[10px] font-medium text-ink-300">
+          {final ? <span className="font-semibold text-merah-300">Ronde terakhir!</span> : map?.name}
         </div>
       </div>
       {maxRounds !== null && (
@@ -132,7 +146,7 @@ export function TopBar({ variant }: { variant: TopBarVariant }) {
   const pause = () => useGame.getState().setPaused(true);
 
   const wide = variant === 'wide';
-  const tip = variant !== 'stack';
+  const tip = variant !== 'stack' && variant !== 'floating';
   const cameraName = CAMERA_LABEL[camera] ?? '3D';
 
   const buttons = (
@@ -153,24 +167,21 @@ export function TopBar({ variant }: { variant: TopBarVariant }) {
       />
       <IconButton
         label={muted ? 'Nyalakan suara' : 'Bisukan suara'}
-        icon={muted ? <VolumeX size={20} aria-hidden className="text-merah-300" /> : <Volume2 size={20} aria-hidden />}
+        icon={muted ? <VolumeX size={18} aria-hidden className="text-merah-300" /> : <Volume2 size={18} aria-hidden />}
         onClick={toggleMute}
         pressed={muted}
         tip={tip}
       />
-      <IconButton label="Jeda (Esc)" icon={<Pause size={20} aria-hidden />} onClick={pause} tip={tip} />
+      <IconButton label="Jeda (Esc)" icon={<Pause size={18} aria-hidden />} onClick={pause} tip={tip} />
     </>
   );
 
-  if (variant === 'mini') {
-    // Short landscape screens: just the round and one menu button (speed, camera and sound live in Jeda → Pengaturan).
+  if (variant === 'floating') {
     return (
-      <header className="flex items-center gap-1.5">
-        <RoundPill compact />
-        <div className="ml-auto">
-          <IconButton label="Menu & pengaturan (Esc)" icon={<Pause size={18} aria-hidden />} onClick={pause} tip={false} />
-        </div>
-      </header>
+      <div className="pointer-events-auto flex items-center gap-1">
+        <RoundPill mini />
+        <div className="flex items-center gap-1 [&_button]:!h-8 [&_button]:!w-8 [&_button]:!min-w-8">{buttons}</div>
+      </div>
     );
   }
 

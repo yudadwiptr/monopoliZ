@@ -114,6 +114,13 @@ export function offerBuild(ctx: Ctx, index: number): void {
   const maxLevel = buildCap(p.laps, level);
   const discount = p.cards.includes('discount');
   if (def.kind !== 'city' || level >= LANDMARK_LEVEL || maxLevel <= level) {
+    // Get Rich Landmark Power: landing on your own Landmark automatically hosts the Festival (×2 toll) there!
+    if (def.kind === 'city' && level >= LANDMARK_LEVEL && ctx.s.festivalTile !== index) {
+      ctx.s.festivalTile = index;
+      emit(ctx, { type: 'festival', playerId: p.id, tile: index });
+      message(ctx, `🏛️✨ Landmark ${def.name} menggelar Pesta Agung (Sewa ×2)!`, 'good');
+      log(ctx, `🏛️🎆 ${p.name} mampir di Landmark ${def.name} — otomatis jadi pusat Pesta (Sewa ×2)!`, 'good', p.id);
+    }
     finishTurn(ctx);
     return;
   }

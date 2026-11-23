@@ -40,6 +40,7 @@ export interface ActionDockProps {
 export function ActionDock({ compact }: ActionDockProps) {
   const pending = useHumanPending();
   const current = useGame((s) => (s.game && !s.game.winner ? s.game.players[s.game.current] : undefined));
+  const localPlayerId = useGame((s) => s.localPlayerId);
   const busy = useGame((s) => s.busy);
   const paused = useGame((s) => s.paused);
   const humans = useHumanCount();
@@ -48,8 +49,9 @@ export function ActionDock({ compact }: ActionDockProps) {
   let content: React.ReactNode = null;
 
   if (current && !paused && !busy) {
-    if (current.isBot) {
-      key = `bot-${current.id}`;
+    const isRemoteHuman = !current.isBot && !!localPlayerId && current.id !== localPlayerId;
+    if (current.isBot || isRemoteHuman) {
+      key = `wait-${current.id}`;
       content = (
         <div className="glass flex items-center gap-2.5 whitespace-nowrap !rounded-full py-1.5 pl-1.5 pr-4" role="status">
           <Avatar characterId={current.characterId} size={compact ? 28 : 34} active />
@@ -57,7 +59,7 @@ export function ActionDock({ compact }: ActionDockProps) {
             <span className="font-semibold" style={{ color: current.color }}>
               {current.name}
             </span>{' '}
-            lagi mikir
+            {isRemoteHuman ? 'lagi giliran' : 'lagi mikir'}
             <ThinkingDots className="ml-1 text-ink-200" />
           </span>
         </div>
@@ -67,7 +69,7 @@ export function ActionDock({ compact }: ActionDockProps) {
       content = (
         <DiceRoller
           compact={compact}
-          player={humans >= 2 ? { name: current.name, characterId: current.characterId } : null}
+          player={!localPlayerId && humans >= 2 ? { name: current.name, characterId: current.characterId } : null}
         />
       );
     }

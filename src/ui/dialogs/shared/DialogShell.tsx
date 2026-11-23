@@ -33,19 +33,18 @@ export function DialogShell({ labelledBy, describedBy, accent, className, ring, 
   }, []);
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:px-6 sm:pt-[10dvh]">
+    <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center p-2.5 sm:px-6">
       <motion.div
         aria-hidden
         className="absolute inset-0"
         style={{
-          background: desktop
-            ? 'radial-gradient(ellipse 60% 55% at 50% 55%, rgba(5,8,26,0.62) 0%, rgba(5,8,26,0.28) 60%, rgba(5,8,26,0) 100%)'
-            : 'linear-gradient(to top, rgba(5,8,26,0.9) 0%, rgba(5,8,26,0.45) 45%, rgba(5,8,26,0) 80%)',
+          background:
+            'radial-gradient(ellipse 65% 60% at 50% 50%, rgba(5,8,26,0.68) 0%, rgba(5,8,26,0.32) 65%, rgba(5,8,26,0) 100%)',
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.25 }}
+        transition={{ duration: 0.22 }}
       />
       <motion.section
         ref={panelRef}
@@ -56,26 +55,25 @@ export function DialogShell({ labelledBy, describedBy, accent, className, ring, 
         aria-describedby={describedBy}
         className={clsx(
           'glass-strong pointer-events-auto relative flex w-full flex-col overflow-hidden outline-none',
-          'max-h-[90dvh] rounded-b-none rounded-t-[1.75rem] border-b-0',
-          'sm:max-h-[82dvh] sm:max-w-[26rem] sm:rounded-4xl sm:border-b',
+          'max-h-[92dvh] max-w-[23.5rem] rounded-3xl border',
+          'sm:max-h-[86dvh] sm:max-w-[25.5rem] sm:rounded-4xl',
           className,
         )}
         style={ring ? { boxShadow: `0 0 0 1.5px ${ring}66, 0 0 40px -6px ${ring}88, 0 24px 60px -12px rgba(0,0,0,0.7)` } : undefined}
-        initial={desktop ? { opacity: 0, y: 48, scale: 0.9 } : { y: '105%' }}
-        animate={desktop ? { opacity: 1, y: 0, scale: 1 } : { y: 0 }}
-        exit={desktop ? { opacity: 0, y: 28, scale: 0.94 } : { y: '105%' }}
+        initial={{ opacity: 0, y: 24, scale: 0.92 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 16, scale: 0.94 }}
         transition={SPRING}
       >
         {accent && (
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-28 left-1/2 h-52 w-80 -translate-x-1/2 rounded-full opacity-40 blur-3xl"
+            className="pointer-events-none absolute -top-28 left-1/2 h-48 w-72 -translate-x-1/2 rounded-full opacity-40 blur-3xl"
             style={{ background: accent }}
           />
         )}
         <div className="batik-bg pointer-events-none absolute inset-0 opacity-60" aria-hidden />
-        {!desktop && <div aria-hidden className="relative mx-auto mt-2.5 h-1.5 w-11 shrink-0 rounded-full bg-white/25" />}
-        <div className="scrollbar-thin relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:p-5">
+        <div className="scrollbar-thin relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-4">
           {children}
         </div>
       </motion.section>
@@ -85,7 +83,7 @@ export function DialogShell({ labelledBy, describedBy, accent, className, ring, 
 
 /** Sticky-ish action row at the bottom of a dialog. */
 export function DialogActions({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={clsx('mt-4 flex items-stretch gap-2.5', className)}>{children}</div>;
+  return <div className={clsx('mt-3 flex items-stretch gap-2', className)}>{children}</div>;
 }
 
 /** Two-line label for money actions: big verb, price underneath (never truncates on 360px phones). */

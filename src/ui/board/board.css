@@ -84,22 +84,22 @@
   margin: calc(var(--c) * 0.07);
   border-radius: calc(var(--c) * 0.24);
   overflow: hidden;
-  background-color: var(--bz-surface);
+  background-color: #1e294b;
   background-image:
-    radial-gradient(62% 62% at 52% 52%, var(--bz-accent-glow), transparent 72%),
-    linear-gradient(135deg, rgba(4, 6, 18, 0.85) 0%, rgba(16, 23, 56, 0.4) 55%, rgba(6, 9, 26, 0.75) 100%),
+    radial-gradient(68% 68% at 52% 52%, rgba(148, 163, 184, 0.28), transparent 72%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.72) 0%, rgba(39, 53, 94, 0.55) 55%, rgba(15, 23, 42, 0.78) 100%),
     var(--batik-kawung);
   background-size:
     100% 100%,
     100% 100%,
     calc(var(--c) * 0.85) calc(var(--c) * 0.85);
-  /* Recessed 3D cliff walls on the top-left (+x, +y in plane = straight down from upper tiles in 45deg iso) */
+  /* Recessed 3D golden-bronze & slate cliff walls around the inner pit (like Get Rich's inner pit rim) */
   box-shadow:
-    inset calc(var(--c) * 0.11) calc(var(--c) * 0.11) 0 #131b3d,
-    inset calc(var(--c) * 0.13) calc(var(--c) * 0.13) 0 var(--bz-accent-soft),
-    inset calc(var(--c) * 0.22) calc(var(--c) * 0.22) 0 #070b1e,
-    inset calc(var(--c) * 0.28) calc(var(--c) * 0.28) calc(var(--c) * 0.45) rgba(0, 0, 0, 0.85),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.14),
+    inset 0 0 0 calc(var(--c) * 0.04) #eab308,
+    inset calc(var(--c) * 0.11) calc(var(--c) * 0.11) 0 #854d0e,
+    inset calc(var(--c) * 0.14) calc(var(--c) * 0.14) 0 #fef08a,
+    inset calc(var(--c) * 0.22) calc(var(--c) * 0.22) 0 #0f172a,
+    inset calc(var(--c) * 0.28) calc(var(--c) * 0.28) calc(var(--c) * 0.45) rgba(0, 0, 0, 0.78),
     0 0 0 calc(var(--c) * 0.03) #05081a;
   pointer-events: none;
 }
@@ -306,7 +306,7 @@
   -webkit-box-orient: vertical;
 }
 
-/* Outer Price / Toll Plate (38% of tile depth, touching the outer board rim) */
+/* Outer Price / Toll Plate (38% of tile depth, touching the outer board rim): high-contrast ivory-silver plate like Get Rich */
 .bz-price-zone {
   position: relative;
   flex: none;
@@ -315,18 +315,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #161f42 0%, #090d22 100%);
-  color: #ffe08a;
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 68%, #cbd5e1 100%);
+  color: #0f172a;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.9);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+    inset 0 1px 0 #ffffff,
+    inset 0 -2px 3px rgba(15, 23, 42, 0.25);
+}
+
+.bz-price-zone.bz-price-special {
+  background: linear-gradient(180deg, #312e81 0%, #1e1b4b 100%);
+}
+
+.bz-price-zone.bz-price-tax {
+  background: linear-gradient(180deg, #4c0519 0%, #2a0612 100%);
 }
 
 .bz-price-zone[data-owned='true'] {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.35);
 }
 
 .bz-price-text {
@@ -336,10 +344,9 @@
   font-family: Fredoka, ui-rounded, system-ui, sans-serif;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  font-size: calc(var(--c) * 0.175);
+  font-size: calc(var(--c) * 0.18);
   line-height: 1;
   white-space: nowrap;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
 }
 
 .bz-price-mult {
@@ -1290,98 +1297,94 @@
     radial-gradient(120% 120% at 50% 50%, transparent 65%, rgba(30, 14, 4, 0.18) 100%);
 }
 
-/* Light wood inlay in the middle of the board, slightly recessed, with the logo burned into it */
+/* Recessed Get Rich Stone/Slate Arena Pit inside the teak wood board frame */
 .bz-center {
-  background-color: #b98a57;
+  background-color: #525b6c;
   background-image:
-    radial-gradient(70% 70% at 50% 50%, rgba(255, 236, 205, 0.18), transparent 75%),
-    repeating-linear-gradient(97deg, rgba(90, 50, 20, 0.12) 0 2px, transparent 2px 9px, rgba(255, 236, 205, 0.06) 9px 11px, transparent 11px 24px),
-    repeating-linear-gradient(95deg, rgba(90, 50, 20, 0.06) 0 1px, transparent 1px 4px),
-    linear-gradient(145deg, #d1a06b 0%, #b98a57 50%, #a3743f 100%);
+    radial-gradient(72% 72% at 50% 50%, rgba(255, 255, 255, 0.16), transparent 72%),
+    linear-gradient(145deg, #646e82 0%, #50596b 52%, #3d4554 100%);
   background-size: auto;
   box-shadow:
-    inset calc(var(--c) * 0.09) calc(var(--c) * 0.09) 0 rgba(60, 30, 10, 0.45),
-    inset calc(var(--c) * 0.2) calc(var(--c) * 0.2) calc(var(--c) * 0.35) rgba(40, 20, 6, 0.35),
-    inset 0 0 0 2px rgba(255, 236, 205, 0.35),
+    inset calc(var(--c) * 0.1) calc(var(--c) * 0.1) 0 #784c26,
+    inset calc(var(--c) * 0.13) calc(var(--c) * 0.13) 0 #d6a36c,
+    inset calc(var(--c) * 0.22) calc(var(--c) * 0.22) 0 #2d3442,
+    inset calc(var(--c) * 0.28) calc(var(--c) * 0.28) calc(var(--c) * 0.42) rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px rgba(255, 236, 205, 0.45),
     0 0 0 calc(var(--c) * 0.03) #4a2a14;
 }
 
 .bz-center-ring {
-  display: none;
+  display: block;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 calc(var(--c) * 0.5) rgba(0, 0, 0, 0.2);
 }
 
 .bz-emblem {
   display: none;
 }
 
-/* Logo burned into the wood */
+/* Engraved Get Rich-style arena watermark in the centre pit */
 .bz-center-head > div:first-child {
   display: block;
-  filter: brightness(0) !important;
-  opacity: 0.22 !important;
+  filter: brightness(1.15) !important;
+  opacity: 0.28 !important;
 }
 
 .bz-mapname {
-  color: rgba(60, 30, 10, 0.42);
-  text-shadow: 0 1px 0 rgba(255, 236, 205, 0.35);
+  color: rgba(255, 255, 255, 0.34);
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.45);
 }
 
 .bz-tagline {
-  color: rgba(60, 30, 10, 0.5);
+  color: rgba(255, 255, 255, 0.45);
   opacity: 1;
-  text-shadow: 0 1px 0 rgba(255, 236, 205, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-/* Cream tiles */
+/* Get Rich 3D tiles: vibrant full-color inner lot block + crisp white/ivory outer price plate */
 .bz-tile {
   background: linear-gradient(160deg, #fffaf0 0%, #f4ead7 70%, #eadcc2 100%);
-  color: #1b2552;
+  color: #ffffff;
 }
 
 .bz-lot-zone {
-  background: transparent;
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.bz-lot-zone.bz-lot-special {
+  background: linear-gradient(160deg, #fffaf0 0%, #f4ead7 100%);
   box-shadow: none;
 }
 
-/* Group colour strip on the edge facing the board centre */
-.bz-band-strip {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: calc(var(--c) * 0.2);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--band) 80%, white), var(--band));
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-}
-.bz-radial-fwd .bz-band-strip {
-  top: 0;
-}
-.bz-radial-rev .bz-band-strip {
-  bottom: 0;
-}
-
 .bz-name {
-  color: #1b2552;
-  text-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 1.5px 2px rgba(0, 0, 0, 0.78),
+    0 0 calc(var(--c) * 0.06) rgba(0, 0, 0, 0.55);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.01em;
 }
 
 .bz-lot-icon {
-  filter: drop-shadow(0 1px 1px rgba(60, 40, 10, 0.3));
+  filter: drop-shadow(0 1.5px 2px rgba(0, 0, 0, 0.45));
 }
 
 .bz-tourist-tag {
-  background: #0fa89c;
-  color: #ffffff;
+  background: rgba(5, 8, 26, 0.65);
+  color: #7ff0e6;
 }
 
-/* Price plate: light, with dark numbers (owned tiles keep the owner colour from inline style) */
+/* Price plate: crisp bright ivory/white with bold dark numbers (owned tiles keep the owner colour) */
 .bz-price-zone {
-  background: linear-gradient(180deg, #efe3cb 0%, #e2d2b2 100%);
-  color: #3a2a10;
-  border-top: 1px solid rgba(120, 90, 50, 0.25);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background: linear-gradient(180deg, #ffffff 0%, #f3ead8 70%, #e5d6bc 100%);
+  color: #1e293b;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    inset 0 -2px 3px rgba(60, 40, 10, 0.2);
 }
 
 .bz-price-text {

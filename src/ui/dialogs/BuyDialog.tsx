@@ -95,24 +95,20 @@ function CityBuy({ map, def, me, pending }: InnerProps) {
         }
       />
 
-      <div className="mt-3 flex items-baseline justify-between px-0.5">
-        <p className="font-display text-base font-semibold text-white">Mau bangun sampai mana?</p>
-        <p className="hidden text-xs text-ink-300 min-[420px]:block">Makin tinggi, makin cuan 📈</p>
+      <div className="mt-2.5 flex items-baseline justify-between px-0.5">
+        <p className="font-display text-sm font-semibold text-white">Pilih bangunan (checklist):</p>
+        {lockedNames.length > 0 && (
+          <span className="flex items-center gap-1 text-[11px] text-ink-300">
+            <Lock size={11} className="shrink-0" aria-hidden />
+            {lockedNames.join(' & ')}: putaran 2
+          </span>
+        )}
       </div>
-      <div className="mt-2">
+      <div className="mt-1.5">
         <LevelStepper options={options} selected={selected} onSelect={setSelected} label="Pilih level pembelian" cumulative />
       </div>
 
-      {lockedNames.length > 0 && (
-        <p className="mt-2.5 flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-2 text-xs text-ink-200">
-          <Lock size={13} className="shrink-0 text-ink-300" aria-hidden />
-          <span>
-            <b className="font-semibold text-white">{lockedNames.join(' & ')}</b> terbuka setelah 1 putaran — lewati Start dulu!
-          </span>
-        </p>
-      )}
-
-      <div className="mt-3 flex gap-2">
+      <div className="mt-2.5 flex gap-2">
         <Stat
           label="Sewa kamu"
           tone="daun"
@@ -120,12 +116,12 @@ function CityBuy({ map, def, me, pending }: InnerProps) {
           hint={choice ? `per lawan mampir` : undefined}
         />
         <Stat
-          label="Sisa uang setelah beli"
+          label="Sisa uang"
           tone={choice && me.cash - choice.cost < 200 ? 'merah' : 'plain'}
           value={choice ? <Money value={me.cash - choice.cost} flash={false} /> : '—'}
           hint={
             <>
-              Uangmu <span className="num">{formatRp(me.cash)}</span>
+              Kas <span className="num">{formatRp(me.cash, { short: true })}</span>
             </>
           }
         />

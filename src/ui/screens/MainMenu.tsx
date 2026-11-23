@@ -1,5 +1,5 @@
 import { motion, type Variants } from 'framer-motion';
-import { BookOpen, Play, RotateCcw, Settings, Zap } from 'lucide-react';
+import { BookOpen, Globe, Play, RotateCcw, Settings, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useGame } from '@/store/gameStore';
 import { Button, Logo } from '@/ui/common';
@@ -132,12 +132,24 @@ export function MainMenu() {
                 variant="gold"
                 size="lg"
                 block
+                icon={<Globe size={22} aria-hidden />}
+                onClick={() => setScreen('online')}
+              >
+                <TwoLine title="Mabar Online (Kode Room)" sub="Main bareng teman beda HP • Real-time" />
+                <Shine delay={1.9} />
+              </Button>
+            </motion.div>
+
+            <motion.div variants={item}>
+              <Button
+                variant="glass"
+                size="lg"
+                block
                 icon={<Zap size={22} fill="currentColor" aria-hidden />}
                 onClick={() => startGame(quickPlayConfig())}
                 aria-label="Main Cepat vs Bot: kamu lawan 3 bot di peta Nusantara"
               >
                 <TwoLine title="Main Cepat vs Bot" sub="Kamu vs 3 bot • Peta Nusantara" />
-                <Shine delay={2.6} />
               </Button>
             </motion.div>
 

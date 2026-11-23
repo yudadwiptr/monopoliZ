@@ -97,3 +97,27 @@ export function useLeaderId(): string | null {
     return bestVal > second ? best : null;
   });
 }
+
+/** Real-time 1..N ranking per playerId by displayed total assets (cash + property value; bankrupt last). */
+export function usePlayerRanks(): Record<string, number> {
+  return useGame(
+    useShallow((s) => {
+      const g = s.game;
+      const v = s.view;
+      const ranks: Record<string, number> = {};
+      if (!g || !v) return ranks;
+      const map = safeMap(g.mapId);
+      const scored = g.players.map((p, idx) => {
+        const isBankrupt = !!v.bankrupt[p.id];
+        const prop = map ? propertyValue(map.tiles, v.tiles, p.id) : 0;
+        const total = isBankrupt ? -1_000_000 - idx : (v.cash[p.id] ?? 0) + prop;
+        return { id: p.id, total, idx };
+      });
+      scored.sort((a, b) => b.total - a.total || a.idx - b.idx);
+      scored.forEach((item, r) => {
+        ranks[item.id] = r + 1;
+      });
+      return ranks;
+    }),
+  );
+}

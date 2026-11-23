@@ -90,6 +90,39 @@ export function touristToll(def: TileDef, ownedCount: number): number {
 }
 
 /**
+ * True when ` tiles[index].owner` owns every city in the same colour group as `defs[index]`.
+ * In LINE Let's Get Rich, completing a colour block doubles the toll of every city in that block!
+ */
+export function hasColorMonopoly(defs: TileDef[], tiles: TileState[], index: number): boolean {
+  const def = defs[index];
+  const owner = tiles[index]?.owner;
+  if (!def || def.kind !== 'city' || def.group === undefined || !owner) return false;
+  const groupTiles = defs.filter((d) => d.kind === 'city' && d.group === def.group);
+  return groupTiles.length > 0 && groupTiles.every((d) => tiles[d.index]?.owner === owner);
+}
+
+/**
+ * Total toll multiplier active on `index` (1, 2, or 4):
+ * - ×2 for owning the full colour group (Color Monopoly)
+ * - ×2 for hosting the Festival
+ * - ×4 when both are active!
+ */
+export function tollMultiplierAt(
+  defs: TileDef[],
+  tiles: TileState[],
+  index: number,
+  festivalTile: number | null,
+): number {
+  const def = defs[index];
+  const t = tiles[index];
+  if (!def || !t || !t.owner || !isProperty(def)) return 1;
+  let mult = 1;
+  if (def.kind === 'city' && hasColorMonopoly(defs, tiles, index)) mult *= 2;
+  if (festivalTile === index) mult *= FESTIVAL_MULT;
+  return mult;
+}
+
+/**
  * Toll payable when landing on `index`. 0 if unowned / not a property.
  */
 export function tollAt(
@@ -107,20 +140,20 @@ export function tollAt(
     const owned = defs.filter((d, i) => d.kind === 'tourist' && tiles[i]?.owner === t.owner).length;
     toll = touristToll(def, owned);
   }
-  if (festivalTile === index) toll *= FESTIVAL_MULT;
+  toll *= tollMultiplierAt(defs, tiles, index, festivalTile);
   return r(toll);
 }
 
 /**
- * Highest level a player may build to on a city this visit.
- *  - before the first lap (laps === 0): up to Rumah (1)
- *  - afterwards: up to Hotel (3)
+ * Highest level a player may build to on a city this visit (LINE Let's Get Rich style):
+ *  - first lap (laps === 0): up to Ruko / 2 buildings (2)
+ *  - afterwards (laps >= 1): up to Hotel / 3 buildings (3)
  *  - Landmark (4) only when the tile ALREADY had a hotel at the start of this visit
  * `currentLevel` is -1 for an unowned tile (purchase).
  */
 export function buildCap(laps: number, currentLevel: number): number {
   if (currentLevel >= HOTEL_LEVEL) return LANDMARK_LEVEL;
-  return laps >= 1 ? HOTEL_LEVEL : 1;
+  return laps >= 1 ? HOTEL_LEVEL : 2;
 }
 
 /** Total property value (invested) of a player. */

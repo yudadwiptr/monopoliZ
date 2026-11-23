@@ -52,7 +52,7 @@ export function maxCostAhead(ctx: BotContext, from: number): number {
 
 function penalty(deficit: number, liquidation: number): number {
   if (deficit <= 0) return 0;
-  if (deficit > liquidation) return BANKRUPT_PENALTY;
+  if (deficit > liquidation) return BANKRUPT_PENALTY + (deficit - liquidation) * 6;
   return deficit * SHORTFALL_RATE;
 }
 

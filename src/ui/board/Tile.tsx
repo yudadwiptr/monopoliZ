@@ -19,6 +19,8 @@ export interface TileViewProps {
   levelName: string | null;
   /** Price when unowned, current toll when owned (properties only). */
   value: number;
+  /** Active toll multiplier (1, 2 for Color Monopoly or Festival, 4 for both). */
+  mult?: number;
   festival: boolean;
   sel: SelState;
   alert: boolean;
@@ -85,7 +87,7 @@ function nameFontSize(name: string): string {
   return `calc(var(--c) * ${Math.min(0.19, fit).toFixed(3)})`;
 }
 
-function PricePlate({ value, ownerColor, festival }: { value: number; ownerColor: string | null; festival: boolean }) {
+function PricePlate({ value, ownerColor, mult = 1 }: { value: number; ownerColor: string | null; mult?: number }) {
   return (
     <div
       className="bz-price-zone"
@@ -102,7 +104,7 @@ function PricePlate({ value, ownerColor, festival }: { value: number; ownerColor
       <span className="bz-price-text num">
         {ownerColor && <span className="bz-coin" aria-hidden />}
         {formatRp(value, { short: true })}
-        {festival && <span className="bz-price-mult">×2</span>}
+        {mult > 1 && <span className="bz-price-mult">×{mult}</span>}
       </span>
     </div>
   );
@@ -143,9 +145,9 @@ function StateLayers({ p }: { p: TileViewProps }) {
           </span>
         </>
       )}
-      {p.festival && (
+      {(p.festival || (p.mult ?? 1) > 1) && (
         <span className="bz-badge bz-badge-fest num" aria-hidden>
-          ×2
+          ×{p.mult && p.mult > 1 ? p.mult : 2}
         </span>
       )}
     </>
@@ -233,11 +235,11 @@ function SideTileContent({ p, band }: { p: TileViewProps; band: string | null })
   const isTourist = def.kind === 'tourist';
   const isOwned = !!p.ownerColor;
   const lotColor = band ?? '#5AA6EC';
+  const lotBg = `linear-gradient(180deg, ${mix(lotColor, '#FFFFFF', 0.22)} 0%, ${lotColor} 62%, ${mix(lotColor, '#05081A', 0.28)} 100%)`;
 
   return (
     <>
-      <div className="bz-lot-zone" style={{ '--band': lotColor } as CSSProperties}>
-        <span className="bz-band-strip" aria-hidden />
+      <div className="bz-lot-zone" style={{ background: lotBg, '--band': lotColor } as CSSProperties}>
         {isTourist && !isOwned && <span className="bz-tourist-tag">WISATA</span>}
         {/* The lot icon shows until a building stands on the lot. */}
         {!isOwned && (
@@ -249,7 +251,7 @@ function SideTileContent({ p, band }: { p: TileViewProps; band: string | null })
           {def.name}
         </span>
       </div>
-      <PricePlate value={p.value} ownerColor={p.ownerColor} festival={p.festival} />
+      <PricePlate value={p.value} ownerColor={p.ownerColor} mult={p.mult} />
     </>
   );
 }

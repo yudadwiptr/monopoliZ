@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { DEFAULT_SALARY, LEVEL_NAMES, tollAt } from '@/engine/economy';
+import { DEFAULT_SALARY, LEVEL_NAMES, tollAt, tollMultiplierAt } from '@/engine/economy';
 import type { MapDef } from '@/engine/types';
 import { useGame, useSelectableTiles } from '@/store/gameStore';
 import { Logo } from '@/ui/common';
@@ -50,6 +50,7 @@ export function TilesLayer({ map, c, onPick }: TilesLayerProps) {
         const t = tiles[def.index];
         const owner = t?.owner ? players.find((p) => p.id === t.owner) ?? null : null;
         const value = owner ? tollAt(map.tiles, tiles, def.index, festival) : def.price ?? 0;
+        const mult = owner ? tollMultiplierAt(map.tiles, tiles, def.index, festival) : 1;
         const sel: SelState = selecting ? (selSet.has(def.index) ? 'pick' : 'dim') : 'none';
         return (
           <Tile
@@ -60,6 +61,7 @@ export function TilesLayer({ map, c, onPick }: TilesLayerProps) {
             ownerName={owner?.name ?? null}
             levelName={owner && def.kind === 'city' ? LEVEL_NAMES[t.level] ?? null : null}
             value={value}
+            mult={mult}
             festival={festival === def.index}
             sel={sel}
             alert={alertSet.has(def.index)}
