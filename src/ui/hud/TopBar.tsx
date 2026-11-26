@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
-import { Box, Diamond, Gauge, Grid2x2, Pause, Rabbit, Turtle, Volume2, VolumeX } from 'lucide-react';
+import { Focus, Gauge, Grid2x2, Pause, Rabbit, Turtle, Volume2, VolumeX } from 'lucide-react';
 import { useGame } from '@/store/gameStore';
-import { CAMERA_LABEL, SPEED_LABEL, useSettings, type CameraMode, type GameSpeed } from '@/store/settingsStore';
+import { SPEED_LABEL, useSettings, type GameSpeed } from '@/store/settingsStore';
 import { Logo } from '@/ui/common';
 import { IconButton } from './IconButton';
 import { useMapDef } from './hooks';
@@ -14,13 +14,6 @@ const SPEED_ICON: Record<GameSpeed, React.ReactNode> = {
   santai: <Turtle size={18} aria-hidden />,
   normal: <Gauge size={18} aria-hidden />,
   ngebut: <Rabbit size={18} aria-hidden />,
-};
-
-const CAMERA_ORDER: CameraMode[] = ['iso', '3d', 'top'];
-const CAMERA_ICON: Record<CameraMode, React.ReactNode> = {
-  iso: <Diamond size={18} aria-hidden />,
-  '3d': <Box size={18} aria-hidden />,
-  top: <Grid2x2 size={18} aria-hidden />,
 };
 
 const UNMUTE_KEY = 'monopoliz.hud.unmute';
@@ -70,13 +63,22 @@ function RoundPill({ compact, mini }: { compact?: boolean; mini?: boolean }) {
   if (mini) {
     return (
       <div
-        className="glass relative flex items-center gap-1.5 overflow-hidden !rounded-full px-2.5 py-1 text-xs font-display font-bold"
+        className="relative flex items-center gap-1.5 overflow-hidden rounded-full border-2 border-[#4a3525] px-3 py-1 font-display text-xs font-black shadow-[0_2px_0_#1a110b] sm:text-[13px]"
+        style={{
+          background: final
+            ? 'linear-gradient(180deg, #fecaca 0%, #f87171 100%)'
+            : 'linear-gradient(180deg, #fff8e7 0%, #fde68a 100%)',
+          color: '#1e130c',
+        }}
         aria-label={`Ronde ${round}${maxRounds ? ` dari ${maxRounds}` : ''}`}
       >
-        <span className="text-ink-300">Ronde</span>
-        <span className={clsx('num', final ? 'text-merah-300' : 'text-gold-300')}>
+        <span aria-hidden className="text-sm leading-none">
+          {map?.theme.emblem ?? '🏆'}
+        </span>
+        <span className="uppercase tracking-wider text-[#5c4028]">Ronde</span>
+        <span className={clsx('num text-sm font-black sm:text-base', final ? 'text-[#991b1b]' : 'text-[#b45309]')}>
           {round}
-          {maxRounds !== null && <span className="text-ink-300">/{maxRounds}</span>}
+          {maxRounds !== null && <span className="text-[#4a3525]">/{maxRounds}</span>}
         </span>
       </div>
     );
@@ -85,41 +87,52 @@ function RoundPill({ compact, mini }: { compact?: boolean; mini?: boolean }) {
   return (
     <div
       className={clsx(
-        'glass relative flex min-w-0 items-center gap-2 overflow-hidden !rounded-2xl',
-        compact ? 'h-10 px-2.5 pb-1' : 'h-12 px-3 pb-1',
+        'relative flex min-w-0 items-center gap-2 overflow-hidden rounded-2xl border-2 border-[#4a3525] shadow-[0_3px_0_#1a110b]',
+        compact ? 'h-9 px-2.5' : 'h-11 px-3',
       )}
+      style={{
+        background: 'linear-gradient(180deg, #fff8e7 0%, #f5deb3 100%)',
+        color: '#1e130c',
+      }}
       aria-label={`Ronde ${round}${maxRounds ? ` dari ${maxRounds}` : ''}, peta ${map?.name ?? ''}`}
     >
       {map && (
-        <span className={clsx('shrink-0 leading-none', compact ? 'text-base' : 'text-2xl')} aria-hidden>
+        <span className={clsx('shrink-0 leading-none', compact ? 'text-base' : 'text-xl')} aria-hidden>
           {map.theme.emblem}
         </span>
       )}
       <div className="min-w-0 leading-tight">
-        <div className="flex items-baseline gap-1 whitespace-nowrap font-display font-semibold">
-          <span className={clsx('text-ink-300', compact ? 'text-xs' : 'text-sm')}>Ronde</span>
+        <div className="flex items-baseline gap-1 whitespace-nowrap font-display font-black">
+          <span className={clsx('uppercase tracking-wider text-[#5c4028]', compact ? 'text-[11px]' : 'text-xs')}>
+            Ronde
+          </span>
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.span
               key={round}
-              className={clsx('num inline-block', compact ? 'text-sm' : 'text-lg', final ? 'text-merah-300' : 'text-white')}
-              initial={{ scale: 1.8, opacity: 0, y: -6 }}
+              className={clsx(
+                'num inline-block font-black',
+                compact ? 'text-sm' : 'text-base',
+                final ? 'text-[#dc2626]' : 'text-[#b45309]',
+              )}
+              initial={{ scale: 1.6, opacity: 0, y: -4 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
+              exit={{ opacity: 0, y: 4 }}
               transition={{ type: 'spring', stiffness: 500, damping: 22 }}
             >
               {round}
             </motion.span>
           </AnimatePresence>
-          {maxRounds !== null && <span className={clsx('num text-ink-300', compact ? 'text-xs' : 'text-sm')}>/{maxRounds}</span>}
-        </div>
-        <div className="truncate text-[10px] font-medium text-ink-300">
-          {final ? <span className="font-semibold text-merah-300">Ronde terakhir!</span> : map?.name}
+          {maxRounds !== null && (
+            <span className={clsx('num font-extrabold text-[#4a3525]', compact ? 'text-xs' : 'text-sm')}>
+              /{maxRounds}
+            </span>
+          )}
         </div>
       </div>
       {maxRounds !== null && (
-        <div className="absolute inset-x-0 bottom-0 h-[3px] overflow-hidden bg-white/10" aria-hidden>
+        <div className="absolute inset-x-0 bottom-0 h-[3px] overflow-hidden bg-[#4a3525]/20" aria-hidden>
           <motion.div
-            className={clsx('h-full w-full origin-left rounded-full', final ? 'bg-merah-400' : 'bg-brand-400')}
+            className={clsx('h-full w-full origin-left rounded-full', final ? 'bg-[#dc2626]' : 'bg-[#d97706]')}
             initial={false}
             animate={{ scaleX: progress }}
             transition={{ type: 'spring', stiffness: 120, damping: 20 }}
@@ -130,24 +143,28 @@ function RoundPill({ compact, mini }: { compact?: boolean; mini?: boolean }) {
   );
 }
 
+const WOOD_BTN =
+  '!bg-[#4a3525] hover:!bg-[#5c4028] !text-[#fff8e7] !border-[1.5px] !border-[#f5deb3]/85 !shadow-[0_2px_0_#1a110b]';
+
 export function TopBar({ variant }: { variant: TopBarVariant }) {
   const speed = useSettings((s) => s.speed);
-  const camera = useSettings((s) => s.camera);
+  const followCam = useSettings((s) => s.followCam);
   const muted = useSettings((s) => s.sfxVolume === 0 && s.musicVolume === 0);
 
   const cycleSpeed = () => {
     const i = SPEED_ORDER.indexOf(speed);
     useSettings.getState().setSpeed(SPEED_ORDER[(i + 1) % SPEED_ORDER.length]);
   };
-  const toggleCamera = () => {
-    const i = CAMERA_ORDER.indexOf(camera);
-    useSettings.getState().setCamera(CAMERA_ORDER[(i + 1) % CAMERA_ORDER.length]);
+  const toggleCameraMode = () => {
+    const cur = useSettings.getState().followCam;
+    useSettings.getState().setCamera('top');
+    useSettings.getState().setFollowCam(!cur);
   };
   const pause = () => useGame.getState().setPaused(true);
 
   const wide = variant === 'wide';
-  const tip = variant !== 'stack' && variant !== 'floating';
-  const cameraName = CAMERA_LABEL[camera] ?? '3D';
+  const tip = variant !== 'stack';
+  const cameraModeLabel = followCam ? 'Mode Fokus (Auto-Zoom)' : 'Mode Utuh (Penuh)';
 
   const buttons = (
     <>
@@ -157,30 +174,43 @@ export function TopBar({ variant }: { variant: TopBarVariant }) {
         text={wide ? SPEED_LABEL[speed] : undefined}
         onClick={cycleSpeed}
         tip={tip}
+        className={WOOD_BTN}
       />
       <IconButton
-        label={`Kamera: ${cameraName} (ketuk untuk ganti)`}
-        icon={CAMERA_ICON[camera] ?? CAMERA_ICON['3d']}
-        text={wide ? cameraName : undefined}
-        onClick={toggleCamera}
+        label={`Kamera: ${cameraModeLabel} (ketuk untuk ganti)`}
+        icon={followCam ? <Focus size={18} aria-hidden className="text-[#fde68a]" /> : <Grid2x2 size={18} aria-hidden />}
+        text={wide ? (followCam ? 'Fokus' : 'Utuh') : undefined}
+        onClick={toggleCameraMode}
+        pressed={followCam}
         tip={tip}
+        className={WOOD_BTN}
       />
       <IconButton
         label={muted ? 'Nyalakan suara' : 'Bisukan suara'}
-        icon={muted ? <VolumeX size={18} aria-hidden className="text-merah-300" /> : <Volume2 size={18} aria-hidden />}
+        icon={muted ? <VolumeX size={17} aria-hidden className="text-[#fca5a5]" /> : <Volume2 size={17} aria-hidden />}
         onClick={toggleMute}
         pressed={muted}
         tip={tip}
+        className={WOOD_BTN}
       />
-      <IconButton label="Jeda (Esc)" icon={<Pause size={18} aria-hidden />} onClick={pause} tip={tip} />
+      <IconButton label="Jeda (Esc)" icon={<Pause size={17} aria-hidden />} onClick={pause} tip={tip} className={WOOD_BTN} />
     </>
   );
 
   if (variant === 'floating') {
     return (
-      <div className="pointer-events-auto flex items-center gap-1">
+      <div
+        className="pointer-events-auto flex items-center gap-1.5 rounded-full px-2 py-1"
+        style={{
+          background: '#2b2118',
+          border: '2.5px solid #f5deb3',
+          boxShadow: '0 6px 18px rgba(0, 0, 0, 0.45), 0 3px 0 #1a110b',
+        }}
+      >
         <RoundPill mini />
-        <div className="flex items-center gap-1 [&_button]:!h-8 [&_button]:!w-8 [&_button]:!min-w-8">{buttons}</div>
+        <div className="flex items-center gap-1 [&_button]:!h-8 [&_button]:!w-8 [&_button]:!min-w-8 [&_button]:!rounded-full">
+          {buttons}
+        </div>
       </div>
     );
   }
@@ -195,14 +225,28 @@ export function TopBar({ variant }: { variant: TopBarVariant }) {
   }
 
   return (
-    <header className="flex items-center gap-2">
+    <header
+      className="flex items-center gap-2 rounded-2xl px-2 py-1"
+      style={{
+        background: '#2b2118',
+        border: '2.5px solid #f5deb3',
+        boxShadow: '0 5px 14px rgba(0, 0, 0, 0.4), 0 2px 0 #1a110b',
+      }}
+    >
       {wide && (
         <div className="hidden max-h-12 shrink-0 items-center lg:flex">
           <Logo size="sm" />
         </div>
       )}
       <RoundPill compact={!wide} />
-      <div className={clsx('ml-auto flex shrink-0 items-center', wide ? 'gap-2' : 'gap-1.5')}>{buttons}</div>
+      <div
+        className={clsx(
+          'ml-auto flex shrink-0 items-center [&_button]:!h-9 [&_button]:!w-9 [&_button]:!min-w-9 [&_button]:!rounded-xl',
+          wide ? 'gap-2' : 'gap-1',
+        )}
+      >
+        {buttons}
+      </div>
     </header>
   );
 }

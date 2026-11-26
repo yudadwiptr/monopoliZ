@@ -75,9 +75,13 @@ export function LevelStepper({ options, selected, onSelect, label, cumulative }:
         Gunakan panah kiri/kanan untuk memilih level, Enter untuk konfirmasi.
       </span>
       {n > 1 && (
-        <div aria-hidden className="absolute top-[25px] h-1.5 rounded-full bg-white/10" style={{ left: inset, right: inset }}>
+        <div
+          aria-hidden
+          className="absolute top-[22px] h-1.5 rounded-full bg-[#8c6239]/25"
+          style={{ left: inset, right: inset }}
+        >
           <motion.div
-            className="h-full origin-left rounded-full bg-gradient-to-r from-brand-400 to-gold-400"
+            className="h-full origin-left rounded-full bg-gradient-to-r from-[#d97706] to-[#15803d]"
             initial={false}
             animate={{ scaleX: fill }}
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
@@ -109,47 +113,55 @@ export function LevelStepper({ options, selected, onSelect, label, cumulative }:
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 420, damping: 26, delay: 0.04 + i * 0.04 }}
               whileTap={disabled ? undefined : { scale: 0.95 }}
+              style={{
+                background: disabled
+                  ? 'rgba(235, 220, 195, 0.55)'
+                  : isSel
+                    ? 'rgba(255, 243, 201, 0.96)'
+                    : included
+                      ? 'rgba(255, 246, 218, 0.88)'
+                      : 'rgba(255, 248, 231, 0.75)',
+                borderColor: disabled ? '#b09372' : isSel ? '#b45309' : '#8c6239',
+                borderWidth: isSel ? '2px' : '1.5px',
+                color: '#2b1d12',
+              }}
               className={clsx(
-                'group relative flex min-h-[6.2rem] flex-col items-center rounded-2xl border px-1 pb-1.5 pt-1.5 text-center outline-none transition-colors',
-                'focus-visible:ring-4 focus-visible:ring-brand-300/60',
-                disabled && 'cursor-not-allowed border-white/5 bg-white/[0.03]',
-                !disabled && !isSel && !landmark && 'border-white/10 bg-white/[0.06] hover:bg-white/10',
-                !disabled && !isSel && landmark && 'border-gold-400/50 bg-gradient-to-b from-gold-400/25 to-gold-600/5 hover:from-gold-400/35',
-                isSel && (landmark ? 'border-gold-300 bg-gold-400/20' : 'border-brand-300/80 bg-brand-500/20'),
-                included && 'bg-brand-500/10',
+                'group relative flex min-h-[5.4rem] flex-col items-center rounded-xl px-1 pb-1.5 pt-1.5 text-center outline-none transition-colors',
+                'focus-visible:ring-4 focus-visible:ring-amber-500/50',
+                disabled ? 'cursor-not-allowed opacity-75' : 'hover:brightness-95',
+                isSel && 'shadow-[0_3px_0_#8c6239]',
               )}
             >
               {isSel && (
                 <motion.span
                   layoutId={selLayoutId}
                   aria-hidden
-                  className={clsx(
-                    'pointer-events-none absolute inset-0 rounded-2xl',
-                    landmark ? 'shadow-glow-gold' : 'shadow-glow-brand',
-                  )}
+                  className="pointer-events-none absolute inset-0 rounded-xl ring-2 ring-[#d97706]/50"
                   transition={{ type: 'spring', stiffness: 480, damping: 34 }}
                 />
               )}
               <motion.span
                 className={clsx(
-                  'relative grid h-10 w-10 place-items-center rounded-full border',
-                  isSel || included ? 'border-white/25 bg-ink-800' : 'border-white/10 bg-ink-900',
-                  landmark && !disabled && 'border-gold-400/70',
+                  'relative grid h-9 w-9 place-items-center rounded-full border-[1.5px]',
+                  isSel || included
+                    ? 'border-[#8c6239] bg-[#fffdf7] shadow-sm'
+                    : 'border-[#a8845e] bg-[#f7ead0]',
+                  landmark && !disabled && 'border-[#d97706]',
                 )}
-                animate={isSel ? { y: -2, scale: 1.08 } : { y: 0, scale: 1 }}
+                animate={isSel ? { y: -1, scale: 1.06 } : { y: 0, scale: 1 }}
                 transition={{ type: 'spring', stiffness: 520, damping: 18 }}
               >
-                <LevelArt level={o.level} size={30} muted={disabled} />
+                <LevelArt level={o.level} size={26} muted={disabled} />
                 {o.status === 'locked' && (
-                  <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-ink-700 text-ink-200 ring-1 ring-ink-900">
+                  <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-[#5c4028] text-[#fff8e7] ring-1 ring-[#2b1d12]">
                     <Lock size={9} strokeWidth={2.6} />
                   </span>
                 )}
                 {(included || isSel) && (
                   <span
                     className={clsx(
-                      'absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full ring-1 ring-ink-900',
-                      isSel ? (landmark ? 'bg-gold-400 text-ink-950' : 'bg-brand-400 text-white') : 'bg-daun-500 text-ink-950',
+                      'absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full ring-1 ring-[#2b1d12]',
+                      isSel ? 'bg-[#d97706] text-white' : 'bg-[#15803d] text-white',
                     )}
                   >
                     <Check size={10} strokeWidth={3.4} />
@@ -158,19 +170,25 @@ export function LevelStepper({ options, selected, onSelect, label, cumulative }:
               </motion.span>
               <span
                 className={clsx(
-                  'mt-1 font-display text-xs font-semibold leading-none',
-                  disabled ? 'text-ink-400' : landmark ? 'text-gold-300' : 'text-white',
+                  'mt-1 font-display text-[11px] font-extrabold leading-none',
+                  disabled ? 'text-[#785a3c]' : landmark ? 'text-[#b45309]' : 'text-[#1e130c]',
                 )}
               >
                 {LEVEL_NAMES[o.level]}
               </span>
               {discounted && (
-                <s className="num mt-0.5 text-[9px] leading-none text-ink-400">{formatRp(o.baseCost, { short: true })}</s>
+                <s className="num mt-0.5 text-[9px] leading-none text-[#785a3c]">{formatRp(o.baseCost, { short: true })}</s>
               )}
               <span
                 className={clsx(
-                  'num mt-0.5 whitespace-nowrap text-xs font-bold leading-tight',
-                  o.status === 'poor' ? 'text-merah-400' : disabled ? 'text-ink-400' : isSel || landmark ? 'text-gold-300' : 'text-ink-100',
+                  'num mt-0.5 whitespace-nowrap text-[11px] font-extrabold leading-tight',
+                  o.status === 'poor'
+                    ? 'text-[#b91c1c]'
+                    : disabled
+                      ? 'text-[#785a3c]'
+                      : isSel || landmark
+                        ? 'text-[#b45309]'
+                        : 'text-[#2b1d12]',
                 )}
               >
                 {formatRp(o.cost, { short: true })}
@@ -178,14 +196,14 @@ export function LevelStepper({ options, selected, onSelect, label, cumulative }:
               {disabled && o.reason ? (
                 <span
                   className={clsx(
-                    'mt-0.5 text-[9.5px] font-semibold leading-tight',
-                    o.status === 'poor' ? 'text-merah-300' : 'text-ink-300',
+                    'mt-0.5 text-[9px] font-bold leading-tight',
+                    o.status === 'poor' ? 'text-[#b91c1c]' : 'text-[#6b4c30]',
                   )}
                 >
                   {o.reason}
                 </span>
               ) : (
-                <span className="mt-0.5 whitespace-nowrap text-[10px] font-semibold leading-tight text-daun-400">
+                <span className="mt-0.5 whitespace-nowrap text-[9.5px] font-extrabold leading-tight text-[#15803d]">
                   Sewa <span className="num">{formatRp(o.toll, { short: true })}</span>
                 </span>
               )}

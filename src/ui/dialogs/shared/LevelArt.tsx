@@ -12,11 +12,36 @@ export interface LevelArtProps {
   muted?: boolean;
 }
 
+const LEVEL_BG_POS: Record<number, string> = {
+  1: '0% 0%',       // Baris 1, Kolom 1: Rumah
+  2: '33.33% 0%',   // Baris 1, Kolom 2: Ruko
+  3: '66.66% 0%',   // Baris 1, Kolom 3: Hotel
+  4: '100% 0%',     // Baris 1, Kolom 4: Landmark
+};
+
 /**
- * Cute flat building illustrations for each level, drawn in one consistent style:
- * 48×48 grid, thick dark outline, soft ground shadow, night-market palette.
+ * 2D illustrated chibi building sprites for each property level:
+ * Level 0 uses a grass plot + flag; Levels 1–4 render `/sprites/icons_chibi_sheet.png` with `mix-blend-mode: multiply`.
  */
 export function LevelArt({ level, size = 40, className, muted }: LevelArtProps) {
+  const bgPos = LEVEL_BG_POS[level];
+  if (bgPos) {
+    return (
+      <span
+        role="img"
+        aria-label={LEVEL_NAMES[level] ?? 'Bangunan'}
+        className={clsx('inline-block shrink-0 select-none', muted && 'opacity-50 grayscale', className)}
+        style={{
+          width: size,
+          height: size,
+          backgroundImage: "url('/sprites/icons_chibi_sheet.png')",
+          backgroundSize: '400% 200%',
+          backgroundPosition: bgPos,
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+    );
+  }
   return (
     <svg
       viewBox="0 0 48 48"
@@ -27,11 +52,7 @@ export function LevelArt({ level, size = 40, className, muted }: LevelArtProps) 
       aria-label={LEVEL_NAMES[level] ?? 'Bangunan'}
     >
       <ellipse cx="24" cy="42" rx="17" ry="3.6" fill="#000" opacity="0.28" />
-      {level <= 0 && <Tanah />}
-      {level === 1 && <Rumah />}
-      {level === 2 && <Ruko />}
-      {level === 3 && <Hotel />}
-      {level >= 4 && <Landmark />}
+      <Tanah />
     </svg>
   );
 }

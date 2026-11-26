@@ -1,0 +1,66 @@
+{
+  "board_name": "MonopoliZ Nusantara 2D",
+  "projection": "flat_top_down_2d",
+  "resolution": {
+    "width": 1376,
+    "height": 768
+  },
+  "pawns": [
+    {
+      "id": "kucing_blangkon",
+      "name": "Kucing Blangkon",
+      "sprite": "pawns/pawn_kucing_blangkon.png",
+      "width": 598,
+      "height": 801
+    },
+    {
+      "id": "garuda",
+      "name": "Garuda Cilik",
+      "sprite": "pawns/pawn_garuda.png",
+      "width": 594,
+      "height": 652
+    },
+    {
+      "id": "komodo_udeng",
+      "name": "Komodo Udeng",
+      "sprite": "pawns/pawn_komodo_udeng.png",
+      "width": 534,
+      "height": 781
+    },
+    {
+      "id": "bajaj_oranye",
+      "name": "Bajaj Oranye",
+      "sprite": "pawns/pawn_bajaj_oranye.png",
+      "width": 510,
+      "height": 808
+    },
+    {
+      "id": "becak",
+      "name": "Becak",
+      "sprite": "pawns/pawn_becak.png",
+      "width": 744,
+      "height": 808
+    },
+    {
+      "id": "tumpeng",
+      "name": "Tumpeng Ceria",
+      "sprite": "pawns/pawn_tumpeng.png",
+      "width": 542,
+      "height": 931
+    },
+    {
+      "id": "gatotkaca",
+      "name": "Gatotkaca",
+      "sprite": "pawns/pawn_gatotkaca.png",
+      "width": 650,
+      "height": 786
+    },
+    {
+      "id": "ondel_ondel",
+      "name": "Ondel-Ondel",
+      "sprite": "pawns/pawn_ondel_ondel.png",
+      "width": 636,
+      "height": 748
+    }
+  ]
+}

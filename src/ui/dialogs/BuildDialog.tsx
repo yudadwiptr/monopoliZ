@@ -94,7 +94,7 @@ function UpgradeBuild({ map, def, me, pending, festival }: InnerProps) {
   const lapLocked = options.filter((o) => o.status === 'locked' && o.level <= HOTEL_LEVEL).map((o) => LEVEL_NAMES[o.level]);
 
   return (
-    <DialogShell labelledBy={titleId} accent={tileColor(map, def)} className="sm:max-w-[28rem]">
+    <DialogShell variant="parchment" labelledBy={titleId} accent={tileColor(map, def)}>
       <PropertyHeader
         map={map}
         def={def}
@@ -107,22 +107,24 @@ function UpgradeBuild({ map, def, me, pending, festival }: InnerProps) {
         }
       />
 
-      <div className="mt-2.5 flex items-baseline justify-between px-0.5">
-        <p className="font-display text-sm font-semibold text-white">Upgrade gedung 🏗️</p>
-        {lapLocked.length > 0 ? (
-          <span className="flex items-center gap-1 text-[11px] text-ink-300">
-            <Lock size={11} className="shrink-0" aria-hidden />
-            {lapLocked.join(' & ')}: putaran 2
-          </span>
-        ) : (
-          <span className="text-[11px] text-gold-300">🏛️ Hotel → Landmark</span>
-        )}
-      </div>
-      <div className="mt-1.5">
-        <LevelStepper options={options} selected={selected} onSelect={setSelected} label="Pilih level bangunan" />
+      <div>
+        <div className="flex items-baseline justify-between px-0.5">
+          <p className="font-display text-xs font-extrabold text-[#2b1d12]">Upgrade gedung 🏗️</p>
+          {lapLocked.length > 0 ? (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-[#6b4c30]">
+              <Lock size={10} className="shrink-0" aria-hidden />
+              {lapLocked.join(' & ')}: putaran 2
+            </span>
+          ) : (
+            <span className="text-[10.5px] font-extrabold text-[#b45309]">🏛️ Hotel → Landmark</span>
+          )}
+        </div>
+        <div className="mt-1">
+          <LevelStepper options={options} selected={selected} onSelect={setSelected} label="Pilih level bangunan" />
+        </div>
       </div>
 
-      <div className="mt-2.5 flex gap-2">
+      <div className="flex gap-2">
         <Stat
           label="Sewa baru"
           tone="daun"
@@ -147,17 +149,17 @@ function UpgradeBuild({ map, def, me, pending, festival }: InnerProps) {
       </div>
 
       <DialogActions>
-        <Button variant="glass" size="lg" silent onClick={skip} className={SKIP_BTN} aria-keyshortcuts="Escape">
+        <Button variant="glass" size="sm" silent onClick={skip} className={SKIP_BTN} aria-keyshortcuts="Escape">
           Lewati
         </Button>
         <Button
           variant="primary"
-          size="lg"
+          size="sm"
           silent
           disabled={!choice}
           onClick={build}
-          className="min-w-0 flex-1 px-3"
-          icon={<Hammer size={20} strokeWidth={2.4} />}
+          className="!flex !h-10 min-w-0 !items-center !justify-center !gap-1.5 !border-2 !border-[#2b1d12] !px-2.5 !py-2 !text-[13px] !leading-[1.1] !shadow-[0_3px_0_#2b1d12] whitespace-nowrap"
+          icon={<Hammer size={16} strokeWidth={2.5} />}
           aria-keyshortcuts="Enter"
         >
           <ActionLabel verb="Bangun" amount={choice ? formatRp(choice.cost) : undefined} />
@@ -182,7 +184,7 @@ function LandmarkBuild({ map, def, me, pending, festival }: InnerProps) {
   useDialogKeys({ enter: canBuild ? build : undefined, escape: skip });
 
   return (
-    <DialogShell labelledBy={titleId} accent="#FFC21F" ring="#FFC21F">
+    <DialogShell variant="parchment" labelledBy={titleId} accent="#FFC21F" ring="#FFC21F">
       <PropertyHeader
         map={map}
         def={def}
@@ -196,40 +198,34 @@ function LandmarkBuild({ map, def, me, pending, festival }: InnerProps) {
       />
 
       <motion.div
-        className="relative mt-3 overflow-hidden rounded-3xl border border-gold-300/60 bg-gradient-to-br from-gold-400/30 via-gold-600/10 to-ink-900/40 p-4"
+        className="relative overflow-hidden rounded-2xl border-2 border-[#b45309] bg-gradient-to-br from-[#fef3c7]/95 via-[#fde68a]/85 to-[#f59e0b]/25 p-2.5"
         initial={{ opacity: 0, scale: 0.94, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 360, damping: 22, delay: 0.1 }}
       >
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-          animate={{ x: ['0%', '400%'] }}
-          transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.2, ease: 'easeInOut' }}
-        />
-        <div className="relative flex items-center gap-3">
+        <div className="relative flex items-center gap-2.5">
           <motion.div
-            className="grid h-24 w-24 shrink-0 place-items-center rounded-full bg-ink-950/50 ring-2 ring-gold-400/60"
-            animate={{ y: [0, -5, 0] }}
+            className="grid h-16 w-16 shrink-0 place-items-center rounded-full border-2 border-[#b45309] bg-[#fffdf7]"
+            animate={{ y: [0, -3, 0] }}
             transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <LevelArt level={LANDMARK_LEVEL} size={76} />
+            <LevelArt level={LANDMARK_LEVEL} size={52} />
           </motion.div>
           <div className="min-w-0">
-            <p className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-300">Level Sultan</p>
-            <p className="text-gradient-gold font-display text-3xl font-bold leading-tight">Landmark</p>
-            <p className="mt-1 flex items-start gap-1 text-sm font-semibold text-white">
-              <ShieldCheck size={16} className="mt-0.5 shrink-0 text-gold-300" aria-hidden />
-              Landmark tidak bisa diakuisisi &amp; sewa 4x!
+            <p className="font-display text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#b45309]">Level Sultan</p>
+            <p className="font-display text-xl font-black leading-tight text-[#1e130c]">Landmark</p>
+            <p className="mt-0.5 flex items-start gap-1 text-xs font-bold text-[#2b1d12]">
+              <ShieldCheck size={14} className="mt-0.5 shrink-0 text-[#15803d]" aria-hidden />
+              Kebal akuisisi &amp; sewa 4x!
             </p>
           </div>
         </div>
       </motion.div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="flex gap-2">
         <Stat
           label="Sewa baru"
-          tone="gold"
+          tone="daun"
           value={formatRp(tollNew)}
           hint={
             <>
@@ -245,29 +241,29 @@ function LandmarkBuild({ map, def, me, pending, festival }: InnerProps) {
           hint={
             <>
               Biaya{' '}
-              {pending.discount && <s className="num text-ink-400">{formatRp(baseCost, { short: true })}</s>}{' '}
-              <span className="num text-gold-200">{formatRp(cost)}</span>
+              {pending.discount && <s className="num text-[#785a3c]">{formatRp(baseCost, { short: true })}</s>}{' '}
+              <span className="num font-bold text-[#b45309]">{formatRp(cost)}</span>
             </>
           }
         />
       </div>
 
       <DialogActions>
-        <Button variant="glass" size="lg" silent onClick={skip} className={SKIP_BTN} aria-keyshortcuts="Escape">
+        <Button variant="glass" size="sm" silent onClick={skip} className={SKIP_BTN} aria-keyshortcuts="Escape">
           Lewati
         </Button>
         <Button
           variant="gold"
-          size="lg"
+          size="sm"
           silent
           disabled={!canBuild}
           onClick={build}
-          className="min-w-0 flex-1 px-3"
+          className="!flex !h-10 min-w-0 !items-center !justify-center !gap-1.5 !border-2 !border-[#2b1d12] !px-2.5 !py-2 !text-[13px] !leading-[1.1] !text-[#1e130c] !shadow-[0_3px_0_#2b1d12] whitespace-nowrap"
           aria-keyshortcuts="Enter"
           icon={<span aria-hidden>🏛️</span>}
         >
           <ActionLabel
-            verb="Bangun Landmark"
+            verb="Landmark"
             amount={
               <>
                 {pending.discount && <s className="mr-1 opacity-60">{formatRp(baseCost, { short: true })}</s>}

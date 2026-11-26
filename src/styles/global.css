@@ -27,18 +27,20 @@
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
   width: 100%;
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   @apply bg-ink-900 font-sans text-ink-100 antialiased;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  user-select: none;
 }
 
 input,
@@ -93,10 +95,12 @@ textarea {
 }
 
 /* In-game: no backdrop blur over the constantly animating board (it re-blurs every frame and causes jank).
-   Slightly more opaque surfaces keep the same look. */
+   When `mz-moving` is active (`isMoving === true`), force disable any backdrop-filter on all HUD/modal descendants. */
 .mz-game .glass,
 .mz-game .glass-strong,
-.mz-game [class*='backdrop-blur'] {
+.mz-game [class*='backdrop-blur'],
+.mz-moving,
+.mz-moving * {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }

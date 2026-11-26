@@ -7,18 +7,22 @@ import { ActionDock } from './ActionDock';
 import { useMeasure } from './hooks';
 
 /**
- * Gives the board the whole free area it is given (Board3D fits itself to any rectangle — the isometric
- * diamond in particular needs the extra width). Shakes the board whenever `useGame().shake` increments.
+ * Gives the board the whole free area it is given and optionally renders the floating bottom dice dock.
+ * On mobile portrait, `GameScreen` places `ActionDock` in its own dedicated bottom slot so it never overlaps
+ * Player 3 & Player 4's cards; on landscape/desktop, `BoardStage` floats `ActionDock` at bottom-center (`bottom: 10px`).
  */
 export function BoardStage({
   className,
   style,
   compact,
+  hideDock = false,
 }: {
   className?: string;
   style?: React.CSSProperties;
   /** Smaller roll button (short screens) */
   compact?: boolean;
+  /** When true, caller renders ActionDock in a dedicated layout slot (e.g. mobile portrait bottom bar) */
+  hideDock?: boolean;
 }) {
   const [ref, size] = useMeasure<HTMLDivElement>();
   const w = Math.floor(size.width);
@@ -41,11 +45,18 @@ export function BoardStage({
   }, [shake, reduce, controls]);
 
   return (
-    <div ref={ref} className={clsx('flex min-h-0 min-w-0 items-center justify-center', className)} style={style}>
+    <div ref={ref} className={clsx('relative flex min-h-0 min-w-0 items-center justify-center', className)} style={style}>
       {Math.min(w, h) > 40 && (
-        <motion.div animate={controls} className="relative" style={{ width: w, height: h }}>
-          <Board3D center={<ActionDock compact={compact || h < 500 || w < 520} />} />
+        <motion.div animate={controls} className="relative will-change-transform" style={{ width: w, height: h }}>
+          <Board3D />
         </motion.div>
+      )}
+      {!hideDock && (
+        <div className="pointer-events-none fixed bottom-2.5 left-1/2 z-30 -translate-x-1/2 sm:bottom-3.5">
+          <div className="pointer-events-auto">
+            <ActionDock compact={compact || h < 500 || w < 520} />
+          </div>
+        </div>
       )}
     </div>
   );

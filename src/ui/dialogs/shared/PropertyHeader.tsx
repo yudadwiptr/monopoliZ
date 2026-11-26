@@ -2,13 +2,14 @@ import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import type { MapDef, TileDef } from '@/engine/types';
+import { TileLandmarkIcon } from './TileLandmarkIcon';
 import { tileColor, tileGroupLabel } from './tileInfo';
 
 export interface PropertyHeaderProps {
   map: MapDef;
   def: TileDef;
   titleId: string;
-  /** Pill(s) shown on the colour band's right side (price, current level, owner…) */
+  /** Pill(s) shown on the header's right side (price, current level, owner…) */
   badge?: ReactNode;
   /** Optional line under the subtitle */
   children?: ReactNode;
@@ -16,44 +17,123 @@ export interface PropertyHeaderProps {
 }
 
 /**
- * "Property deed" header: group-colour band with a kawung texture, a big tile icon that pops in,
- * the city name and its province / group.
+ * 2D Hand-Drawn Property Card Header integrated directly into the full-modal `/ui/card_beli_properti_blank.png` frame:
+ * - `.property-card-icon-slot` is positioned at `top: 7.2%; left: 50%; transform: translateX(-50%); width: 17.5%; aspect-ratio: 1 / 1; background: transparent;`
+ *   directly over the white square box already drawn in `/ui/card_beli_properti_blank.png`.
+ * - The category/region label sits centered inside the dark teal ribbon plaque (`top: 23.2%; left: 50%; transform: translateX(-50%)`).
+ * - City title (`#1e130c`) and province subtitle (`#5c4028`) sit on the cream parchment immediately below the plaque.
  */
 export function PropertyHeader({ map, def, titleId, badge, children, className }: PropertyHeaderProps) {
   const color = tileColor(map, def);
+  const isTourist = def.kind === 'tourist';
+
   return (
-    <div className={clsx('relative overflow-hidden rounded-3xl border border-white/10 bg-ink-900/70', className)}>
+    <>
+      {/* Optional Price / Discount / Level badge at top-right of the tropical banner */}
+      {badge && (
+        <div
+          className="z-10 flex items-center gap-1"
+          style={{
+            position: 'absolute',
+            top: '7.5%',
+            right: '8.5%',
+          }}
+        >
+          {badge}
+        </div>
+      )}
+
+      {/*
+        Dynamic Icon Slot (`.property-card-icon-slot`):
+        Static outer div handles `left: 50%; transform: translateX(-50%)` so Framer Motion scale animation
+        on the inner icon never overwrites `translateX(-50%)`!
+      */}
       <div
-        className="relative h-12 sm:h-14"
-        style={{ background: `linear-gradient(120deg, ${color} 0%, ${color}D9 55%, ${color}99 100%)` }}
+        className="property-card-icon-slot"
+        style={{
+          position: 'absolute',
+          top: '7.2%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '17.5%',
+          aspectRatio: '1 / 1',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'transparent',
+          zIndex: 5,
+        }}
       >
-        <div className="batik-bg absolute inset-0 opacity-90 mix-blend-overlay" aria-hidden />
-        <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" aria-hidden />
-        <span className="absolute left-[5.75rem] top-2 font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-950/80 sm:left-[6.5rem] sm:top-2.5 sm:text-xs">
+        <motion.div
+          key={def.index}
+          className="flex h-full w-full items-center justify-center"
+          initial={{ scale: 0.55, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+        >
+          <TileLandmarkIcon def={def} color={color} className="h-[75%] w-[75%] object-contain" />
+        </motion.div>
+      </div>
+
+      {/* Category / Region Badge centered inside the dark teal ribbon plaque below the icon box */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '23.1%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          height: '5.2%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 6,
+        }}
+      >
+        <span
+          className="inline-flex items-center gap-1.5 whitespace-nowrap px-2 font-display font-black uppercase text-[#fff8e7] drop-shadow-[0_1.5px_0_#102a2e]"
+          style={{
+            fontSize: '10px',
+            letterSpacing: '0.08em',
+          }}
+        >
+          <span
+            className="h-2 w-2 shrink-0 rounded-full border border-[#102a2e] shadow-sm"
+            style={{ background: isTourist ? '#22D3C5' : color }}
+            aria-hidden
+          />
           {tileGroupLabel(map, def)}
         </span>
-        {badge && <div className="absolute right-2.5 top-2 flex items-center gap-1.5 sm:top-2.5">{badge}</div>}
       </div>
-      <div className="relative flex items-end gap-3 px-3 pb-3">
-        <motion.div
-          className="-mt-8 grid h-[4.5rem] w-[4.5rem] shrink-0 place-items-center rounded-2xl bg-gradient-to-b from-white to-ink-100 text-[2.6rem] shadow-lg sm:-mt-9 sm:h-20 sm:w-20 sm:text-5xl"
-          style={{ boxShadow: `0 0 0 3px ${color}, 0 10px 24px -8px ${color}AA` }}
-          initial={{ scale: 0.4, rotate: -14 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 520, damping: 16, delay: 0.08 }}
-          aria-hidden
+
+      {/* City / Tourist Name & Province Subtitle on the cream parchment below the dark teal plaque */}
+      <div className={clsx('flex w-full flex-col items-center text-center', className)}>
+        <h2
+          id={titleId}
+          className="w-full truncate font-display"
+          style={{
+            fontSize: '20px',
+            fontWeight: 800,
+            color: '#1e130c',
+            lineHeight: 1.15,
+          }}
         >
-          <span className="leading-none">{def.icon}</span>
-        </motion.div>
-        <div className="min-w-0 flex-1 pt-1.5">
-          <h2 id={titleId} className="truncate font-display text-2xl font-bold leading-tight text-white sm:text-[1.7rem]">
-            {def.name}
-          </h2>
-          {def.subtitle && <p className="truncate text-sm text-ink-300">{def.subtitle}</p>}
-        </div>
+          {def.name}
+        </h2>
+        {def.subtitle && (
+          <p
+            className="mt-0.5 w-full truncate font-display font-semibold"
+            style={{
+              fontSize: '12px',
+              color: '#5c4028',
+              lineHeight: 1.2,
+            }}
+          >
+            {def.subtitle}
+          </p>
+        )}
+        {children && <div className="mt-1.5 w-full">{children}</div>}
       </div>
-      {children && <div className="relative px-3 pb-3">{children}</div>}
-    </div>
+    </>
   );
 }
 
@@ -68,16 +148,16 @@ export function Pill({
   className?: string;
 }) {
   const tones: Record<string, string> = {
-    dark: 'bg-ink-950/75 text-white border-white/10',
-    gold: 'bg-gradient-to-b from-gold-300 to-gold-500 text-ink-950 border-white/40',
-    merah: 'bg-merah-500 text-white border-white/20',
-    daun: 'bg-daun-500 text-ink-950 border-white/30',
-    brand: 'bg-brand-500 text-white border-white/20',
+    dark: 'bg-[#fff8e7]/95 text-[#2b1d12] border-[#5c4028]',
+    gold: 'bg-gradient-to-b from-gold-300 to-gold-500 text-[#1e130c] border-[#5c4028]',
+    merah: 'bg-merah-500 text-white border-[#2b1d12]',
+    daun: 'bg-daun-500 text-[#1e130c] border-[#2b1d12]',
+    brand: 'bg-brand-500 text-white border-[#2b1d12]',
   };
   return (
     <span
       className={clsx(
-        'inline-flex h-7 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 font-display text-xs font-semibold shadow-sm',
+        'inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-2 font-display text-[10.5px] font-extrabold shadow-sm',
         tones[tone],
         className,
       )}

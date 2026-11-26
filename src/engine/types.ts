@@ -65,6 +65,8 @@ export interface CharacterDef {
   id: string;
   name: string;
   emoji: string;
+  /** Path to 2D transparent PNG pawn sprite in public/pawns/ */
+  sprite: string;
   color: string; // signature colour (also used as the player's colour)
   tagline: string;
 }

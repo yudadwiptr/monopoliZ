@@ -34,7 +34,7 @@ export interface ViewState {
   dice: [number, number] | null;
   diceRolling: boolean;
   activePlayerId: string;
-  moving: { playerId: string; mode: 'walk' | 'fly' | 'jump' } | null;
+  moving: { playerId: string; mode: 'walk' | 'fly' | 'jump'; to: number } | null;
   /** Player whose island status changed recently (for UI badges) */
   islandTurns: Record<string, number>;
 }
@@ -217,7 +217,7 @@ export const useGame = create<GameStore>()((set, get) => {
       case 'move': {
         if (ev.mode === 'walk' && ev.steps !== 0) {
           const dir = ev.steps > 0 ? 1 : -1;
-          patchView(() => ({ moving: { playerId: ev.playerId, mode: 'walk' } }));
+          patchView(() => ({ moving: { playerId: ev.playerId, mode: 'walk', to: ev.to } }));
           let pos = ev.from;
           for (let s = 0; s < Math.abs(ev.steps); s++) {
             if (!alive()) return;
@@ -231,7 +231,7 @@ export const useGame = create<GameStore>()((set, get) => {
           await sleep(120);
         } else {
           patchView((v) => ({
-            moving: { playerId: ev.playerId, mode: ev.mode },
+            moving: { playerId: ev.playerId, mode: ev.mode, to: ev.to },
             positions: { ...v.positions, [ev.playerId]: ev.to },
           }));
           sfx.play(ev.mode === 'fly' ? 'fly' : 'whoosh');

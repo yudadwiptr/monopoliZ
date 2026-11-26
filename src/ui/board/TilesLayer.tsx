@@ -1,9 +1,7 @@
-import { memo, useMemo } from 'react';
+import { useMemo } from 'react';
 import { DEFAULT_SALARY, LEVEL_NAMES, tollAt, tollMultiplierAt } from '@/engine/economy';
 import type { MapDef } from '@/engine/types';
 import { useGame, useSelectableTiles } from '@/store/gameStore';
-import { Logo } from '@/ui/common';
-import { clamp, CORNER_K, RIM_K } from './geometry';
 import { Tile, type SelState } from './Tile';
 
 interface TilesLayerProps {
@@ -15,8 +13,13 @@ interface TilesLayerProps {
 
 const EMPTY_SET = new Set<number>();
 
-/** The 32 tiles + recessed Get Rich center pit, laid out on the (tilted) board plane. */
-export function TilesLayer({ map, c, onPick }: TilesLayerProps) {
+/**
+ * Layered 2D Hand-Drawn Board:
+ * - z-index 1: `<img src="/board/board_centerpiece.png" />` at `inset: 18.5%; width: 63%; height: 63%; object-fit: cover;`
+ * - z-index 2: `<img src="/board/board_frame_2d.png" alt="Board Frame" />` at `inset: 0; width: 100%; height: 100%; object-fit: fill;`
+ * - z-index 3: 32-tile transparent CSS Grid at `inset: 5.2%; grid-template-columns: 1.35fr repeat(7, 1fr) 1.35fr;`
+ */
+export function TilesLayer({ map, onPick }: TilesLayerProps) {
   const tiles = useGame((s) => s.view?.tiles);
   const festival = useGame((s) => s.view?.festivalTile ?? null);
   const players = useGame((s) => s.game?.players);
@@ -38,75 +41,76 @@ export function TilesLayer({ map, c, onPick }: TilesLayerProps) {
   if (!tiles || !players) return null;
 
   return (
-    <div
-      className="bz-grid"
-      style={{
-        inset: RIM_K * c,
-        gridTemplateColumns: `${CORNER_K}fr repeat(7, 1fr) ${CORNER_K}fr`,
-        gridTemplateRows: `${CORNER_K}fr repeat(7, 1fr) ${CORNER_K}fr`,
-      }}
-    >
-      {map.tiles.map((def) => {
-        const t = tiles[def.index];
-        const owner = t?.owner ? players.find((p) => p.id === t.owner) ?? null : null;
-        const value = owner ? tollAt(map.tiles, tiles, def.index, festival) : def.price ?? 0;
-        const mult = owner ? tollMultiplierAt(map.tiles, tiles, def.index, festival) : 1;
-        const sel: SelState = selecting ? (selSet.has(def.index) ? 'pick' : 'dim') : 'none';
-        return (
-          <Tile
-            key={def.index}
-            def={def}
-            bandColor={def.group !== undefined ? map.groups[def.group]?.color ?? null : null}
-            ownerColor={owner?.color ?? null}
-            ownerName={owner?.name ?? null}
-            levelName={owner && def.kind === 'city' ? LEVEL_NAMES[t.level] ?? null : null}
-            value={value}
-            mult={mult}
-            festival={festival === def.index}
-            sel={sel}
-            alert={alertSet.has(def.index)}
-            here={!selecting && activePos === def.index ? activeColor : null}
-            salary={salary}
-            onPick={onPick}
-          />
-        );
-      })}
-      <BoardCenter map={map} logoScale={clamp(c / 44, 0.7, 2.1)} />
-    </div>
-  );
-}
+    <>
+      {/* Layer 1 (z-index: 1): Center Island Diorama tucked inside the inner opening of board_frame_2d.png */}
+      <img
+        src="/board/board_centerpiece.png"
+        alt=""
+        decoding="async"
+        draggable={false}
+        style={{
+          position: 'absolute',
+          inset: '22.2%',
+          width: '55.6%',
+          height: '55.6%',
+          objectFit: 'cover',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      />
 
-interface CenterProps {
-  map: MapDef;
-  logoScale: number;
-}
+      {/* Layer 2 (z-index: 2): Full 2D Hand-Drawn Wooden Frame & Parchment Tile Grid Image */}
+      <img
+        src="/board/board_frame_2d.png"
+        alt="Board Frame"
+        decoding="async"
+        draggable={false}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'fill',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      />
 
-/**
- * Recessed 3D Center Pit:
- * - Stepped 3D cliff walls around the inner perimeter
- * - Counter-rotated watermark emblem & map wordmark in the middle of the arena floor
- */
-const BoardCenter = memo(function BoardCenter({ map, logoScale }: CenterProps) {
-  return (
-    <div className="bz-center" style={{ gridRow: '2 / 9', gridColumn: '2 / 9' }} aria-hidden>
-      <div className="bz-center-ring" />
-      <div className="bz-center-arena">
-        <div className="bz-emblem">{map.theme.emblem}</div>
-        <div className="bz-center-head">
-          <div
-            style={{
-              transform: `scale(${logoScale * 0.88})`,
-              transformOrigin: '50% 50%',
-              opacity: 0.35,
-              filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
-            }}
-          >
-            <Logo size="sm" />
-          </div>
-          <div className="bz-mapname">{map.name}</div>
-          <div className="bz-tagline">{map.tagline}</div>
-        </div>
+      {/* Layer 3 (z-index: 3): Transparent 32-Tile Interactive Layer aligned to exact tile rects on board_frame_2d.png */}
+      <div
+        className="bz-grid"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 3,
+        }}
+      >
+        {map.tiles.map((def) => {
+          const t = tiles[def.index];
+          const owner = t?.owner ? players.find((p) => p.id === t.owner) ?? null : null;
+          const value = owner ? tollAt(map.tiles, tiles, def.index, festival) : def.price ?? 0;
+          const mult = owner ? tollMultiplierAt(map.tiles, tiles, def.index, festival) : 1;
+          const sel: SelState = selecting ? (selSet.has(def.index) ? 'pick' : 'dim') : 'none';
+          return (
+            <Tile
+              key={def.index}
+              def={def}
+              bandColor={def.group !== undefined ? map.groups[def.group]?.color ?? null : null}
+              ownerColor={owner?.color ?? null}
+              ownerName={owner?.name ?? null}
+              levelName={owner && def.kind === 'city' ? LEVEL_NAMES[t.level] ?? null : null}
+              value={value}
+              mult={mult}
+              festival={festival === def.index}
+              sel={sel}
+              alert={alertSet.has(def.index)}
+              here={!selecting && activePos === def.index ? activeColor : null}
+              salary={salary}
+              onPick={onPick}
+            />
+          );
+        })}
       </div>
-    </div>
+    </>
   );
-});
+}

@@ -79,7 +79,7 @@ function CityBuy({ map, def, me, pending }: InnerProps) {
   const lockedNames = options.filter((o) => o.status === 'locked').map((o) => LEVEL_NAMES[o.level]);
 
   return (
-    <DialogShell labelledBy={titleId} accent={tileColor(map, def)} className="sm:max-w-[28rem]">
+    <DialogShell variant="parchment" labelledBy={titleId} accent={tileColor(map, def)}>
       <PropertyHeader
         map={map}
         def={def}
@@ -95,20 +95,22 @@ function CityBuy({ map, def, me, pending }: InnerProps) {
         }
       />
 
-      <div className="mt-2.5 flex items-baseline justify-between px-0.5">
-        <p className="font-display text-sm font-semibold text-white">Pilih bangunan (checklist):</p>
-        {lockedNames.length > 0 && (
-          <span className="flex items-center gap-1 text-[11px] text-ink-300">
-            <Lock size={11} className="shrink-0" aria-hidden />
-            {lockedNames.join(' & ')}: putaran 2
-          </span>
-        )}
-      </div>
-      <div className="mt-1.5">
-        <LevelStepper options={options} selected={selected} onSelect={setSelected} label="Pilih level pembelian" cumulative />
+      <div>
+        <div className="flex items-baseline justify-between px-0.5">
+          <p className="font-display text-xs font-extrabold text-[#2b1d12]">Pilih bangunan (checklist):</p>
+          {lockedNames.length > 0 && (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-[#6b4c30]">
+              <Lock size={10} className="shrink-0" aria-hidden />
+              {lockedNames.join(' & ')}: putaran 2
+            </span>
+          )}
+        </div>
+        <div className="mt-1">
+          <LevelStepper options={options} selected={selected} onSelect={setSelected} label="Pilih level pembelian" cumulative />
+        </div>
       </div>
 
-      <div className="mt-2.5 flex gap-2">
+      <div className="flex gap-2">
         <Stat
           label="Sewa kamu"
           tone="daun"
@@ -131,24 +133,24 @@ function CityBuy({ map, def, me, pending }: InnerProps) {
         <motion.p
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-2 rounded-xl border border-gold-400/30 bg-gold-400/10 px-3 py-2 text-xs text-gold-200"
+          className="rounded-xl border border-[#b45309] bg-[#fef3c7]/90 px-2.5 py-1 text-[11px] font-semibold text-[#78350f]"
         >
           🏷️ Voucher 50% kepakai — hemat <b className="num">{formatRp(choice.baseCost - choice.cost)}</b>!
         </motion.p>
       )}
 
       <DialogActions>
-        <Button variant="glass" size="lg" silent onClick={skip} className={SKIP_BTN} aria-keyshortcuts="Escape">
+        <Button variant="glass" size="sm" silent onClick={skip} className={SKIP_BTN} aria-keyshortcuts="Escape">
           Lewati
         </Button>
         <Button
           variant="gold"
-          size="lg"
+          size="sm"
           silent
           disabled={!choice}
           onClick={buy}
-          className="min-w-0 flex-1 px-3"
-          icon={<ShoppingBag size={20} strokeWidth={2.4} />}
+          className="!flex !h-10 min-w-0 !items-center !justify-center !gap-1.5 !border-2 !border-[#2b1d12] !px-2.5 !py-2 !text-[13px] !leading-[1.1] !text-[#1e130c] !shadow-[0_3px_0_#2b1d12] whitespace-nowrap"
+          icon={<ShoppingBag size={16} strokeWidth={2.5} />}
           aria-keyshortcuts="Enter"
         >
           <ActionLabel verb="Beli" amount={choice ? formatRp(choice.cost) : undefined} />
@@ -169,7 +171,6 @@ function TouristBuy({ game, map, def, me, pending }: InnerProps & { game: GameSt
   const owned = all.filter((i) => game.tiles[i]?.owner === me.id).length;
   const after = owned + 1;
   const tiers = all.map((_, k) => ({ count: k + 1, toll: touristToll(def, k + 1) }));
-  const maxToll = Math.max(1, ...tiers.map((t) => t.toll));
   const winsNow = after >= all.length;
 
   const buy = () => canBuy && act({ type: 'BUY', level: 0 });
@@ -177,7 +178,7 @@ function TouristBuy({ game, map, def, me, pending }: InnerProps & { game: GameSt
   useDialogKeys({ enter: canBuy ? buy : undefined, escape: skip });
 
   return (
-    <DialogShell labelledBy={titleId} accent={tileColor(map, def)}>
+    <DialogShell variant="parchment" labelledBy={titleId} accent={tileColor(map, def)}>
       <PropertyHeader
         map={map}
         def={def}
@@ -185,31 +186,47 @@ function TouristBuy({ game, map, def, me, pending }: InnerProps & { game: GameSt
         badge={pending.discount ? <Pill tone="gold">🏷️ -50%</Pill> : <Pill>🏝️ Wisata</Pill>}
       />
 
-      <div className="mt-3 rounded-2xl border border-laut-400/25 bg-laut-500/[0.07] p-3">
-        <div className="flex items-baseline justify-between">
-          <p className="font-display text-sm font-semibold text-laut-300">Sewa per koleksi wisata</p>
-          <p className="text-[11px] text-ink-300">
-            Kamu punya <b className="num text-white">{owned}</b>/{all.length}
+      <div
+        className="rounded-xl px-2.5 py-2"
+        style={{
+          background: 'rgba(255, 248, 231, 0.78)',
+          border: '1.5px solid #8c6239',
+        }}
+      >
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="font-display text-xs font-extrabold text-[#0f766e]">Sewa per koleksi wisata</p>
+          <p className="whitespace-nowrap text-[10.5px] font-semibold text-[#5c4028]">
+            Kamu punya <b className="num text-[#1e130c]">{owned}</b>/{all.length}
           </p>
         </div>
-        <div className="mt-2 grid grid-cols-4 items-end gap-2" role="list" aria-label="Tabel sewa wisata">
-          {tiers.map((t, i) => {
+        <div
+          className="mt-2"
+          role="list"
+          aria-label="Tabel sewa wisata"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '6px',
+            textAlign: 'center',
+            fontSize: '11px',
+          }}
+        >
+          {tiers.map((t) => {
             const mine = t.count === after;
             return (
-              <div key={t.count} role="listitem" className="flex flex-col items-center">
-                <span className={`num mb-1 text-[12px] font-bold ${mine ? 'text-gold-300' : 'text-ink-200'}`}>
+              <div
+                key={t.count}
+                role="listitem"
+                className="flex flex-col items-center justify-between rounded-lg px-1 py-1.5"
+                style={{
+                  background: mine ? 'rgba(254, 243, 199, 0.95)' : 'rgba(232, 213, 181, 0.55)',
+                  border: mine ? '1.5px solid #d97706' : '1px solid rgba(140, 98, 57, 0.45)',
+                }}
+              >
+                <span className={`num whitespace-nowrap text-[11.5px] font-extrabold ${mine ? 'text-[#b45309]' : 'text-[#1e130c]'}`}>
                   {formatRp(t.toll, { short: true })}
                 </span>
-                <div className="relative flex h-16 w-full items-end overflow-hidden rounded-xl bg-white/5">
-                  <motion.div
-                    className={`w-full origin-bottom rounded-lg ${mine ? 'bg-gradient-to-t from-gold-600 to-gold-300 shadow-glow-gold' : 'bg-gradient-to-t from-laut-600/80 to-laut-400/80'}`}
-                    style={{ height: `${Math.max(14, (t.toll / maxToll) * 100)}%` }}
-                    initial={{ scaleY: 0 }}
-                    animate={{ scaleY: 1 }}
-                    transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 + i * 0.07 }}
-                  />
-                </div>
-                <span className={`mt-1 text-[11px] font-semibold ${mine ? 'text-gold-300' : 'text-ink-300'}`}>
+                <span className={`mt-1 whitespace-nowrap text-[10.5px] font-extrabold ${mine ? 'text-[#b45309]' : 'text-[#5c4028]'}`}>
                   {mine ? 'Kamu!' : `${t.count} wisata`}
                 </span>
               </div>
@@ -219,36 +236,39 @@ function TouristBuy({ game, map, def, me, pending }: InnerProps & { game: GameSt
       </div>
 
       <motion.p
-        className={`mt-2.5 flex items-start gap-2 rounded-xl px-3 py-2 text-xs ${winsNow ? 'border border-gold-400/50 bg-gold-400/15 text-gold-200' : 'bg-white/5 text-ink-200'}`}
-        animate={winsNow ? { scale: [1, 1.03, 1] } : undefined}
+        className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-[#2b1d12]"
+        style={{
+          background: winsNow ? 'rgba(254, 243, 199, 0.92)' : 'rgba(255, 248, 231, 0.78)',
+          border: winsNow ? '1.5px solid #d97706' : '1.5px solid #8c6239',
+        }}
+        animate={winsNow ? { scale: [1, 1.02, 1] } : undefined}
         transition={winsNow ? { repeat: Infinity, duration: 1.4 } : undefined}
       >
-        <Trophy size={15} className="mt-px shrink-0 text-gold-400" aria-hidden />
+        <Trophy size={14} className="shrink-0 text-[#b45309]" aria-hidden />
         {winsNow ? (
           <span>
-            <b>Ini wisata terakhir!</b> Beli sekarang = langsung menang <b>Monopoli Wisata</b>! 🏆
+            <b>Wisata terakhir!</b> Beli = menang <b>Monopoli Wisata</b>! 🏆
           </span>
         ) : (
           <span>
-            Kuasai semua <b>{all.length} destinasi wisata</b> = <b className="text-gold-300">Monopoli Wisata</b>, langsung
-            menang!
+            Kuasai <b>{all.length} destinasi wisata</b> = <b className="text-[#b45309]">Monopoli Wisata</b>!
           </span>
         )}
       </motion.p>
 
-      <div className="mt-3 flex gap-2">
+      <div className="flex gap-2">
         <Stat
           label="Harga"
-          tone="gold"
+          tone="daun"
           value={
-            <span className="flex items-baseline gap-1.5">
-              {pending.discount && <s className="text-xs text-ink-400">{formatRp(baseCost, { short: true })}</s>}
+            <span className="flex items-baseline gap-1">
+              {pending.discount && <s className="text-[10px] text-[#785a3c]">{formatRp(baseCost, { short: true })}</s>}
               {formatRp(cost)}
             </span>
           }
         />
         <Stat
-          label="Sisa uang setelah beli"
+          label="Sisa uang"
           tone={canBuy ? 'plain' : 'merah'}
           value={canBuy ? <Money value={me.cash - cost} flash={false} /> : 'Uang kurang'}
           hint={
@@ -260,17 +280,17 @@ function TouristBuy({ game, map, def, me, pending }: InnerProps & { game: GameSt
       </div>
 
       <DialogActions>
-        <Button variant="glass" size="lg" silent onClick={skip} className={SKIP_BTN} aria-keyshortcuts="Escape">
+        <Button variant="glass" size="sm" silent onClick={skip} className={SKIP_BTN} aria-keyshortcuts="Escape">
           Lewati
         </Button>
         <Button
           variant="gold"
-          size="lg"
+          size="sm"
           silent
           disabled={!canBuy}
           onClick={buy}
-          className="min-w-0 flex-1 px-3"
-          icon={<ShoppingBag size={20} strokeWidth={2.4} />}
+          className="!flex !h-10 min-w-0 !items-center !justify-center !gap-1.5 !border-2 !border-[#2b1d12] !px-2.5 !py-2 !text-[13px] !leading-[1.1] !text-[#1e130c] !shadow-[0_3px_0_#2b1d12] whitespace-nowrap"
+          icon={<ShoppingBag size={16} strokeWidth={2.5} />}
           aria-keyshortcuts="Enter"
         >
           <ActionLabel verb="Beli" amount={formatRp(cost)} />

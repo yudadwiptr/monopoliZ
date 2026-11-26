@@ -387,9 +387,9 @@ export function OnlineLobbyScreen() {
                     })}
                   </div>
 
-                  {/* Quick character switcher for local player inside lobby */}
+                  {/* Quick pawn switcher for local player inside lobby */}
                   <div className="mt-3 border-t border-white/10 pt-3">
-                    <span className="text-[11px] font-semibold text-ink-300">Ganti karaktermu:</span>
+                    <span className="text-[11px] font-semibold text-ink-300">Ganti pionmu:</span>
                     <div className="mt-1.5 grid grid-cols-4 gap-1.5">
                       {CHARACTERS.map((c) => {
                         const taken = takenChars.has(c.id);
@@ -401,13 +401,13 @@ export function OnlineLobbyScreen() {
                             disabled={taken}
                             onClick={() => setMyProfile(myName, c.id)}
                             className={clsx(
-                              'flex items-center justify-center gap-1 rounded-xl border py-1.5 font-display text-xs font-bold transition-all',
+                              'flex items-center justify-center gap-1 rounded-xl border px-1.5 py-1.5 font-display text-xs font-bold transition-all',
                               active && 'border-gold-300 bg-gold-400/20 text-gold-200',
                               !active && !taken && 'border-white/10 bg-white/5 text-white hover:bg-white/10',
                               taken && 'cursor-not-allowed border-white/5 bg-white/[0.02] opacity-35',
                             )}
                           >
-                            <span>{c.emoji}</span>
+                            <img src={c.sprite} alt="" className="h-5 w-5 shrink-0 object-contain" />
                             <span className="truncate text-[10px]">{c.name}</span>
                           </button>
                         );

@@ -1,8 +1,8 @@
 /**
- * Responsive layout maths for the game screen.
- *  - portrait: top bar, panel row, board stacked vertically (tablets upright; phones are asked to rotate)
- *  - wide:     slim Get Rich panels flush in the four screen corners, board full-bleed
- *  - short:    phone landscape — same as wide with compact corner panels
+ * Responsive layout maths for the game screen:
+ *  - portrait: mobile portrait (`max-width: 768px` & `orientation: portrait`) — Top Bar + P1/P2 row + 1:1 square board + P3/P4 row + bottom dice dock
+ *  - wide:     desktop & tablet landscape — 4 corner HUD cards (`clamp(130px, 18vw, 220px)`), square board in center, bottom floating dice dock
+ *  - short:    phone landscape — compact 4 corner HUD cards (`clamp(130px, 18vw, 195px)`), square board in center (`min(92dvh, 92vw)`), bottom dice dock
  */
 export type HudMode = 'portrait' | 'wide' | 'short';
 export type PanelSize = 'full' | 'compact' | 'mini';
@@ -22,30 +22,37 @@ export interface HudLayout {
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
-export function computeLayout(width: number, height: number, players: number): HudLayout {
+export function computeLayout(width: number, height: number, _players: number): HudLayout {
   const w = width > 0 ? width : typeof window !== 'undefined' ? window.innerWidth : 360;
   const h = height > 0 ? height : typeof window !== 'undefined' ? window.innerHeight : 640;
-  const n = Math.max(1, players);
 
-  if (w / h < 1.15) {
-    const perPanel = (w - 16 - (n - 1) * 6) / n;
+  if (w <= 768 && w < h) {
     return {
       mode: 'portrait',
-      panelSize: perPanel >= 150 && h >= 600 ? 'compact' : 'mini',
+      panelSize: 'mini',
       sideW: 0,
-      dockH: 0,
-      denseDock: h < 700,
+      dockH: 76,
+      denseDock: true,
+      feedLines: 0,
+    };
+  }
+
+  if (w / h < 1.05) {
+    return {
+      mode: 'portrait',
+      panelSize: 'compact',
+      sideW: 0,
+      dockH: 82,
+      denseDock: h < 740,
       feedLines: 0,
     };
   }
 
   if (h < 540) {
-    // Phone landscape: Get Rich four-corner HUD plates, compact width so the diamond board fills the screen.
-    const tiny = h < 420;
     return {
       mode: 'short',
-      panelSize: 'full',
-      sideW: tiny ? clamp(w * 0.22, 156, 196) : clamp(w * 0.24, 168, 212),
+      panelSize: 'mini',
+      sideW: Math.round(clamp(w * 0.18, 134, 196)),
       dockH: 0,
       denseDock: true,
       feedLines: 0,
@@ -55,14 +62,14 @@ export function computeLayout(width: number, height: number, players: number): H
   return {
     mode: 'wide',
     panelSize: 'full',
-    sideW: clamp(w * 0.17, 210, 256),
+    sideW: Math.round(clamp(w * 0.18, 175, 224)),
     dockH: 0,
     denseDock: false,
     feedLines: 0,
   };
 }
 
-/** Corner per seat (index = seat order). Matches LINE Let's Get Rich: top-left & top-right first, then bottom corners. */
+/** Corner per seat (index = seat order): top-left & top-right first, then bottom-left & bottom-right. */
 export function cornerSlots(players: number): Corner[] {
   if (players <= 2) return ['tl', 'tr'];
   if (players === 3) return ['tl', 'tr', 'bl'];

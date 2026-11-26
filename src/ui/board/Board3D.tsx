@@ -1,12 +1,7 @@
 import './board.css';
 import {
-  animate,
   motion,
-  useMotionValue,
   useReducedMotion,
-  useTransform,
-  type AnimationPlaybackControls,
-  type MotionValue,
 } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { sfx } from '@/audio';
@@ -51,67 +46,74 @@ function themeVars(theme: MapTheme, c: number, camera: CameraMode): CSSPropertie
 /** Width (px) of the centre controls at full size — the roll capsule with its Genap/Ganjil chips. */
 const CENTER_DESIGN_W = 280;
 
-/** On-screen size (px) a tile should reach while the camera follows a pawn. */
-const FOLLOW_CELL_PX = 76;
+/** Maximum smooth zoom factor in Mode Fokus (Auto-Zoom). */
+const FOCUS_ZOOM_MAX = 1.35;
 
 /**
- * Follow camera: while a pawn moves, zoom in and pan so it stays centred; shortly after it lands, ease back
- * to the whole board. Drives three motion values on a wrapper around the rig — no React re-renders.
+ * Hardware-accelerated GPU camera controller:
+ * - Only triggers ONCE per move toward the final destination tile (`mv.to`), never per intermediate step!
+ * - Uses pure CSS `transform: translate3d(Xpx, Ypx, 0) scale3d(S, S, 1)` with `transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1)`
+ *   so the browser's GPU compositor thread animates the camera at a locked 60fps without main-thread spring interrupts.
  */
-function useFollowCamera(rig: CameraRig, enabled: boolean) {
-  const zoom = useMotionValue(1);
-  const panX = useMotionValue(0);
-  const panY = useMotionValue(0);
-  const { S, c, k, tilt, yaw, rigScale, rigY } = rig;
+function useDestinationCamera(rig: CameraRig, enabled: boolean) {
+  const [camTransform, setCamTransform] = useState('translate3d(0px, 0px, 0) scale3d(1, 1, 1)');
+  const { S, k, tilt, yaw, rigScale, rigY } = rig;
 
   useEffect(() => {
-    const ctl: AnimationPlaybackControls[] = [];
     let back: ReturnType<typeof setTimeout> | null = null;
-    const go = (z: number, x: number, y: number, soft: boolean) => {
-      ctl.splice(0).forEach((a) => a.stop());
-      const t = soft
-        ? { type: 'spring' as const, stiffness: 70, damping: 20 }
-        : { type: 'spring' as const, stiffness: 140, damping: 24 };
-      ctl.push(animate(zoom, z, t), animate(panX, x, t), animate(panY, y, t));
-    };
-    const overview = () => go(1, 0, 0, true);
+    const overview = () => setCamTransform('translate3d(0px, 0px, 0) scale3d(1, 1, 1)');
+
     if (!enabled) {
       overview();
-      return () => ctl.forEach((a) => a.stop());
+      return () => {
+        if (back) clearTimeout(back);
+      };
     }
 
-    const focus = () => {
+    const focusDestination = () => {
       const v = useGame.getState().view;
       const mv = v?.moving;
       if (!v || !mv) {
-        if (!back && zoom.get() !== 1) back = setTimeout(() => ((back = null), overview()), 700 * speedFactor());
+        if (!back) {
+          back = setTimeout(() => {
+            back = null;
+            overview();
+          }, 420 * speedFactor());
+        }
         return;
       }
       if (back) {
         clearTimeout(back);
         back = null;
       }
-      const spot = pawnSpot(v.positions[mv.playerId] ?? 0, 0, 1);
-      const p = project(spot.u, spot.v, CELL_N * 0.35, tilt.get(), k, yaw.get());
+      // Compute coordinates of the final destination tile (mv.to) ONCE for the entire move
+      const destTile = mv.to ?? v.positions[mv.playerId] ?? 0;
+      const spot = pawnSpot(destTile, 0, 1);
+      const p = project(spot.u, spot.v, CELL_N * 0.2, tilt.get(), k, yaw.get());
       const rs = rigScale.get();
-      const ox = p.x * S * rs;
-      const oy = p.y * S * rs + rigY.get();
-      const z = clamp(FOLLOW_CELL_PX / Math.max(1, c * rs), 1.12, 2.1);
-      go(z, -ox * z, -oy * z, false);
+      const z = FOCUS_ZOOM_MAX;
+      // Gentle quadrant pan toward destination tile, clamped so the board edges stay well within view
+      const maxPan = S * rs * 0.16;
+      const tx = clamp(-p.x * S * rs * 0.42, -maxPan, maxPan);
+      const ty = clamp(-(p.y * S * rs + rigY.get()) * 0.42, -maxPan, maxPan);
+      setCamTransform(`translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) scale3d(${z}, ${z}, 1)`);
     };
 
+    // Only subscribe to `s.view.moving` changes (start & end of move), NOT per-step `positions`!
     const unsub = useGame.subscribe((s, prev) => {
-      if (s.view?.moving !== prev.view?.moving || s.view?.positions !== prev.view?.positions) focus();
+      if (s.view?.moving !== prev.view?.moving) {
+        focusDestination();
+      }
     });
-    focus();
+    focusDestination();
+
     return () => {
       unsub();
       if (back) clearTimeout(back);
-      ctl.forEach((a) => a.stop());
     };
-  }, [enabled, S, c, k, tilt, yaw, rigScale, rigY, zoom, panX, panY]);
+  }, [enabled, S, k, tilt, yaw, rigScale, rigY]);
 
-  return { zoom, panX, panY };
+  return camTransform;
 }
 
 /** Candidates the human may pick right now (read imperatively so the board never re-renders for it). */
@@ -139,7 +141,7 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
   const cam = useCamValue(rig);
   const followSetting = useSettings((s) => s.followCam);
   const reduce = useReducedMotion();
-  const follow = useFollowCamera(rig, followSetting && !reduce);
+  const camTransform = useDestinationCamera(rig, followSetting && !reduce);
   // Screen-space y of the board centre (u=0, v=0) relative to the container centre — keeps roll controls inside the pit.
   const centerY = useLive(
     [rig.tilt, rig.yaw, rig.rigScale, rig.rigY],
@@ -169,17 +171,17 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
     <div ref={rootRef} className="relative h-full w-full select-none overflow-hidden" style={vars}>
       {ready && map && (
         <CamContext.Provider value={cam}>
-          <div className="bz-ambient" aria-hidden />
-          <motion.div className="absolute inset-0 will-change-transform" style={{ scale: follow.zoom, x: follow.panX, y: follow.panY }}>
+          {camera !== 'top' && <div className="bz-ambient" aria-hidden />}
+          <div className="board-camera-wrapper absolute inset-0" style={{ transform: camTransform }}>
             <motion.div
               className="absolute left-1/2 top-1/2"
               style={{ width: S, height: S, marginLeft: -S / 2, marginTop: -S / 2, scale: rig.rigScale, y: rig.rigY }}
             >
-              <div className="bz-persp" style={{ perspective: `${(k * S).toFixed(1)}px` }}>
-                <motion.div className="bz-slab" style={{ transform: rig.slabTransform }} aria-hidden />
+              <div className="bz-persp" style={{ perspective: camera === 'top' ? 'none' : `${(k * S).toFixed(1)}px` }}>
+                {camera !== 'top' && <motion.div className="bz-slab" style={{ transform: rig.slabTransform }} aria-hidden />}
                 <motion.div
                   className="bz-plane"
-                  style={{ transform: rig.planeTransform }}
+                  style={{ transform: camera === 'top' ? 'none' : rig.planeTransform }}
                   role="group"
                   aria-label={`Papan ${map.name}`}
                 >
@@ -198,7 +200,7 @@ export function Board3D({ center }: { center?: ReactNode } = {}) {
                 <FxLayer />
               </div>
             </motion.div>
-          </motion.div>
+          </div>
           {center && (
             <motion.div className="pointer-events-none absolute left-1/2 top-1/2 z-30" style={{ y: centerY, scale: centerScale }}>
               <div className="pointer-events-auto absolute left-0 top-0 w-max -translate-x-1/2 -translate-y-1/2">{center}</div>

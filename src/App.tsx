@@ -60,15 +60,15 @@ export default function App() {
 
   const Current = SCREENS[screen];
   return (
-    <div className="relative h-full w-full overflow-hidden bg-ink-900">
+    <div className="relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden bg-ink-900">
       <AnimatePresence mode="wait">
         <motion.div
           key={screen}
-          className="absolute inset-0"
-          initial={{ opacity: 0, scale: 1.02 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.35, ease: 'easeOut' }}
+          className="absolute inset-0 will-change-[opacity,transform]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
         >
           <Current />
         </motion.div>

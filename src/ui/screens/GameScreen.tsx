@@ -1,7 +1,7 @@
 /**
- * Game screen: themed backdrop, board, player panels, top bar, action dock and HUD overlays.
- * Styled after LINE Let's Get Rich on both mobile portrait (2 top corners + full board + 2 bottom corners)
- * and mobile/desktop landscape (full-bleed board + 4 flush corner HUD plates with 1st/2nd/3rd/4th rank orbs).
+ * Game screen: themed backdrop, 2D flat board, 4 corner player HUD cards, top bar, action dock and modals.
+ * - Mobile Portrait: vertical column (`TopBar` -> `P1 & P2` compact grid -> 1:1 square board -> `P3 & P4` compact grid -> thumb-friendly `ActionDock`).
+ * - Mobile Landscape & Desktop: centered 1:1 board (`min(92dvh, 92vw)`), 4 corner player cards (`clamp(130px, 18vw, 220px)`), and bottom-center floating dice dock.
  */
 import clsx from 'clsx';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import { useGame } from '@/store/gameStore';
 import { useSettings } from '@/store/settingsStore';
 import { DecisionLayer } from '@/ui/dialogs/DecisionLayer';
 import {
+  ActionDock,
   BoardStage,
   CenterToasts,
   ErrorToast,
@@ -68,7 +69,7 @@ function PortraitLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
     return (
       <PlayerPanel
         playerId={id}
-        size="full"
+        size={layout.panelSize}
         onOpen={onOpenPlayer}
         align={corner === 'tr' || corner === 'br' ? 'right' : 'left'}
         {...flags(id)}
@@ -78,28 +79,43 @@ function PortraitLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
   const hasBottom = slots.includes('bl') || slots.includes('br');
 
   return (
-    <div className="relative z-10 flex h-full flex-col gap-1.5" style={SAFE_PAD}>
-      <TopBar variant="compact" />
-      <div className="grid shrink-0 grid-cols-2 gap-1.5">
-        {at('tl')}
-        {at('tr')}
-      </div>
-      <BoardStage className="flex-1" compact={layout.denseDock} />
-      {hasBottom && (
-        <div className="grid shrink-0 grid-cols-2 gap-1.5">
-          {at('bl')}
-          {at('br')}
+    <div
+      className="relative z-10 flex h-full w-full flex-col items-center justify-between gap-1"
+      style={SAFE_PAD}
+    >
+      {/* Top Bar + Player 1 & Player 2 horizontal compact row */}
+      <div className="flex w-full shrink-0 flex-col gap-1 px-0.5">
+        <TopBar variant="compact" />
+        <div className="grid w-full grid-cols-2 gap-1.5 pt-1">
+          {at('tl')}
+          {at('tr')}
         </div>
-      )}
+      </div>
+
+      {/* Center 1:1 Square Board Area */}
+      <BoardStage className="my-auto w-full flex-1" compact={layout.denseDock} hideDock />
+
+      {/* Bottom HUD: Player 3 & Player 4 horizontal compact row + dedicated Bottom Dice Dock */}
+      <div className="flex w-full shrink-0 flex-col items-center gap-1.5 px-0.5">
+        {hasBottom && (
+          <div className="grid w-full grid-cols-2 gap-1.5">
+            {at('bl')}
+            {at('br')}
+          </div>
+        )}
+        <div className="flex min-h-[68px] w-full items-center justify-center pb-0.5">
+          <ActionDock compact />
+        </div>
+      </div>
     </div>
   );
 }
 
 /**
- * Get Rich Full-Screen Corner Layout (Mobile Landscape & Desktop):
- * - No full-width TopBar stealing vertical height: the diamond board reaches from top:0 to bottom:0!
- * - 4 Player Panels sit flush in the 4 screen corners (tl, tr, bl, br) with 1st/2nd/3rd/4th orbs & Total/Kas rows.
- * - Floating compact utility dock (Ronde, Speed, Camera, Sound, Pause) tucks into the bottom-right corner margin.
+ * Landscape & Desktop Corner Layout:
+ * - Centered 1:1 square board (`min(92dvh, 92vw)`).
+ * - 4 Player Panels sit in the 4 screen corners with proportional width (`clamp(130px, 18vw, 220px)`).
+ * - Floating bottom-center dice dock (`bottom: 10px`).
  */
 function CornerLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
   const flags = usePanelFlags();
@@ -125,21 +141,23 @@ function CornerLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
 
   return (
     <div className="relative z-10 flex h-full flex-col" style={SAFE_PAD}>
+      {/* Floating Top-Center HUD Bar (Ronde 1/25 & Utility Controls) in the top panel above the board */}
+      <div className="pointer-events-none fixed left-1/2 top-1.5 z-30 -translate-x-1/2 sm:top-2">
+        <TopBar variant="floating" />
+      </div>
+
       {fullBleed && <BoardStage className="absolute inset-0 z-0" compact={short} />}
-      <div className={clsx('pointer-events-none relative flex min-h-0 flex-1', short ? 'gap-2' : 'gap-4')}>
+      <div className={clsx('pointer-events-none relative flex min-h-0 flex-1', short ? 'gap-1.5' : 'gap-3')}>
         <aside className={aside} style={{ width: layout.sideW }}>
           <div>{at('tl')}</div>
           <div>{at('bl')}</div>
         </aside>
-        <main className="flex min-w-0 flex-1">
+        <main className="flex min-w-0 flex-1 pt-9 sm:pt-10">
           {!fullBleed && <BoardStage className="pointer-events-auto w-full flex-1" compact={short} />}
         </main>
         <aside className={aside} style={{ width: layout.sideW }}>
           <div>{at('tr')}</div>
-          <div className="flex flex-col items-end gap-1.5">
-            <TopBar variant="floating" />
-            {at('br')}
-          </div>
+          <div>{at('br')}</div>
         </aside>
       </div>
     </div>
@@ -148,6 +166,7 @@ function CornerLayout({ layout, ids, onOpenPlayer }: LayoutProps) {
 
 export function GameScreen() {
   const ready = useGame((s) => !!s.game && !!s.view);
+  const isMoving = useGame((s) => !!s.view?.moving);
   const ids = usePlayerIds();
   const [rootRef, size] = useMeasure<HTMLDivElement>();
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -161,7 +180,14 @@ export function GameScreen() {
   };
 
   return (
-    <div ref={rootRef} className={clsx('mz-game relative h-[100dvh] w-full overflow-hidden text-ink-100')}>
+    <div
+      ref={rootRef}
+      data-moving={isMoving ? 'true' : 'false'}
+      className={clsx(
+        'mz-game relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden text-ink-100',
+        isMoving && 'mz-moving',
+      )}
+    >
       <GameBackdrop />
       {ready && (
         <>

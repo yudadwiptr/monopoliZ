@@ -7,7 +7,7 @@ import { MAPS } from '@/data/maps';
 import { DEFAULT_MAX_ROUNDS, DEFAULT_SALARY, DEFAULT_START_CASH } from '@/engine/economy';
 import type { BotLevel, GameConfig } from '@/engine/types';
 
-export const SETUP_KEY = 'monopoliz.setup.v1';
+export const SETUP_KEY = 'monopoliz.setup.v2';
 export const MIN_SEATS = 2;
 export const MAX_SEATS = 4;
 export const START_CASH_OPTIONS = [1500, 2000, 3000] as const;

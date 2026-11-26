@@ -1,6 +1,5 @@
 import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
 import clsx from 'clsx';
-import { Dices } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sfx } from '@/audio';
 import { useGame } from '@/store/gameStore';
@@ -50,14 +49,16 @@ export interface DiceRollerProps {
 }
 
 /**
- * Minimalist Get Rich-style Roll button sitting cleanly inside the center pit,
- * flanked by slim Genap / Ganjil pills without any bulky container or arch track.
- * Hold to charge the smooth ring gauge; tap for a quick roll.
+ * 2D Cartoon Floating Bottom Dock (Monopoly GO / Meow Gambit style):
+ * - Capsule container: `background: #2b2118`, `border: 3px solid #f5deb3`, `border-radius: 999px`,
+ *   `padding: 8px 18px`, `box-shadow: 0 8px 20px rgba(0,0,0,0.4)`.
+ * - GENAP on the left, prominent golden-orange LEMPAR button in the center, GANJIL on the right.
+ * - Clean hint badge ("Tahan untuk atur kekuatan") attached neatly above the dock.
  */
 export function DiceRoller({ player, compact = false }: DiceRollerProps) {
   const pos = useMotionValue(0.5);
   const [charging, setCharging] = useState(false);
-  const [activeSum, setActiveSum] = useState(7);
+  const [, setActiveSum] = useState(7);
   const [hintSeen, setHintSeen] = useState(readHintSeen);
   const charges = useGame((s) => {
     const p = s.game?.players[s.game.current];
@@ -183,8 +184,8 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
     };
   }, [start, release]);
 
-  // Gauge ring hugging the coin while charging.
-  const size = compact ? 64 : 76; // coin diameter
+  // Gauge ring hugging the center coin while charging.
+  const size = compact ? 64 : 74;
   const ring = compact ? 5 : 6;
   const box = size + ring * 2 + 4;
   const r = box / 2 - ring / 2;
@@ -193,23 +194,41 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
   const ringColor = useTransform(pos, gaugeColor);
   const target = useTransform(pos, (p) => String(Math.round(2 + p * 10)));
   const empty = charges <= 0;
-  const capH = compact ? 44 : 50;
 
   return (
-    <div className="flex select-none flex-col items-center gap-2" style={{ touchAction: 'none' }}>
-      {player && (
-        <span className="rounded-full bg-ink-950/80 px-3 py-0.5 font-display text-[11px] font-semibold tracking-wide text-ink-100">
-          Giliran {player.name}
-        </span>
-      )}
+    <div className="flex select-none flex-col items-center gap-1.5" style={{ touchAction: 'none' }}>
+      {/* Hint / turn badge neatly above the bottom dock */}
+      <AnimatePresence initial={false} mode="wait">
+        {!charging && (
+          <motion.span
+            key={player?.name ?? parity ?? (empty ? 'empty' : 'hint')}
+            className="pointer-events-none whitespace-nowrap rounded-full border-[1.5px] border-[#f5deb3]/75 bg-[#2b2118]/95 px-3 py-0.5 font-display text-[11px] font-bold tracking-wide text-[#f5deb3] shadow-md"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+          >
+            {player
+              ? `Giliran ${player.name} · Tahan untuk atur kekuatan`
+              : parity
+                ? `Condong ${parity.toUpperCase()} · sisa ${charges - 1}×`
+                : empty
+                  ? 'Jatah genap/ganjil habis · isi lagi lewat Start'
+                  : 'Tahan untuk atur kekuatan'}
+          </motion.span>
+        )}
+      </AnimatePresence>
 
-      {/* One slim glass capsule: GENAP · coin · GANJIL. The coin overhangs the capsule a little. */}
-      <div className="relative flex items-center" style={{ height: box }}>
-        <div
-          aria-hidden
-          className="absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-ink-950/75 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] backdrop-blur-xl"
-          style={{ height: capH }}
-        />
+      {/* 2D Cartoon Dock Capsule: GENAP · LEMPAR · GANJIL */}
+      <div
+        className="relative flex items-center"
+        style={{
+          background: '#2b2118',
+          border: '3px solid #f5deb3',
+          borderRadius: '999px',
+          padding: compact ? '5px 12px' : '7px 18px',
+          boxShadow: '0 8px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12)',
+        }}
+      >
         <ParityChip
           label="Genap"
           side="left"
@@ -219,9 +238,13 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
           onClick={() => setParity(parity === 'genap' ? null : 'genap')}
         />
 
-        <div className="relative mx-1 flex items-center justify-center" style={{ width: box, height: box }}>
+        {/* Center protruding LEMPAR button */}
+        <div
+          className="relative mx-2 -my-3.5 flex items-center justify-center sm:mx-2.5 sm:-my-4"
+          style={{ width: box, height: box }}
+        >
           <svg className="pointer-events-none absolute inset-0 -rotate-90" width={box} height={box} aria-hidden>
-            <circle cx={box / 2} cy={box / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={ring} />
+            <circle cx={box / 2} cy={box / 2} r={r} fill="none" stroke="rgba(245,222,179,0.22)" strokeWidth={ring} />
             {charging && (
               <motion.circle
                 cx={box / 2}
@@ -242,17 +265,17 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
                 ? `Giliran ${player.name}: lempar dadu. Tahan untuk atur kekuatan.`
                 : 'Lempar dadu. Tahan untuk atur kekuatan.'
             }
-            className="relative flex touch-none flex-col items-center justify-center rounded-full text-ink-950 outline-none [-webkit-touch-callout:none] focus-visible:ring-4 focus-visible:ring-gold-300/50"
+            className="relative flex touch-none flex-col items-center justify-center rounded-full border-[2.5px] border-[#2b1d12] text-[#2b1d12] outline-none will-change-transform [-webkit-touch-callout:none] focus-visible:ring-4 focus-visible:ring-gold-300/60"
             style={{
               width: size,
               height: size,
-              background: 'linear-gradient(180deg, #FFE38A 0%, #FFC83D 48%, #F0A81C 100%)',
+              background: 'linear-gradient(180deg, #FFE68F 0%, #FFC226 52%, #EE9B12 100%)',
               boxShadow:
-                'inset 0 1.5px 0 rgba(255,255,255,0.75), inset 0 -3px 6px rgba(150,90,0,0.35), 0 0 0 1px rgba(122,79,0,0.55), 0 5px 0 #9A6400, 0 10px 18px -6px rgba(0,0,0,0.7)',
+                'inset 0 2px 0 rgba(255,255,255,0.8), inset 0 -3px 6px rgba(150,82,0,0.4), 0 4px 0 #2b1d12, 0 8px 16px rgba(0,0,0,0.55)',
             }}
-            whileHover={{ y: -1 }}
-            whileTap={{ y: 3 }}
-            animate={charging ? { y: 3, scale: 0.97 } : { y: 0, scale: 1 }}
+            whileHover={{ y: -1.5 }}
+            whileTap={{ y: 2.5 }}
+            animate={charging ? { y: 2.5, scale: 0.96 } : { y: 0, scale: 1 }}
             transition={{ type: 'spring', stiffness: 520, damping: 28 }}
             onPointerDown={(e) => {
               if (e.button !== 0) return;
@@ -268,22 +291,23 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
             onPointerCancel={() => release(true)}
             onContextMenu={(e) => e.preventDefault()}
             onClick={() => {
-              // Assistive tech "click" without pointer events → quick roll.
               if (suppressClickRef.current) return;
               roll();
             }}
           >
             {charging ? (
               <>
-                <motion.span className={clsx('num font-bold leading-none', compact ? 'text-2xl' : 'text-[28px]')}>
+                <motion.span className={clsx('num font-display font-black leading-none', compact ? 'text-2xl' : 'text-[28px]')}>
                   {target}
                 </motion.span>
-                <span className="mt-0.5 font-display text-[9px] font-bold uppercase tracking-[0.18em] opacity-70">lepas</span>
+                <span className="mt-0.5 font-display text-[9px] font-extrabold uppercase tracking-[0.16em] opacity-80">
+                  lepas
+                </span>
               </>
             ) : (
               <>
-                <DiceGlyph size={compact ? 24 : 28} />
-                <span className={clsx('mt-0.5 font-display font-bold uppercase tracking-[0.14em]', compact ? 'text-[9px]' : 'text-[10px]')}>
+                <DiceGlyph size={compact ? 25 : 29} />
+                <span className={clsx('mt-0.5 font-display font-black uppercase tracking-[0.12em]', compact ? 'text-[9px]' : 'text-[10px]')}>
                   Lempar
                 </span>
               </>
@@ -300,44 +324,30 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
           onClick={() => setParity(parity === 'ganjil' ? null : 'ganjil')}
         />
       </div>
-
-      <AnimatePresence initial={false} mode="wait">
-        {(!hintSeen || parity || empty) && !charging && (
-          <motion.span
-            key={parity ?? (empty ? 'empty' : 'hint')}
-            className="pointer-events-none whitespace-nowrap text-[11px] font-medium text-ink-200 [text-shadow:0_1px_3px_rgba(0,0,0,0.9)]"
-            initial={{ opacity: 0, y: -3 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-          >
-            {parity
-              ? `Condong ${parity} · sisa ${charges - 1}×`
-              : empty
-                ? 'Jatah genap/ganjil habis · isi lagi lewat Start'
-                : 'Tahan untuk atur kekuatan'}
-          </motion.span>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
 
-/** Two small dice, drawn so the coin reads as "roll" at a glance. */
+/** 2D illustrated dice icon from `/icons/icon_dadu_2d.png`. */
 function DiceGlyph({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <rect x="3" y="9" width="16" height="16" rx="4" fill="#FFF7E0" stroke="#3A2600" strokeWidth="2" transform="rotate(-12 11 17)" />
-      <circle cx="8" cy="14" r="1.6" fill="#3A2600" />
-      <circle cx="13.5" cy="19.5" r="1.6" fill="#3A2600" />
-      <rect x="15" y="5" width="14" height="14" rx="3.5" fill="#FFF7E0" stroke="#3A2600" strokeWidth="2" transform="rotate(14 22 12)" />
-      <circle cx="22" cy="12" r="1.6" fill="#E01E45" />
-    </svg>
+    <img
+      src="/icons/icon_dadu_2d.png"
+      alt=""
+      draggable={false}
+      style={{
+        width: size * 1.32,
+        height: size * 1.08,
+        objectFit: 'contain',
+        filter: 'drop-shadow(0 1.5px 2px rgba(43,29,18,0.35))',
+      }}
+      aria-hidden
+    />
   );
 }
 
 function ParityChip({
   label,
-  side,
   active,
   charges,
   compact,
@@ -358,12 +368,13 @@ function ParityChip({
       disabled={disabled}
       aria-label={`Pilih ${label}, sisa jatah ${charges}${active ? ' (aktif, ketuk lagi untuk bebas)' : ''}`}
       onClick={onClick}
-      whileTap={disabled ? undefined : { scale: 0.95 }}
+      whileTap={disabled ? undefined : { scale: 0.94 }}
       className={clsx(
-        'relative z-10 flex flex-col items-center justify-center gap-1 rounded-full font-display font-semibold uppercase outline-none transition-colors focus-visible:ring-2 focus-visible:ring-gold-300/60',
-        compact ? 'h-9 w-[62px] text-[10px] tracking-[0.12em]' : 'h-10 w-[74px] text-[11px] tracking-[0.14em]',
-        side === 'left' ? 'ml-1.5' : 'mr-1.5',
-        active ? 'bg-gold-400/15 text-gold-200 ring-1 ring-gold-300/60' : 'text-ink-200 hover:bg-white/5 hover:text-white',
+        'relative z-10 flex min-h-[42px] min-w-[64px] flex-col items-center justify-center gap-1 rounded-full border-2 font-display font-extrabold uppercase outline-none transition-colors focus-visible:ring-2 focus-visible:ring-gold-300/70',
+        compact ? 'h-10 w-[68px] text-[10px] tracking-[0.1em]' : 'h-11 w-[78px] text-[11px] tracking-[0.12em]',
+        active
+          ? 'border-[#ffe074] bg-[#4a3525] text-[#ffe074] shadow-[0_0_12px_rgba(255,224,116,0.35)]'
+          : 'border-[#5c432d] bg-[#3b2c1f] text-[#f5deb3] hover:border-[#f5deb3]/60 hover:bg-[#4a3728]',
         disabled && 'cursor-not-allowed opacity-35',
       )}
     >
@@ -373,8 +384,8 @@ function ParityChip({
           <span
             key={i}
             className={clsx(
-              'block h-1 w-1 rounded-full',
-              i < charges ? (active ? 'bg-gold-300' : 'bg-ink-200') : 'bg-white/15',
+              'block h-1.5 w-1.5 rounded-full',
+              i < charges ? (active ? 'bg-[#ffe074]' : 'bg-[#f5deb3]') : 'bg-white/15',
             )}
           />
         ))}

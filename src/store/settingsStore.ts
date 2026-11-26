@@ -38,15 +38,17 @@ interface SettingsState {
   setDiceSkin(s: DiceSkin): void;
 }
 
+const isMobileDefault = () => typeof window !== 'undefined' && window.innerWidth <= 768;
+
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       sfxVolume: 0.7,
       musicVolume: 0.35,
       speed: 'normal',
-      camera: 'iso',
+      camera: 'top',
       haptics: true,
-      followCam: true,
+      followCam: !isMobileDefault(),
       diceSkin: 'klasik',
       setSfxVolume: (v) => set({ sfxVolume: Math.max(0, Math.min(1, v)) }),
       setMusicVolume: (v) => set({ musicVolume: Math.max(0, Math.min(1, v)) }),
@@ -58,11 +60,11 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'monopoliz.settings.v1',
-      version: 2,
-      // v2: new isometric camera becomes the default; follow camera added.
+      version: 5,
+      // v5: Flat 2D top-down camera ('top') with Mode Utuh (followCam=false) default on mobile for 60fps zero-lag play.
       migrate: (old, from) => {
         const prev = (old ?? {}) as Partial<SettingsState>;
-        return from < 2 ? { ...prev, camera: 'iso', followCam: true } : prev;
+        return from < 5 ? { ...prev, camera: 'top', followCam: !isMobileDefault() } : prev;
       },
     },
   ),

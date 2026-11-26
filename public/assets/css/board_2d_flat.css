@@ -1,0 +1,43 @@
+/* MonopoliZ Flat 2D Board Style (Tanpa Miring 3D) */
+.board-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #79c9d4 0%, #469cb0 100%);
+  overflow: hidden;
+}
+
+.board-2d {
+  position: relative;
+  width: min(92vw, 92vh);
+  aspect-ratio: 1 / 1;
+  background: #f6eedc;
+  border: 6px solid #4a3525;
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(27, 46, 56, 0.35);
+  /* Hapus transform rotateX() agar peta rata 2D */
+  transform: none !important;
+  display: grid;
+  grid-template-columns: 1.35fr repeat(7, 1fr) 1.35fr;
+  grid-template-rows: 1.35fr repeat(7, 1fr) 1.35fr;
+  gap: 3px;
+  padding: 6px;
+}
+
+.board-centerpiece {
+  grid-column: 2 / 9;
+  grid-row: 2 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 3px solid #4a3525;
+}
+
+.pawn-sprite {
+  width: 44px;
+  height: auto;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.35));
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

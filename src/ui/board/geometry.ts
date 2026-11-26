@@ -6,12 +6,12 @@
  * fx live in a flat 2D overlay positioned with `project()`, which reproduces exactly what the CSS
  * perspective does to a point. That keeps billboards upright, crisp and trivially depth-sorted.
  */
-import { BOARD_SIZE, GRID, tileGridPos, tileSide } from '@/data/layout';
+import { BOARD_SIZE, tileGridPos, tileSide } from '@/data/layout';
 
-/** Corner / side-tile depth, in cells. */
-export const CORNER_K = 1.5;
-/** Decorative rim around the tile ring, in cells. */
-export const RIM_K = 0.22;
+/** Corner / side-tile depth, in cells (`1.53fr` vs `1fr` in `public/board/board_frame_2d.png`). */
+export const CORNER_K = 1.53;
+/** Outer wooden frame rim around the tile ring, in cells (`7.5%` of total board). */
+export const RIM_K = 0.88;
 /** Board edge length in cells. */
 export const CELLS = 7 + 2 * CORNER_K + 2 * RIM_K;
 /** One cell in normalised units. */
@@ -33,16 +33,46 @@ export interface Rect {
   h: number;
 }
 
-const trackStart = (i: number) => (i === 0 ? 0 : CORNER_K + (i - 1));
-const trackSize = (i: number) => (i === 0 || i === GRID - 1 ? CORNER_K : 1);
+/**
+ * Exact measured cream-parchment column and row boundaries (in % of full board width/height)
+ * directly from `public/board/board_frame_2d.png` (1930×1930) so every tile, color strip,
+ * ownership border, building, and pawn aligns with its hand-drawn box to the pixel.
+ */
+const COL_BOUNDS_PCT: [number, number][] = [
+  [7.68, 19.72],  // Col 0 (Left corners & left side tiles)
+  [20.92, 28.68], // Col 1
+  [29.38, 37.10], // Col 2
+  [37.77, 45.52], // Col 3
+  [46.22, 53.91], // Col 4
+  [54.59, 62.31], // Col 5
+  [63.03, 70.73], // Col 6
+  [71.45, 79.07], // Col 7
+  [80.13, 91.95], // Col 8 (Right corners & right side tiles)
+];
+
+const ROW_BOUNDS_PCT: [number, number][] = [
+  [7.45, 19.32],  // Row 0 (Top corners & top side tiles)
+  [20.58, 28.43], // Row 1
+  [29.15, 36.87], // Row 2
+  [37.55, 45.31], // Row 3
+  [45.99, 53.86], // Row 4
+  [54.53, 62.40], // Row 5
+  [63.08, 71.00], // Row 6
+  [71.67, 79.39], // Row 7
+  [80.45, 91.97], // Row 8 (Bottom corners & bottom side tiles)
+];
 
 function computeRect(index: number): Rect {
   const { row, col } = tileGridPos(index);
-  const x0 = -0.5 + RIM_N + trackStart(col) * CELL_N;
-  const y0 = -0.5 + RIM_N + trackStart(row) * CELL_N;
-  const w = trackSize(col) * CELL_N;
-  const h = trackSize(row) * CELL_N;
-  return { x0, y0, x1: x0 + w, y1: y0 + h, cx: x0 + w / 2, cy: y0 + h / 2, w, h };
+  const [cx0, cx1] = COL_BOUNDS_PCT[col] ?? [0, 10];
+  const [ry0, ry1] = ROW_BOUNDS_PCT[row] ?? [0, 10];
+  const x0 = -0.5 + cx0 / 100;
+  const x1 = -0.5 + cx1 / 100;
+  const y0 = -0.5 + ry0 / 100;
+  const y1 = -0.5 + ry1 / 100;
+  const w = x1 - x0;
+  const h = y1 - y0;
+  return { x0, y0, x1, y1, cx: x0 + w / 2, cy: y0 + h / 2, w, h };
 }
 
 export const TILE_RECTS: Rect[] = Array.from({ length: BOARD_SIZE }, (_, i) => computeRect(i));
@@ -53,20 +83,20 @@ export interface Point {
 }
 
 /**
- * Where a property's 3D isometric building stands: directly on the inner colored lot block of the tile
- * (about 34% in from the inner pit edge), just like LINE Let's Get Rich.
+ * Where a property's 3D building stands: squarely on the outer cream lot zone of the tile
+ * (about 58% out from the inner diorama edge) so it never covers the city name in the inner color band.
  */
 export function lotAnchor(index: number): Point {
   const r = TILE_RECTS[index];
   switch (tileSide(index)) {
     case 0:
-      return { u: r.cx, v: r.y0 + r.h * 0.34 };
+      return { u: r.cx, v: r.y0 + r.h * 0.48 };
     case 1:
-      return { u: r.x1 - r.w * 0.34, v: r.cy };
+      return { u: r.x1 - r.w * 0.48, v: r.cy };
     case 2:
-      return { u: r.cx, v: r.y1 - r.h * 0.34 };
+      return { u: r.cx, v: r.y1 - r.h * 0.48 };
     case 3:
-      return { u: r.x0 + r.w * 0.34, v: r.cy };
+      return { u: r.x0 + r.w * 0.48, v: r.cy };
     default:
       return { u: r.cx, v: r.cy };
   }
@@ -83,26 +113,26 @@ const CLUSTER: [number, number][][] = [
   [],
   [[0, 0]],
   [
-    [-0.22, 0],
-    [0.22, 0],
+    [-0.24, -0.06],
+    [0.24, 0.08],
   ],
   [
-    [-0.24, 0.1],
-    [0.24, 0.1],
-    [0, -0.12],
+    [-0.26, 0.08],
+    [0.26, 0.1],
+    [0, -0.14],
   ],
   [
-    [-0.22, -0.11],
-    [0.22, -0.11],
-    [-0.22, 0.13],
-    [0.22, 0.13],
+    [-0.24, -0.12],
+    [0.24, -0.1],
+    [-0.22, 0.14],
+    [0.22, 0.16],
   ],
 ];
 
 /**
  * Standing spot for pawn `slot` of `count` sharing tile `index`.
- * Placed on the outer-middle walkway of side tiles (~68% from the inner pit edge) so pawns never overlap
- * the 3D buildings standing on the inner lot block.
+ * Placed on the middle-outer lot of side tiles (~62% from the inner edge) with staggered x/y offsets
+ * when >1 pawn shares the tile so wooden bases never completely hide each other.
  */
 export function pawnSpot(index: number, slot: number, count: number): Point {
   const r = TILE_RECTS[index];
@@ -111,19 +141,19 @@ export function pawnSpot(index: number, slot: number, count: number): Point {
   const [fx, fy] = layout[Math.min(slot, layout.length - 1)] ?? [0, 0];
 
   if (side === 0) {
-    return { u: r.cx + fx * r.w, v: r.y0 + r.h * 0.68 + fy * r.h * 0.45 };
+    return { u: r.cx + fx * r.w, v: r.y0 + r.h * 0.62 + fy * r.h * 0.45 };
   }
   if (side === 2) {
-    return { u: r.cx + fx * r.w, v: r.y1 - r.h * 0.68 + fy * r.h * 0.45 };
+    return { u: r.cx + fx * r.w, v: r.y1 - r.h * 0.62 + fy * r.h * 0.45 };
   }
   if (side === 1) {
-    return { u: r.x1 - r.w * 0.68 + fy * r.w * 0.45, v: r.cy + fx * r.h };
+    return { u: r.x1 - r.w * 0.62 + fy * r.w * 0.45, v: r.cy + fx * r.h };
   }
   if (side === 3) {
-    return { u: r.x0 + r.w * 0.68 + fy * r.w * 0.45, v: r.cy + fx * r.h };
+    return { u: r.x0 + r.w * 0.62 + fy * r.w * 0.45, v: r.cy + fx * r.h };
   }
   // Corner tile
-  return { u: r.cx + fx * r.w * 0.85, v: r.cy + r.h * 0.1 + fy * r.h * 0.85 };
+  return { u: r.cx + fx * r.w * 0.85, v: r.cy + r.h * 0.08 + fy * r.h * 0.85 };
 }
 
 // ───────────────────────────── camera ─────────────────────────────

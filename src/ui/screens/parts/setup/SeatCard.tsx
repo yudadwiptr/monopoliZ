@@ -111,8 +111,8 @@ export const SeatCard = forwardRef<HTMLDivElement, SeatCardProps>(function SeatC
         )}
       </div>
 
-      {/* character picker */}
-      <div role="radiogroup" aria-label={`Karakter pemain ${n}`} className="relative mt-4 grid grid-cols-6 gap-1.5">
+      {/* pawn picker (8 Nusantara 2D sprites) */}
+      <div role="radiogroup" aria-label={`Pion pemain ${n}`} className="relative mt-4 grid grid-cols-4 gap-2">
         {CHARACTERS.map((c) => {
           const owner = takenBy[c.id];
           const mine = c.id === seat.characterId;
@@ -126,16 +126,19 @@ export const SeatCard = forwardRef<HTMLDivElement, SeatCardProps>(function SeatC
               aria-label={`${c.name}${taken ? `, dipakai P${owner}` : ''}`}
               disabled={taken}
               onClick={() => onCharacter(c.id)}
-              whileHover={taken ? undefined : { y: -3, scale: 1.06 }}
-              whileTap={taken ? undefined : { scale: 0.9 }}
+              whileHover={taken ? undefined : { y: -3, scale: 1.05 }}
+              whileTap={taken ? undefined : { scale: 0.92 }}
               className={clsx(
-                'relative grid aspect-square min-h-[44px] place-items-center rounded-2xl outline-none transition-colors',
+                'relative flex flex-col items-center gap-1 rounded-2xl border p-1.5 outline-none transition-colors',
                 'focus-visible:ring-4 focus-visible:ring-brand-300/60',
-                mine ? 'bg-white/15' : 'hover:bg-white/5',
-                taken && 'cursor-not-allowed',
+                mine ? 'border-gold-300/70 bg-white/15 shadow-glow-gold' : 'border-white/10 bg-white/[0.03] hover:bg-white/10',
+                taken && 'cursor-not-allowed opacity-45',
               )}
             >
-              <Avatar characterId={c.id} size={36} ring={mine} dimmed={taken} />
+              <Avatar characterId={c.id} size={40} ring={mine} dimmed={taken} variant="full" />
+              <span className="w-full truncate text-center font-display text-[10px] font-bold leading-tight text-white">
+                {c.name}
+              </span>
               {taken && (
                 <span className="num absolute -bottom-0.5 -right-0.5 rounded-md bg-ink-950/90 px-1 text-[10px] font-bold text-ink-200">
                   P{owner}

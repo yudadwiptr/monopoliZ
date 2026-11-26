@@ -1,20 +1,19 @@
-import { AnimatePresence, motion, useDragControls } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
 import { AlertTriangle, X } from 'lucide-react';
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   DEFAULT_SALARY,
+  FESTIVAL_MULT,
   ISLAND_ESCAPE_FEE,
   ISLAND_MAX_TURNS,
   LANDMARK_LEVEL,
-  LEVEL_ICONS,
   LEVEL_NAMES,
   TAX_RATE,
   TOURIST_TOLL_MULT,
   acquirePrice,
   cityToll,
-  FESTIVAL_MULT,
   levelCost,
   sellValue,
   tollAt,
@@ -24,11 +23,13 @@ import type { MapDef, TileDef, TileKind } from '@/engine/types';
 import { formatRp } from '@/lib/format';
 import { useGame } from '@/store/gameStore';
 import { Avatar } from '@/ui/common';
-import { inkOn, rgba } from './color';
+import { LevelArt } from '@/ui/dialogs/shared/LevelArt';
+import { TileLandmarkIcon } from '@/ui/dialogs/shared/TileLandmarkIcon';
+import { inkOn } from './color';
 
 export interface TileInfoTarget {
   index: number;
-  /** Screen rect of the tapped tile, for placing the desktop popover. */
+  /** Screen rect of the tapped tile. */
   rect: DOMRect;
 }
 
@@ -41,16 +42,68 @@ interface TileInfoProps {
 const TOURIST = '#22D3C5';
 const KIND_META: Record<TileKind, { label: string; color: string }> = {
   start: { label: 'Start', color: '#2EE59D' },
-  island: { label: 'Pulau Terdampar', color: '#FF5C7A' },
-  festival: { label: 'Pesta Rakyat', color: '#FFC21F' },
+  island: { label: 'Pulau', color: '#FF5C7A' },
+  festival: { label: 'Festival', color: '#FFC21F' },
   airport: { label: 'Bandara', color: '#3A8CD6' },
   city: { label: 'Kota', color: '#3A8CD6' },
-  tourist: { label: 'Destinasi Wisata', color: TOURIST },
-  chance: { label: 'Kartu Rezeki', color: '#B36BFF' },
+  tourist: { label: 'Wisata', color: TOURIST },
+  chance: { label: 'Rezeki', color: '#B36BFF' },
   tax: { label: 'Pajak', color: '#FF7A59' },
 };
 
-function useWide(query = '(min-width: 640px)'): boolean {
+/** Exact ladder row top/height percentages measured from `public/ui/card_detail_kota.png` (1742×2356). */
+const LADDER_ROW_SLOTS: { top: string; height: string }[] = [
+  { top: '49.25%', height: '6.15%' },
+  { top: '56.75%', height: '5.95%' },
+  { top: '64.20%', height: '5.95%' },
+  { top: '71.60%', height: '5.95%' },
+  { top: '79.25%', height: '5.95%' },
+];
+
+const CARD_ASPECT = 1742 / 2356; // width / height ≈ 0.7394
+
+const SPECIAL_ICON_IMG: Partial<Record<TileKind, string>> = {
+  island: '/icons/icon_pulau_terdampar.png',
+  airport: '/icons/icon_bandara.png',
+  chance: '/icons/icon_kartu_rezeki.png',
+};
+
+function isPropertyTile(kind: TileKind): boolean {
+  return kind === 'city' || kind === 'tourist';
+}
+
+function clampVal(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+/**
+ * Computes a smart floating position on desktop/landscape screens so the detail card appears
+ * adjacent to the tapped tile on the map (to the right of left-half tiles, to the left of right-half tiles)
+ * and never covers the tile being inspected.
+ */
+function computeFloatingPlacement(rect: DOMRect) {
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 720;
+  const cardW = Math.min(vw * 0.92, 356, vh * 0.88 * CARD_ASPECT);
+  const cardH = cardW / CARD_ASPECT;
+
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const onLeftHalf = cx < vw / 2;
+
+  const rawLeft = onLeftHalf ? rect.right + 14 : rect.left - cardW - 14;
+  const left = Math.round(clampVal(rawLeft, 12, Math.max(12, vw - cardW - 12)));
+  const top = Math.round(clampVal(cy - cardH / 2, 12, Math.max(12, vh - cardH - 12)));
+
+  return {
+    left,
+    top,
+    width: Math.round(cardW),
+    fromX: onLeftHalf ? -18 : 18,
+  };
+}
+
+function useWide(query = '(min-width: 769px)'): boolean {
   const get = () => typeof window !== 'undefined' && !!window.matchMedia?.(query).matches;
   const [m, setM] = useState(get);
   useEffect(() => {
@@ -64,7 +117,21 @@ function useWide(query = '(min-width: 640px)'): boolean {
   return m;
 }
 
-/** Tile details: popover beside the tile on desktop, bottom sheet on phones. Closes on outside tap / Esc. */
+function groupMeta(map: MapDef, def: TileDef): { label: string; color: string } {
+  if (def.kind === 'city') {
+    const g = map.groups.find((x) => x.id === def.group);
+    return { label: g?.name ?? 'Kota', color: g?.color ?? '#3A8CD6' };
+  }
+  return KIND_META[def.kind];
+}
+
+/**
+ * 2D Hand-Drawn City Detail Card (`/ui/card_detail_kota.png`):
+ * - Desktop (`> 768px`): floats neatly on the right side of the screen (`width: min(92vw, 370px)`).
+ * - Mobile (`<= 768px`): centered modal card over a semi-transparent dark backdrop (`rgba(15, 23, 42, 0.6)`).
+ * - Every element (Icon box, Ribbon, Owner row, 2-column Rent/Acquire boxes, 5-row Building Ladder, and `DI SINI:` row)
+ *   is positioned directly inside its corresponding drawn slot in `card_detail_kota.png`.
+ */
 export function TileInfo({ map, target, onClose }: TileInfoProps) {
   const wide = useWide();
   const ref = useRef<HTMLDivElement>(null);
@@ -82,7 +149,7 @@ export function TileInfo({ map, target, onClose }: TileInfoProps) {
       const el = e.target instanceof Element ? e.target : null;
       if (!el) return;
       if (ref.current?.contains(el)) return;
-      if (el.closest('.bz-tile')) return; // the board handles tile taps (switch / toggle)
+      if (el.closest('.bz-tile')) return;
       onClose();
     };
     window.addEventListener('keydown', onKey, true);
@@ -93,7 +160,6 @@ export function TileInfo({ map, target, onClose }: TileInfoProps) {
     };
   }, [open, onClose]);
 
-  // Close when the game ends / map disappears.
   useEffect(() => {
     if (!open) return;
     return useGame.subscribe((s) => {
@@ -102,138 +168,94 @@ export function TileInfo({ map, target, onClose }: TileInfoProps) {
   }, [open, onClose]);
 
   if (typeof document === 'undefined') return null;
+
+  const placement = target && wide ? computeFloatingPlacement(target.rect) : null;
+  const targetDef = target ? map.tiles[target.index] : null;
+  const isPropTile = targetDef ? isPropertyTile(targetDef.kind) : true;
+  const frameBg = isPropTile ? "url('/ui/card_detail_kota.png')" : "url('/ui/card_detail_spesial.png')";
+
   return createPortal(
     <AnimatePresence>
-      {target &&
-        (wide ? (
-          <Popover key="pop" target={target} innerRef={ref} onClose={onClose}>
-            <TileDetails map={map} index={target.index} onClose={onClose} />
-          </Popover>
-        ) : (
-          <Sheet key="sheet" innerRef={ref} onClose={onClose}>
-            <TileDetails map={map} index={target.index} onClose={onClose} />
-          </Sheet>
-        ))}
+      {target && (
+        <div
+          key="tile-info-layer"
+          className={clsx(
+            'fixed inset-0 z-[45]',
+            wide ? 'pointer-events-none' : 'pointer-events-auto flex items-center justify-center p-3',
+          )}
+        >
+          {/* Mobile dark semi-transparent backdrop */}
+          {!wide && (
+            <motion.div
+              aria-hidden
+              className="absolute inset-0"
+              style={{ background: 'rgba(15, 23, 42, 0.6)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={onClose}
+            />
+          )}
+
+          <motion.div
+            ref={ref}
+            role="dialog"
+            aria-modal={!wide}
+            aria-label="Detail petak"
+            className="pointer-events-auto select-none overflow-hidden rounded-[18px]"
+            style={
+              placement
+                ? {
+                    position: 'fixed',
+                    left: placement.left,
+                    top: placement.top,
+                    width: placement.width,
+                    aspectRatio: isPropTile ? '1742 / 2356' : '3 / 4',
+                    backgroundImage: frameBg,
+                    backgroundSize: '100% 100%',
+                    backgroundRepeat: 'no-repeat',
+                    filter: 'drop-shadow(0 18px 40px rgba(0, 0, 0, 0.55))',
+                    containerType: 'inline-size',
+                  }
+                : {
+                    position: 'relative',
+                    width: 'min(92vw, 356px, calc(88dvh * 0.7394))',
+                    aspectRatio: isPropTile ? '1742 / 2356' : '3 / 4',
+                    backgroundImage: frameBg,
+                    backgroundSize: '100% 100%',
+                    backgroundRepeat: 'no-repeat',
+                    filter: 'drop-shadow(0 18px 40px rgba(0, 0, 0, 0.55))',
+                    containerType: 'inline-size',
+                  }
+            }
+            initial={
+              placement
+                ? { opacity: 0, x: placement.fromX, scale: 0.94 }
+                : { opacity: 0, y: 24, scale: 0.92 }
+            }
+            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+            exit={
+              placement
+                ? { opacity: 0, x: placement.fromX, scale: 0.95 }
+                : { opacity: 0, y: 16, scale: 0.94 }
+            }
+            transition={{ type: 'spring', stiffness: 440, damping: 32 }}
+          >
+            {isPropTile ? (
+              <TileCardContent map={map} index={target.index} onClose={onClose} />
+            ) : (
+              <SpecialTileCardContent map={map} index={target.index} onClose={onClose} />
+            )}
+          </motion.div>
+        </div>
+      )}
     </AnimatePresence>,
     document.body,
   );
 }
 
-const POP_W = 320;
-const MARGIN = 12;
-
-function Popover({
-  target,
-  innerRef,
-  children,
-}: {
-  target: TileInfoTarget;
-  innerRef: React.RefObject<HTMLDivElement>;
-  onClose: () => void;
-  children: ReactNode;
-}) {
-  const [pos, setPos] = useState<{ left: number; top: number; from: number } | null>(null);
-  const { rect, index } = target;
-
-  useLayoutEffect(() => {
-    const el = innerRef.current;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const hgt = Math.min(el?.offsetHeight ?? 420, vh - MARGIN * 2);
-    let left: number;
-    let from = 0;
-    if (rect.right + MARGIN + POP_W <= vw - MARGIN) {
-      left = rect.right + MARGIN;
-      from = -16;
-    } else if (rect.left - MARGIN - POP_W >= MARGIN) {
-      left = rect.left - MARGIN - POP_W;
-      from = 16;
-    } else {
-      left = Math.min(Math.max(MARGIN, rect.left + rect.width / 2 - POP_W / 2), vw - POP_W - MARGIN);
-    }
-    const top = Math.min(Math.max(MARGIN, rect.top + rect.height / 2 - hgt / 2), vh - hgt - MARGIN);
-    setPos({ left, top, from });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, rect.left, rect.top]);
-
-  return (
-    <motion.div
-      ref={innerRef}
-      role="dialog"
-      aria-modal="false"
-      aria-label="Info petak"
-      className="glass-strong fixed z-[45] flex flex-col overflow-hidden"
-      style={{
-        width: POP_W,
-        maxHeight: `calc(100dvh - ${MARGIN * 2}px)`,
-        left: pos?.left ?? -9999,
-        top: pos?.top ?? 0,
-        visibility: pos ? 'visible' : 'hidden',
-      }}
-      initial={{ opacity: 0, scale: 0.92, x: pos?.from ?? 0 }}
-      animate={{ opacity: 1, scale: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-      transition={{ type: 'spring', stiffness: 480, damping: 32 }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function Sheet({
-  innerRef,
-  onClose,
-  children,
-}: {
-  innerRef: React.RefObject<HTMLDivElement>;
-  onClose: () => void;
-  children: ReactNode;
-}) {
-  const drag = useDragControls();
-  return (
-    <motion.div
-      ref={innerRef}
-      role="dialog"
-      aria-modal="false"
-      aria-label="Info petak"
-      className="glass-strong fixed inset-x-0 bottom-0 z-[45] mx-auto flex max-h-[72dvh] w-full max-w-lg flex-col overflow-hidden rounded-b-none"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '100%', transition: { duration: 0.2, ease: 'easeIn' } }}
-      transition={{ type: 'spring', stiffness: 420, damping: 38 }}
-      drag="y"
-      dragControls={drag}
-      dragListener={false}
-      dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={{ top: 0, bottom: 0.6 }}
-      onDragEnd={(_, info) => {
-        if (info.offset.y > 80 || info.velocity.y > 500) onClose();
-      }}
-    >
-      <div
-        className="flex shrink-0 cursor-grab touch-none justify-center pb-1 pt-2"
-        onPointerDown={(e) => drag.start(e)}
-        aria-hidden
-      >
-        <span className="h-1.5 w-10 rounded-full bg-white/25" />
-      </div>
-      {children}
-    </motion.div>
-  );
-}
-
-// ───────────────────────────── content ─────────────────────────────
-
-function groupMeta(map: MapDef, def: TileDef): { label: string; color: string } {
-  if (def.kind === 'city') {
-    const g = map.groups.find((x) => x.id === def.group);
-    return { label: g?.name ?? 'Kota', color: g?.color ?? '#3A8CD6' };
-  }
-  return KIND_META[def.kind];
-}
-
-function TileDetails({ map, index, onClose }: { map: MapDef; index: number; onClose: () => void }) {
+function TileCardContent({ map, index, onClose }: { map: MapDef; index: number; onClose: () => void }) {
   const titleId = useId();
   const def = map.tiles[index];
   const tiles = useGame((s) => s.view?.tiles);
@@ -258,279 +280,673 @@ function TileDetails({ map, index, onClose }: { map: MapDef; index: number; onCl
   const fMul = isFest ? FESTIVAL_MULT : 1;
 
   return (
-    <section aria-labelledby={titleId} className="flex min-h-0 flex-col">
-      {/* header */}
-      <div className="relative shrink-0 overflow-hidden px-4 pb-3 pt-3">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-60"
-          style={{ background: `radial-gradient(120% 90% at 0% 0%, ${rgba(meta.color, 0.45)}, transparent 65%)` }}
-        />
-        <div className="relative flex items-start gap-3">
-          <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-3xl"
-            style={{
-              background: `linear-gradient(160deg, ${rgba(meta.color, 0.55)}, ${rgba(meta.color, 0.15)})`,
-              boxShadow: `inset 0 0 0 2px ${rgba(meta.color, 0.8)}, 0 6px 16px -6px ${rgba(meta.color, 0.7)}`,
-            }}
-            aria-hidden
-          >
-            {def.icon}
-          </div>
-          <div className="min-w-0 flex-1">
-            <span
-              className="inline-block max-w-full truncate rounded-full px-2 py-0.5 font-display text-[11px] font-bold uppercase tracking-wider"
-              style={{ background: meta.color, color: inkOn(meta.color) }}
-            >
-              {meta.label}
-            </span>
-            <h2 id={titleId} className="mt-1 truncate font-display text-xl font-bold leading-tight text-white">
-              {def.name}
-            </h2>
-            {def.subtitle && <p className="truncate text-xs font-semibold text-ink-300">{def.subtitle}</p>}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="-mr-1 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-ink-100 transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
-            aria-label="Tutup info petak"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        {(isFest || alerted) && (
-          <div className="relative mt-2 flex flex-wrap gap-1.5">
-            {isFest && (
-              <span className="rounded-full bg-gradient-to-r from-gold-300 to-[#FF4FD8] px-2 py-0.5 font-display text-xs font-bold text-[#2A0A2E]">
-                🎉 Lagi pesta! Sewa ×{FESTIVAL_MULT}
-              </span>
-            )}
-            {alerted && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-merah-500 px-2 py-0.5 font-display text-xs font-bold text-white">
-                <AlertTriangle className="h-3 w-3" /> Incaran monopoli!
-              </span>
-            )}
-          </div>
+    <div aria-labelledby={titleId} className="relative h-full w-full text-[#2b1d12]">
+      {/* 1. Dynamic City/Tile Icon Box (Top-Left square slot: left 13.7%, top 13.5%, width 13%, height 10.45%) */}
+      <div
+        className="absolute flex items-center justify-center overflow-hidden rounded-[8px] border-2 border-[#2b1d12]"
+        style={{
+          left: '13.7%',
+          top: '13.54%',
+          width: '13.0%',
+          height: '10.45%',
+          background: `linear-gradient(145deg, #ffffff 0%, ${meta.color}55 100%)`,
+          boxShadow: `inset 0 0 0 2px ${meta.color}`,
+        }}
+        aria-hidden
+      >
+        {isProp ? (
+          <TileLandmarkIcon def={def} color={meta.color} className="h-[80%] w-[80%] object-contain" />
+        ) : (
+          <span className="text-[6.2cqi] leading-none">{def.icon}</span>
         )}
       </div>
 
-      <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-        {def.blurb && <p className="text-sm leading-snug text-ink-200">{def.blurb}</p>}
+      {/* 2. Region / Group Badge inside the cream ribbon (left 29.5%, top 13.35%, width 22%, height 4.1%) */}
+      <div
+        className="absolute flex items-center justify-center px-1"
+        style={{
+          left: '29.2%',
+          top: '13.35%',
+          width: '22.2%',
+          height: '4.1%',
+        }}
+      >
+        <span
+          className="truncate rounded-full px-1.5 py-px font-display text-[2.3cqi] font-black uppercase tracking-wider"
+          style={{
+            background: meta.color,
+            color: inkOn(meta.color),
+          }}
+        >
+          {meta.label}
+        </span>
+      </div>
 
-        {isProp && (
-          <div className="mt-3 rounded-2xl border border-white/10 bg-ink-950/40 p-3">
-            {owner ? (
-              <div className="flex items-center gap-2.5">
-                <Avatar characterId={owner.characterId} size={36} />
-                <div className="min-w-0 flex-1">
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-300">Pemilik</div>
-                  <div className="truncate font-display font-bold" style={{ color: owner.color }}>
+      {/* Festival / Monopoly Alert badge next to ribbon if active */}
+      {(isFest || alerted) && (
+        <div
+          className="absolute flex items-center gap-1"
+          style={{ left: '53%', top: '13.4%', right: '17%' }}
+        >
+          {isFest && (
+            <span className="truncate rounded-full border border-[#2b1d12] bg-gold-300 px-1.5 py-px font-display text-[2.2cqi] font-black text-[#2b1d12]">
+              🎉 ×{FESTIVAL_MULT}
+            </span>
+          )}
+          {alerted && (
+            <span className="inline-flex items-center gap-0.5 truncate rounded-full border border-[#2b1d12] bg-merah-500 px-1.5 py-px font-display text-[2.2cqi] font-black text-white">
+              <AlertTriangle className="h-2.5 w-2.5" /> Awas!
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* 3. City Name & Province inside the dark header arch (left 29.2%, top 17.5%, right 15%, height 6.4%) */}
+      <div
+        className="absolute flex flex-col justify-center"
+        style={{
+          left: '29.2%',
+          top: '17.4%',
+          right: '14%',
+          height: '6.5%',
+        }}
+      >
+        <h2
+          id={titleId}
+          className="truncate font-display text-[5.2cqi] font-black leading-none text-[#fef9e7]"
+          style={{ textShadow: '0 2px 0 #140d08' }}
+        >
+          {def.name}
+        </h2>
+        {def.subtitle && (
+          <p className="mt-0.5 truncate font-display text-[2.8cqi] font-bold leading-tight text-[#d8c9a8]">
+            {def.subtitle}
+          </p>
+        )}
+      </div>
+
+      {/* 4. Close Button (X) in top-right corner of header */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Tutup info petak"
+        className="absolute flex items-center justify-center rounded-full border-2 border-[#2b1d12] transition-transform hover:scale-105 active:scale-95"
+        style={{
+          top: '13.8%',
+          right: '8.2%',
+          width: '7.6%',
+          aspectRatio: '1 / 1',
+          background: '#4a3525',
+          color: '#f6eedc',
+          boxShadow: '0 2px 0 #2b1d12',
+        }}
+      >
+        <X className="h-[58%] w-[58%]" strokeWidth={2.8} />
+      </button>
+
+      {/* 5. Short Property Blurb on the parchment strip to the right of the left icon arch (top 24.4% .. 27.9%) */}
+      {isProp && def.blurb && (
+        <div
+          className="absolute flex items-center"
+          style={{
+            left: '28.5%',
+            right: '13.5%',
+            top: '24.4%',
+            height: '3.5%',
+          }}
+        >
+          <p className="truncate font-sans text-[2.35cqi] font-bold leading-none text-[#4a3525]" title={def.blurb}>
+            {def.blurb}
+          </p>
+        </div>
+      )}
+
+      {/* 6. Slot 1: Owner Row Box (top 28.3%, height 7.2%, left 14.5%, right 14.5%) */}
+      <div
+        className="absolute flex items-center justify-between px-2.5"
+        style={{
+          left: '14.5%',
+          right: '14.5%',
+          top: '28.3%',
+          height: '7.2%',
+        }}
+      >
+        {isProp ? (
+          owner ? (
+            <>
+              <div className="flex min-w-0 items-center gap-2">
+                <Avatar characterId={owner.characterId} size={28} />
+                <div className="min-w-0">
+                  <div className="font-display text-[2.2cqi] font-extrabold uppercase leading-none tracking-wider text-[#6e5239]">
+                    Pemilik
+                  </div>
+                  <div className="truncate font-display text-[3.5cqi] font-black leading-tight text-[#2b1d12]">
                     {owner.name}
                   </div>
                 </div>
-                {def.kind === 'city' && (
-                  <span className="shrink-0 rounded-full bg-white/10 px-2 py-1 font-display text-xs font-bold text-white">
-                    {LEVEL_ICONS[t.level]} {LEVEL_NAMES[t.level]}
+              </div>
+              {def.kind === 'city' ? (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border-[1.5px] border-[#2b1d12] bg-[#f5e3b8] px-2 py-0.5 font-display text-[2.8cqi] font-extrabold text-[#2b1d12] shadow-sm">
+                  <LevelArt level={t.level} size={15} />
+                  {LEVEL_NAMES[t.level]}
+                </span>
+              ) : (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border-[1.5px] border-[#2b1d12] bg-[#bfeef2] px-2 py-0.5 font-display text-[2.7cqi] font-extrabold text-[#123d42]">
+                  🏝️ {touristOwned} Wisata
+                </span>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center gap-1.5 font-display text-[3.1cqi] font-extrabold text-[#4a3525]">
+              <span aria-hidden>🏷️</span>
+              <span>Belum ada pemilik — siap dibeli!</span>
+            </div>
+          )
+        ) : (
+          <div className="flex items-center gap-1.5 font-display text-[3.2cqi] font-extrabold text-[#4a3525]">
+            <span>{def.icon}</span>
+            <span>Petak Spesial • {meta.label}</span>
+          </div>
+        )}
+      </div>
+
+      {/* 7. Slot 2: Two Side-by-Side Stat Boxes (top 37.3%, height 7.7%) */}
+      <div
+        className="absolute flex flex-col justify-center px-2.5"
+        style={{
+          left: '14.5%',
+          width: '33.8%',
+          top: '37.3%',
+          height: '7.7%',
+        }}
+      >
+        <div className="truncate font-display text-[2.15cqi] font-extrabold uppercase tracking-wider text-[#6e5239]">
+          {isProp ? (owner ? (isFest ? 'Sewa sekarang (×2)' : 'Sewa sekarang') : 'Harga beli') : 'Kategori'}
+        </div>
+        <div className="num truncate font-display text-[4.0cqi] font-black leading-tight text-[#b45309]">
+          {isProp ? formatRp(owner ? toll : def.price ?? 0) : meta.label}
+        </div>
+      </div>
+
+      <div
+        className="absolute flex flex-col justify-center px-2.5"
+        style={{
+          left: '51.7%',
+          width: '33.8%',
+          top: '37.3%',
+          height: '7.7%',
+        }}
+      >
+        <div className="truncate font-display text-[2.15cqi] font-extrabold uppercase tracking-wider text-[#6e5239]">
+          {isProp
+            ? owner
+              ? 'Harga akuisisi'
+              : 'Sewa awal'
+            : 'Status'}
+        </div>
+        <div className="num truncate font-display text-[4.0cqi] font-black leading-tight text-[#1d4ed8]">
+          {isProp
+            ? owner
+              ? def.kind === 'city' && t.level >= LANDMARK_LEVEL
+                ? 'Kebal 🛡️'
+                : formatRp(acquirePrice(def, t.level))
+              : formatRp(def.kind === 'city' ? cityToll(def, 0) : touristToll(def, 1))
+            : 'Aktif'}
+        </div>
+      </div>
+
+      {/* Small "Nilai jual ke bank" text in the gap between the middle box (46.8%) and Row 1 (49.25%) */}
+      {isProp && (
+        <div
+          className="absolute flex items-center justify-between px-1.5"
+          style={{
+            left: '13.0%',
+            right: '13.0%',
+            top: '46.85%',
+            height: '2.25%',
+          }}
+        >
+          <span className="font-sans text-[2.15cqi] font-bold text-[#5c432d]">
+            {owner ? (
+              <>
+                Nilai jual ke bank: <b className="num text-[#2b1d12]">{formatRp(sellValue(def, t.level))}</b>
+              </>
+            ) : (
+              <>
+                Nilai jual dasar: <b className="num text-[#2b1d12]">{formatRp(sellValue(def, 0))}</b>
+              </>
+            )}
+          </span>
+          <span className="font-display text-[1.95cqi] font-extrabold uppercase tracking-wider text-[#6e5239]">
+            Biaya / Sewa{fMul > 1 ? ' ×2' : ''}
+          </span>
+        </div>
+      )}
+
+      {/* 8. Slot 3: 5 Building Ladder Rows (Tanah, Rumah, Ruko, Hotel, Landmark) */}
+      {def.kind === 'city' &&
+        LEVEL_NAMES.map((name, l) => {
+          const current = owner !== undefined && l === t.level;
+          const slot = LADDER_ROW_SLOTS[l];
+          return (
+            <div
+              key={name}
+              className={clsx(
+                'absolute flex items-center rounded-[7px] transition-colors',
+                current && 'border-2 border-[#d97706] bg-[#fde047]/45 shadow-[0_0_0_1px_#2b1d12]',
+              )}
+              style={{
+                left: '11.4%',
+                right: '11.4%',
+                top: slot.top,
+                height: slot.height,
+              }}
+            >
+              {/* Column 1: Level Icon + Name + KINI badge (0% .. 50.4% of row) */}
+              <div className="flex w-[50.4%] min-w-0 items-center gap-1.5 pl-2 pr-1">
+                <LevelArt level={l} size={17} />
+                <span className="truncate font-display text-[3.1cqi] font-extrabold text-[#2b1d12]">
+                  {name}
+                </span>
+                {current && (
+                  <span className="ml-auto shrink-0 rounded-full border border-[#2b1d12] bg-[#f59e0b] px-1.5 py-px font-display text-[2.0cqi] font-black uppercase text-[#2b1d12]">
+                    KINI
                   </span>
                 )}
               </div>
-            ) : (
-              <div className="flex items-center gap-2 text-sm font-semibold text-ink-200">
-                <span className="text-lg" aria-hidden>
-                  🏷️
-                </span>
-                Belum ada pemilik — siap dibeli!
+
+              {/* Column 2: Biaya (50.4% .. 75.5% of row) */}
+              <div className="num w-[25.1%] pr-2 text-right font-display text-[3.0cqi] font-bold text-[#4a3525]">
+                {formatRp(levelCost(def, l), { short: true })}
               </div>
-            )}
 
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {owner ? (
-                <>
-                  <Stat label={isFest ? 'Sewa sekarang (×2)' : 'Sewa sekarang'} value={formatRp(toll)} tone="gold" />
-                  {def.kind === 'city' && t.level >= LANDMARK_LEVEL ? (
-                    <Stat label="Akuisisi" value="Kebal 🛡️" tone="muted" />
-                  ) : (
-                    <Stat label="Harga akuisisi" value={formatRp(acquirePrice(def, t.level))} tone="brand" />
-                  )}
-                </>
-              ) : (
-                <>
-                  <Stat label={def.kind === 'city' ? 'Harga tanah' : 'Harga beli'} value={formatRp(def.price ?? 0)} tone="gold" />
-                  <Stat
-                    label="Sewa awal"
-                    value={formatRp(def.kind === 'city' ? cityToll(def, 0) : touristToll(def, 1))}
-                    tone="brand"
-                  />
-                </>
-              )}
+              {/* Column 3: Sewa (75.5% .. 100% of row) */}
+              <div className="num w-[24.5%] pr-2.5 text-right font-display text-[3.1cqi] font-black text-[#b45309]">
+                {formatRp(cityToll(def, l) * fMul, { short: true })}
+              </div>
             </div>
-            {owner && (
-              <p className="mt-2 text-[11px] text-ink-300">
-                Nilai jual ke bank: <span className="num text-ink-100">{formatRp(sellValue(def, t.level))}</span>
-              </p>
-            )}
-          </div>
-        )}
+          );
+        })}
 
-        {def.kind === 'city' && <CityLadder def={def} level={owner ? t.level : -1} fMul={fMul} />}
-        {def.kind === 'tourist' && <TouristLadder def={def} owned={touristOwned} fMul={fMul} />}
-        {!isProp && <SpecialInfo def={def} map={map} salary={salary} festival={festival} />}
-
-        {here.length > 0 && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-300">Di sini:</span>
-            <div className="flex -space-x-1.5">
-              {here.map((p) => (
-                <Avatar key={p.id} characterId={p.characterId} size={26} />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function Stat({ label, value, tone }: { label: string; value: string; tone: 'gold' | 'brand' | 'muted' }) {
-  return (
-    <div className="rounded-xl bg-white/5 px-2.5 py-2">
-      <div className="text-[10px] font-semibold uppercase leading-tight tracking-wider text-ink-300">{label}</div>
-      <div
-        className={clsx(
-          'num mt-0.5 text-base font-bold leading-tight',
-          tone === 'gold' && 'text-gold-300',
-          tone === 'brand' && 'text-brand-300',
-          tone === 'muted' && 'text-ink-200',
-        )}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function CityLadder({ def, level, fMul }: { def: TileDef; level: number; fMul: number }) {
-  return (
-    <div className="mt-3">
-      <h3 className="mb-1.5 font-display text-xs font-bold uppercase tracking-wider text-ink-300">Tangga bangunan</h3>
-      <table className="w-full border-separate border-spacing-y-1 text-sm">
-        <thead>
-          <tr className="text-[10px] uppercase tracking-wider text-ink-400">
-            <th className="pl-2 text-left font-semibold">Level</th>
-            <th className="text-right font-semibold">Biaya</th>
-            <th className="pr-2 text-right font-semibold">Sewa{fMul > 1 ? ' ×2' : ''}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {LEVEL_NAMES.map((name, l) => {
-            const current = l === level;
+      {/* Tourist 4-row ladder + 5th row opaque Monopoly note badge covering the 3-column dividers */}
+      {def.kind === 'tourist' &&
+        [1, 2, 3, 4, 5].map((n, idx) => {
+          const slot = LADDER_ROW_SLOTS[idx];
+          if (n === 5) {
             return (
-              <tr key={name} className={clsx(current ? 'bg-brand-500/25' : 'bg-white/[0.04]')}>
-                <td className={clsx('rounded-l-lg py-1.5 pl-2', current && 'shadow-[inset_3px_0_0_#8CC4F5]')}>
-                  <span className="mr-1.5" aria-hidden>
-                    {LEVEL_ICONS[l]}
-                  </span>
-                  <span className={clsx('font-semibold', current ? 'text-white' : 'text-ink-100')}>{name}</span>
-                  {current && <span className="ml-1.5 text-[10px] font-bold uppercase text-brand-300">• kini</span>}
-                </td>
-                <td className="num py-1.5 text-right text-ink-200">{formatRp(levelCost(def, l), { short: true })}</td>
-                <td className="num rounded-r-lg py-1.5 pr-2 text-right font-bold text-gold-300">
-                  {formatRp(cityToll(def, l) * fMul, { short: true })}
-                </td>
-              </tr>
+              <div
+                key="tour-note"
+                className="absolute flex items-center justify-center rounded-[7px] px-2.5 text-center font-display text-[2.55cqi] font-extrabold text-[#123d42]"
+                style={{
+                  left: '11.2%',
+                  right: '11.2%',
+                  top: '79.1%',
+                  height: '6.2%',
+                  background: 'linear-gradient(180deg, #fef3c7 0%, #f3dfb9 100%)',
+                  border: '1.5px solid #5c4028',
+                }}
+              >
+                🏆 Kuasai 4 destinasi wisata = langsung menang Monopoli Wisata!
+              </div>
             );
-          })}
-        </tbody>
-      </table>
-      <p className="mt-1 text-[11px] leading-snug text-ink-400">
-        Biaya = ongkos naik ke level itu. Landmark hanya bisa dibangun dari Hotel, dan kebal akuisisi.
-      </p>
-    </div>
-  );
-}
-
-function TouristLadder({ def, owned, fMul }: { def: TileDef; owned: number; fMul: number }) {
-  const counts = TOURIST_TOLL_MULT.map((_, n) => n).filter((n) => n >= 1 && n <= 4);
-  return (
-    <div className="mt-3">
-      <h3 className="mb-1.5 font-display text-xs font-bold uppercase tracking-wider text-ink-300">
-        Sewa menurut jumlah wisata dimiliki
-      </h3>
-      <div className="grid grid-cols-4 gap-1.5">
-        {counts.map((n) => {
-          const current = n === owned;
+          }
+          const current = owner !== undefined && touristOwned === n;
           return (
             <div
               key={n}
               className={clsx(
-                'rounded-xl px-1 py-2 text-center',
-                current ? 'bg-laut-500/25 shadow-[inset_0_0_0_2px_#22D3C5]' : 'bg-white/[0.05]',
+                'absolute flex items-center rounded-[7px]',
+                current && 'border-2 border-[#0891b2] bg-[#67e8f9]/45',
               )}
+              style={{ left: '11.4%', right: '11.4%', top: slot.top, height: slot.height }}
             >
-              <div className="text-[10px] font-semibold text-ink-300">{n} wisata</div>
-              <div className="num text-sm font-bold text-gold-300">{formatRp(touristToll(def, n) * fMul, { short: true })}</div>
+              <div className="flex w-[50.4%] items-center gap-1.5 pl-2.5">
+                <span aria-hidden>🏝️</span>
+                <span className="font-display text-[3.1cqi] font-extrabold text-[#2b1d12]">{n} Wisata</span>
+                {current && (
+                  <span className="ml-auto mr-1 rounded-full border border-[#2b1d12] bg-[#22d3c5] px-1.5 py-px font-display text-[2.0cqi] font-black uppercase text-[#2b1d12]">
+                    KINI
+                  </span>
+                )}
+              </div>
+              <div className="num w-[25.1%] pr-2 text-right font-display text-[2.8cqi] font-bold text-[#4a3525]">
+                {n === 1 ? formatRp(def.price ?? 0, { short: true }) : `${TOURIST_TOLL_MULT[n]}×`}
+              </div>
+              <div className="num w-[24.5%] pr-2.5 text-right font-display text-[3.1cqi] font-black text-[#b45309]">
+                {formatRp(touristToll(def, n) * fMul, { short: true })}
+              </div>
             </div>
           );
         })}
+
+      {/* 9. Slot 4: Bottom Visitor Row (`DI SINI:`) (top 86.6%, height 6.0%, left 11.4%, right 11.4%) */}
+      <div
+        className="absolute flex items-center justify-between gap-1.5 overflow-hidden px-2.5"
+        style={{
+          left: '11.4%',
+          right: '11.4%',
+          top: '86.6%',
+          height: '6.0%',
+        }}
+      >
+        <span className="shrink-0 font-display text-[2.6cqi] font-black uppercase tracking-wider text-[#4a3525]">
+          DI SINI:
+        </span>
+        {here.length > 0 ? (
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-1 overflow-hidden">
+            {here.map((p) => {
+              const crowded = here.length >= 3;
+              const shortName = crowded ? p.name.split(' ')[0] : p.name;
+              return (
+                <div
+                  key={p.id}
+                  className={clsx(
+                    'flex min-w-0 items-center rounded-full border border-[#2b1d12] bg-[#f5e3b8] py-0.5 pl-0.5',
+                    crowded ? 'gap-0.5 pr-1.5' : 'gap-1 pr-2',
+                  )}
+                  title={p.name}
+                >
+                  <Avatar characterId={p.characterId} size={crowded ? 16 : 20} />
+                  <span
+                    className={clsx(
+                      'truncate font-display font-extrabold text-[#2b1d12]',
+                      crowded ? 'max-w-[3.1rem] text-[2.2cqi]' : 'max-w-[5rem] text-[2.45cqi]',
+                    )}
+                  >
+                    {shortName}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <span className="truncate font-sans text-[2.45cqi] font-semibold italic text-[#7a5c43]">
+            Belum ada pemain di petak ini
+          </span>
+        )}
       </div>
-      <p className="mt-1.5 text-[11px] leading-snug text-ink-400">
-        Wisata tidak bisa dibangun. Kuasai keempatnya untuk Monopoli Wisata!
-      </p>
     </div>
   );
 }
 
-function SpecialInfo({
-  def,
-  map,
-  salary,
-  festival,
-}: {
-  def: TileDef;
-  map: MapDef;
-  salary: number;
-  festival: number | null;
-}) {
-  let rows: [string, string][] = [];
+/**
+ * Dedicated 2D Hand-Drawn Detail Card for Special & Corner Tiles (`/ui/card_detail_spesial.png`):
+ * - Uses the special template featuring a wide description slot, 2 status boxes (KATEGORI & STATUS),
+ *   2 illustrated scroll banners (passive/money scroll + landing/trophy scroll), tropical bunting illustration,
+ *   and the bottom `DI SINI:` visitor bar.
+ */
+function SpecialTileCardContent({ map, index, onClose }: { map: MapDef; index: number; onClose: () => void }) {
+  const titleId = useId();
+  const def = map.tiles[index];
+  const festival = useGame((s) => s.view?.festivalTile ?? null);
+  const players = useGame((s) => s.game?.players);
+  const salary = useGame((s) => s.game?.config.salary ?? DEFAULT_SALARY);
+  const positions = useGame((s) => s.view?.positions);
+  const bankrupt = useGame((s) => s.view?.bankrupt);
+  if (!def || !players) return null;
+
+  const meta = KIND_META[def.kind];
+  const here = players.filter((p) => !bankrupt?.[p.id] && positions?.[p.id] === index);
+  const iconSprite = SPECIAL_ICON_IMG[def.kind];
+
+  let scroll1: [string, string] = ['Efek petak', 'Aktif'];
+  let scroll2: [string, string] = ['Mendarat pas', 'Lihat aturan'];
+
   switch (def.kind) {
     case 'start':
-      rows = [
-        ['Gaji tiap lewat', formatRp(salary)],
-        ['Mendarat pas', 'Upgrade 1 kota'],
-      ];
+      scroll1 = ['Gaji tiap lewat', formatRp(salary)];
+      scroll2 = ['Mendarat pas', 'Upgrade 1 kota'];
       break;
     case 'island':
-      rows = [
-        ['Ongkos kabur', formatRp(ISLAND_ESCAPE_FEE)],
-        ['Maksimal', `${ISLAND_MAX_TURNS} giliran`],
-      ];
+      scroll1 = ['Ongkos kabur', formatRp(ISLAND_ESCAPE_FEE)];
+      scroll2 = ['Bebas gratis', `Dadu kembar / ${ISLAND_MAX_TURNS}x`];
       break;
     case 'festival':
-      rows = [
-        ['Efek', `Sewa ×${FESTIVAL_MULT}`],
-        ['Pesta sekarang', festival !== null ? map.tiles[festival]?.name ?? '-' : 'Belum ada'],
-      ];
+      scroll1 = ['Efek Pesta', `Sewa kota ×${FESTIVAL_MULT}`];
+      scroll2 = ['Tuan rumah', festival !== null ? map.tiles[festival]?.name ?? 'Aktif' : 'Pilih 1 kotamu'];
       break;
     case 'airport':
-      rows = [['Giliran berikut', 'Terbang ke mana saja']];
+      scroll1 = ['Tiket terbang', 'Gratis (Rp 0)'];
+      scroll2 = ['Giliran berikut', 'Terbang bebas'];
       break;
     case 'tax':
-      rows = [['Tarif', `${Math.round(TAX_RATE * 100)}% nilai properti`]];
+      scroll1 = ['Tarif Pajak', `${Math.round(TAX_RATE * 100)}% nilai aset`];
+      scroll2 = ['Mendarat pas', 'Bayar ke negara'];
       break;
     case 'chance':
-      rows = [['Isi', 'Cuan, apes, atau plot twist']];
+      scroll1 = ['Hadiah & bonus', 'Uang / diskon -50%'];
+      scroll2 = ['Mendarat pas', 'Ambil 1 Kartu Rezeki'];
       break;
     default:
-      rows = [];
+      break;
   }
-  if (!rows.length) return null;
+
   return (
-    <div className="mt-3 grid gap-1.5">
-      {rows.map(([k, v]) => (
-        <div key={k} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.05] px-3 py-2 text-sm">
-          <span className="text-ink-300">{k}</span>
-          <span className="num text-right font-bold text-white">{v}</span>
+    <div aria-labelledby={titleId} className="relative h-full w-full text-[#2b1d12]">
+      {/* 1. Top-Left White Icon Box (left 14.3%, top 12.8%, width 14.2%, height 10.5%) */}
+      <div
+        className="absolute flex items-center justify-center overflow-hidden rounded-[10px]"
+        style={{
+          left: '14.3%',
+          top: '12.8%',
+          width: '14.2%',
+          height: '10.5%',
+        }}
+        aria-hidden
+      >
+        {iconSprite ? (
+          <img
+            src={iconSprite}
+            alt=""
+            decoding="async"
+            draggable={false}
+            className="h-[82%] w-[82%] object-contain"
+          />
+        ) : (
+          <span className="text-[7.2cqi] leading-none">{def.icon}</span>
+        )}
+      </div>
+
+      {/* 2. Top Ribbon Badge (START, PAJAK, REZEKI, BANDARA, FESTIVAL, PULAU) */}
+      <div
+        className="absolute flex items-center justify-center px-1"
+        style={{
+          left: '31.8%',
+          top: '12.15%',
+          width: '20.5%',
+          height: '3.9%',
+        }}
+      >
+        <span
+          className="truncate rounded-full px-2 py-px font-display text-[2.35cqi] font-black uppercase tracking-wider"
+          style={{
+            background: meta.color,
+            color: inkOn(meta.color),
+          }}
+        >
+          {meta.label}
+        </span>
+      </div>
+
+      {/* 3. Tile Title & Location Subtitle inside the Dark Arch Header */}
+      <div
+        className="absolute flex flex-col justify-center"
+        style={{
+          left: '31.2%',
+          top: '16.5%',
+          right: '14.5%',
+          height: '6.2%',
+        }}
+      >
+        <h2
+          id={titleId}
+          className="truncate font-display text-[5.3cqi] font-black leading-none text-[#fef9e7]"
+          style={{ textShadow: '0 2px 0 #140d08' }}
+        >
+          {def.name}
+        </h2>
+        {def.subtitle && (
+          <p className="mt-0.5 truncate font-display text-[2.85cqi] font-bold leading-tight text-[#d8c9a8]">
+            {def.subtitle}
+          </p>
+        )}
+      </div>
+
+      {/* 4. Close Button (X) in Top-Right of Header */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Tutup info petak"
+        className="absolute flex items-center justify-center rounded-full border-2 border-[#2b1d12] transition-transform hover:scale-105 active:scale-95"
+        style={{
+          top: '13.4%',
+          right: '8.2%',
+          width: '7.6%',
+          aspectRatio: '1 / 1',
+          background: '#4a3525',
+          color: '#f6eedc',
+          boxShadow: '0 2px 0 #2b1d12',
+        }}
+      >
+        <X className="h-[58%] w-[58%]" strokeWidth={2.8} />
+      </button>
+
+      {/* 5. Wide Description Box (First Upper Tier: top 27.6%, height 7.3%, left 16.0%, right 16.0%) */}
+      <div
+        className="absolute flex items-center px-2.5"
+        style={{
+          left: '16.0%',
+          right: '16.0%',
+          top: '27.6%',
+          height: '7.3%',
+        }}
+      >
+        <p
+          className="line-clamp-2 font-sans text-[2.55cqi] leading-[1.22]"
+          style={{ color: '#2b1d12', fontWeight: 600 }}
+        >
+          {def.blurb ?? `Petak spesial ${def.name}.`}
+        </p>
+      </div>
+
+      {/* 6. Two Side-by-Side Boxes Below Description: KATEGORI (left) & STATUS (right) */}
+      <div
+        className="absolute flex flex-col justify-center px-3"
+        style={{
+          left: '15.2%',
+          width: '33.0%',
+          top: '37.1%',
+          height: '8.1%',
+        }}
+      >
+        <div className="truncate font-display text-[2.2cqi] font-extrabold uppercase tracking-wider text-[#6e5239]">
+          Kategori
         </div>
-      ))}
+        <div className="truncate font-display text-[4.1cqi] font-black leading-tight text-[#b45309]">
+          {meta.label}
+        </div>
+      </div>
+
+      <div
+        className="absolute flex flex-col justify-center px-3"
+        style={{
+          left: '52.2%',
+          width: '32.5%',
+          top: '37.1%',
+          height: '8.1%',
+        }}
+      >
+        <div className="truncate font-display text-[2.2cqi] font-extrabold uppercase tracking-wider text-[#6e5239]">
+          Status
+        </div>
+        <div className="truncate font-display text-[4.1cqi] font-black leading-tight text-[#1d4ed8]">
+          Aktif
+        </div>
+      </div>
+
+      {/* 7. First Scroll Banner (next to money bag & coin icons: left 31.5%, right 16.0%, top 51.2%, height 6.0%) */}
+      <div
+        className="absolute flex items-center justify-between gap-2 px-2.5"
+        style={{
+          left: '31.5%',
+          right: '16.0%',
+          top: '51.2%',
+          height: '6.0%',
+        }}
+      >
+        <span className="truncate font-display text-[2.95cqi] font-extrabold text-[#2b1d12]">
+          {scroll1[0]}
+        </span>
+        <span
+          className="num shrink-0 font-display text-[3.15cqi]"
+          style={{ fontWeight: 800, color: '#15803d' }}
+        >
+          {scroll1[1]}
+        </span>
+      </div>
+
+      {/* 8. Second Scroll Banner (next to star, trophy & gate icons: left 40.6%, right 16.0%, top 61.2%, height 5.5%) */}
+      <div
+        className="absolute flex items-center justify-between gap-2 px-2.5"
+        style={{
+          left: '40.6%',
+          right: '16.0%',
+          top: '61.2%',
+          height: '5.5%',
+        }}
+      >
+        <span className="truncate font-display text-[2.85cqi] font-extrabold text-[#2b1d12]">
+          {scroll2[0]}
+        </span>
+        <span
+          className="num shrink-0 font-display text-[2.95cqi]"
+          style={{ fontWeight: 800, color: '#b45309' }}
+        >
+          {scroll2[1]}
+        </span>
+      </div>
+
+      {/* 9. Bottom Visitor Bar (to the right of the pre-printed `DI SINI:` label on the card: left 22.8%, right 12.5%, top 87.0%, height 5.7%) */}
+      <div
+        className="absolute flex items-center justify-end gap-1 overflow-hidden px-1.5"
+        style={{
+          left: '22.8%',
+          right: '12.5%',
+          top: '87.0%',
+          height: '5.7%',
+        }}
+      >
+        {here.length > 0 ? (
+          here.map((p) => {
+            const crowded = here.length >= 3;
+            const shortName = crowded ? p.name.split(' ')[0] : p.name;
+            return (
+              <div
+                key={p.id}
+                className={clsx(
+                  'flex min-w-0 items-center rounded-full border border-[#2b1d12] bg-[#f5e3b8] py-0.5 pl-0.5',
+                  crowded ? 'gap-0.5 pr-1.5' : 'gap-1 pr-2',
+                )}
+                title={p.name}
+              >
+                <Avatar characterId={p.characterId} size={crowded ? 16 : 20} />
+                <span
+                  className={clsx(
+                    'truncate font-display font-extrabold text-[#2b1d12]',
+                    crowded ? 'max-w-[3.1rem] text-[2.2cqi]' : 'max-w-[5rem] text-[2.45cqi]',
+                  )}
+                >
+                  {shortName}
+                </span>
+              </div>
+            );
+          })
+        ) : (
+          <span className="truncate font-sans text-[2.45cqi] font-semibold italic text-[#7a5c43]">
+            Belum ada pemain di petak ini
+          </span>
+        )}
+      </div>
     </div>
   );
 }

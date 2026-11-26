@@ -4,9 +4,7 @@ import {
   motion,
   useMotionValue,
   useReducedMotion,
-  useTransform,
   type AnimationPlaybackControls,
-  type MotionValue,
 } from 'framer-motion';
 import clsx from 'clsx';
 import { memo, useEffect, useRef, useState, type CSSProperties } from 'react';
@@ -19,15 +17,15 @@ import { depthZ, flatCss, useAnchor, useCam, useLive } from './camera';
 import { mix } from './color';
 import { CELL_N, pawnSpot, project, screenDepth, type Point } from './geometry';
 
-/** Pawn scale by how many pawns share the tile, so a cluster never overlaps. */
-const CLUSTER_SCALE = [1, 1, 0.74, 0.7, 0.66];
-/** Hop height in normalised units (screen-space lift, so it reads in both cameras). */
-const HOP_N = CELL_N * 0.55;
+/** Pawn scale by how many pawns share the tile, so a cluster never overlaps completely. */
+const CLUSTER_SCALE = [1, 1, 0.86, 0.8, 0.75];
+/** Hop height in normalised units (screen-space lift, so it reads in every camera). */
+const HOP_N = CELL_N * 0.62;
 const FLY_N = CELL_N * 2.6;
 
 const EMPTY: Record<string, never> = {};
 
-/** All live pawns. Re-renders on every step (cheap: ≤ 4 children, each memoised). */
+/** All live 2D PNG sprite pawns standing upright on the board. */
 export function PawnsLayer() {
   const players = useGame((s) => s.game?.players);
   const positions = useGame(useShallow((s) => s.view?.positions ?? EMPTY));
@@ -45,8 +43,7 @@ export function PawnsLayer() {
     list.push(p.id);
     byTile.set(t, list);
   });
-  // Phones: larger, chunkier Get Rich character standees so pawns pop out clearly on mobile screens.
-  const boost = c < 42 ? 1.32 : c < 58 ? 1.18 : 1.08;
+  const boost = c < 42 ? 1.24 : c < 58 ? 1.12 : 1.04;
 
   return (
     <AnimatePresence>
@@ -59,7 +56,7 @@ export function PawnsLayer() {
             key={p.id}
             id={p.id}
             color={p.color}
-            emoji={ch.emoji}
+            sprite={ch.sprite}
             name={p.name}
             tile={tile}
             slot={group.indexOf(p.id)}
@@ -77,7 +74,7 @@ export function PawnsLayer() {
 interface PawnProps {
   id: string;
   color: string;
-  emoji: string;
+  sprite: string;
   name: string;
   tile: number;
   slot: number;
@@ -94,10 +91,10 @@ interface Poof {
 }
 let poofSeq = 1;
 
-const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, active, island, boost }: PawnProps) {
+const Pawn = memo(function Pawn({ id, color, sprite, name, tile, slot, count, active, island, boost }: PawnProps) {
   const { tilt, yaw, k, S } = useCam();
   const reduce = useReducedMotion();
-  const base = (CLUSTER_SCALE[Math.min(count, 4)] ?? 0.66) * boost;
+  const base = (CLUSTER_SCALE[Math.min(count, 4)] ?? 0.75) * boost;
   const start = pawnSpot(tile, slot, count);
 
   const u = useMotionValue(start.u);
@@ -130,8 +127,8 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
       s.set(base);
       o.set(1);
     } else if (prev.tile === tile) {
-      // Someone joined or left this tile: slide into the new cluster spot.
-      const t = { duration: 0.28, ease: 'easeOut' as const };
+      // Someone joined or left this tile: slide into the new cluster offset spot.
+      const t = { duration: 0.26, ease: 'easeOut' as const };
       ctl.push(animate(u, target.u, t), animate(v, target.v, t), animate(s, base, t));
     } else {
       const mv = useGame.getState().view?.moving;
@@ -145,7 +142,7 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
           animate(u, target.u, { duration: dur, ease }),
           animate(v, target.v, { duration: dur, ease }),
           animate(h, [h.get(), FLY_N, 0], { duration: dur, times: [0, 0.5, 1], ease: ['easeOut', 'easeIn'] }),
-          animate(s, [s.get(), base * 1.75, base * 1.08, base], { duration: dur + 0.15, times: [0, 0.5, 0.88, 1] }),
+          animate(s, [s.get(), base * 1.65, base * 1.08, base], { duration: dur + 0.15, times: [0, 0.5, 0.88, 1] }),
         );
       } else if (mode === 'jump') {
         addPoof({ u: u.get(), v: v.get() });
@@ -164,14 +161,17 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
           );
         });
       } else {
-        // Walk: one short hop per tile (the store advances one tile every ~230ms × speed).
-        const dur = adjacent ? Math.max(0.1, 0.2 * sf) : 0.42 * sf;
-        const lift = adjacent ? HOP_N : HOP_N * 2;
+        // Walk: bouncy hop (translateY lift + scale squash & stretch) on each step.
+        const dur = adjacent ? Math.max(0.11, 0.21 * sf) : 0.42 * sf;
+        const lift = adjacent ? HOP_N : HOP_N * 1.9;
         ctl.push(
           animate(u, target.u, { duration: dur, ease: 'easeInOut' }),
           animate(v, target.v, { duration: dur, ease: 'easeInOut' }),
           animate(h, [h.get(), lift, 0], { duration: dur, times: [0, 0.45, 1], ease: ['easeOut', 'easeIn'] }),
-          animate(s, [s.get(), base * 1.06, base], { duration: dur }),
+          animate(s, [s.get(), base * 1.15, base * 0.94, base], {
+            duration: dur,
+            times: [0, 0.45, 0.88, 1],
+          }),
           animate(o, 1, { duration: 0.1 }),
         );
       }
@@ -185,15 +185,17 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
   const body = useLive([u, v, h, s, tilt, yaw], () => {
     const p = project(u.get(), v.get(), 0, tilt.get(), k, yaw.get());
     const hh = h.get();
-    return `translate3d(${(p.x * S).toFixed(2)}px,${(p.y * S - hh * S * p.f).toFixed(2)}px,0) scale(${(p.f * s.get()).toFixed(4)})`;
+    const sc = (p.f * s.get()).toFixed(4);
+    return `translate3d(${(p.x * S).toFixed(2)}px,${(p.y * S - hh * S * p.f).toFixed(2)}px,0) scale3d(${sc},${sc},1)`;
   });
   const ground = useLive([u, v, h, s, tilt, yaw], () => {
     const shrink = 1 - Math.min(0.55, (h.get() / (CELL_N * 3)) * 0.9);
     return flatCss(u.get(), v.get(), tilt.get(), k, S, s.get() * shrink, yaw.get());
   });
+  // Dynamic z-index by screen depth + slot offset + active turn bonus so stacked pawns layer cleanly
   const z = useLive([u, v, h, yaw], () => {
     const lifted = h.get() > CELL_N ? 4000 : 0;
-    return depthZ(screenDepth(u.get(), v.get(), yaw.get()), 40) + lifted + (active ? 5 : 0);
+    return depthZ(screenDepth(u.get(), v.get(), yaw.get()), 40) + lifted + slot * 3 + (active ? 12 : 0);
   });
 
   const vars = {
@@ -204,15 +206,12 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
 
   return (
     <>
-      {/* flat on the board: soft shadow + active ring */}
+      {/* flat on the board: active turn glow ring under the wooden base */}
       <motion.div
         className="bz-anchor"
         style={{ transform: ground, zIndex: 3, opacity: o }}
         exit={{ opacity: 0, transition: { duration: 0.4 } }}
       >
-        <div className="bz-mid">
-          <div className="bz-shadow" />
-        </div>
         {active && (
           <div className="bz-mid" style={vars}>
             <div className="bz-ring" />
@@ -220,7 +219,7 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
         )}
       </motion.div>
 
-      {/* upright billboard */}
+      {/* upright 2D PNG pawn sprite (transform-origin: bottom center, unaffected by board perspective tilt) */}
       <motion.div
         className="bz-anchor"
         style={{ transform: body, zIndex: z, opacity: o }}
@@ -229,11 +228,13 @@ const Pawn = memo(function Pawn({ id, color, emoji, name, tile, slot, count, act
         <div className="bz-stand">
           <div className="bz-pawn" style={vars} title={name}>
             <div className={clsx('bz-pawn-inner', active && 'bz-bob')}>
-              <span className="bz-pawn-base" />
-              <span className="bz-pawn-neck" />
-              <span className="bz-pawn-head">
-                <span className="bz-pawn-emoji">{emoji}</span>
-              </span>
+              <img
+                src={sprite}
+                alt={name}
+                decoding="async"
+                draggable={false}
+                className="bz-pawn-sprite"
+              />
               {island > 0 && <span className="bz-pawn-tag num">🏝️{island}</span>}
             </div>
           </div>
