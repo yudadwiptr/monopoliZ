@@ -91,7 +91,7 @@ export function Segmented<T>({
       aria-label={ariaLabel}
       aria-disabled={disabled || undefined}
       className={clsx(
-        'relative flex w-full gap-1 rounded-2xl border border-white/10 bg-ink-950/55 p-1 shadow-[inset_0_2px_6px_rgba(0,0,0,0.45)]',
+        'relative flex w-full gap-1 rounded-2xl border-2 border-[#2b1d12] bg-[#3d2514] p-1 shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]',
         disabled && 'opacity-50',
         className,
       )}
@@ -111,16 +111,16 @@ export function Segmented<T>({
             onClick={() => select(i)}
             onKeyDown={(e) => onKey(e, i)}
             className={clsx(
-              'relative flex min-w-0 flex-1 select-none items-center justify-center gap-1.5 rounded-xl px-2 text-center font-display font-semibold leading-tight outline-none transition-colors',
-              'focus-visible:ring-4 focus-visible:ring-brand-300/60',
+              'relative flex min-w-0 flex-1 select-none items-center justify-center gap-1.5 rounded-xl px-2 text-center font-display font-bold leading-tight outline-none transition-colors',
+              'focus-visible:ring-4 focus-visible:ring-amber-400/60',
               size === 'sm' ? 'min-h-[40px] text-sm' : 'min-h-[44px] text-[15px]',
-              active ? ACTIVE_TEXT[accent] : 'text-ink-200 hover:bg-white/5 hover:text-white',
+              active ? ACTIVE_TEXT[accent] : 'text-[#f5e6c8] hover:bg-white/10 hover:text-white',
             )}
           >
             {active && (
               <motion.span
                 layoutId={`${id}-pill`}
-                className={clsx('absolute inset-0 rounded-xl', PILL[accent])}
+                className={clsx('absolute inset-0 rounded-xl border border-[#2b1d12]', PILL[accent])}
                 transition={{ type: 'spring', stiffness: 520, damping: 34 }}
               />
             )}

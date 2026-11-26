@@ -45,7 +45,10 @@ export function MonopolyAlertBanner() {
               animate={{ opacity: [0.75, 1, 0.75] }}
               transition={{ duration: 0.8, repeat: Infinity }}
             />
-            <div className="relative rounded-[1.35rem] bg-ink-950/85 px-4 py-3 backdrop-blur-md">
+            <div
+              className="relative rounded-[1.35rem] border-2 border-[#2b1d12] px-4 py-3 text-[#2b1d12]"
+              style={{ background: 'linear-gradient(180deg, #fff9ea 0%, #f5e6c8 60%, #ebd4a9 100%)' }}
+            >
               <div className="flex items-center gap-3">
                 <motion.span
                   className="shrink-0 text-3xl leading-none"
@@ -58,22 +61,22 @@ export function MonopolyAlertBanner() {
                 <div className="min-w-0 flex-1">
                   <div
                     className={clsx(
-                      'font-display text-lg font-bold uppercase leading-tight tracking-wider',
-                      self ? 'text-gold-300' : 'text-merah-300',
+                      'font-display text-lg font-black uppercase leading-tight tracking-wider',
+                      self ? 'text-[#b45309]' : 'text-[#b91c1c]',
                     )}
                   >
                     {self ? 'Dikit lagi!' : 'Awas!'}
                   </div>
-                  <p className="text-sm leading-snug text-ink-100">
+                  <p className="text-sm font-bold leading-snug text-[#2b1d12]">
                     {self ? (
                       'Kamu'
                     ) : (
-                      <span className="font-semibold" style={{ color: player.color }}>
+                      <span className="font-black underline decoration-2" style={{ color: '#2b1d12' }}>
                         {player.name}
                       </span>
                     )}{' '}
                     tinggal 1 petak lagi menuju{' '}
-                    <span className={clsx('font-bold', self ? 'text-gold-300' : 'text-gold-400')}>{WIN_REASON_LABEL[alert.reason]}</span>!
+                    <span className={clsx('font-black', self ? 'text-[#b45309]' : 'text-[#b91c1c]')}>{WIN_REASON_LABEL[alert.reason]}</span>!
                     {!self && ' Halangi sekarang!'}
                   </p>
                 </div>
@@ -81,19 +84,19 @@ export function MonopolyAlertBanner() {
               </div>
               {missing.length > 0 && (
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-300">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wide text-[#5c4028]">
                     {missing.length > 1 ? 'Salah satu dari:' : 'Petak penentu:'}
                   </span>
                   {missing.slice(0, 6).map((t) => (
                     <span
                       key={t.index}
-                      className="flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-xs font-semibold text-white"
+                      className="flex items-center gap-1 rounded-full border border-[#5c4028] bg-[#fff8e7] px-2 py-0.5 text-xs font-extrabold text-[#2b1d12]"
                     >
                       <span aria-hidden>{t.icon}</span>
                       {t.name}
                     </span>
                   ))}
-                  {missing.length > 6 && <span className="text-xs text-ink-300">+{missing.length - 6} lagi</span>}
+                  {missing.length > 6 && <span className="text-xs font-bold text-[#5c4028]">+{missing.length - 6} lagi</span>}
                 </div>
               )}
             </div>

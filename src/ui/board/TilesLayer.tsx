@@ -25,6 +25,8 @@ export function TilesLayer({ map, onPick }: TilesLayerProps) {
   const players = useGame((s) => s.game?.players);
   const salary = useGame((s) => s.game?.config.salary ?? DEFAULT_SALARY);
   const activeId = useGame((s) => s.view?.activePlayerId ?? '');
+  const positions = useGame((s) => s.view?.positions);
+  const bankrupt = useGame((s) => s.view?.bankrupt);
   const activePos = useGame((s) => {
     const v = s.view;
     if (!v || v.bankrupt[v.activePlayerId]) return -1;
@@ -35,6 +37,14 @@ export function TilesLayer({ map, onPick }: TilesLayerProps) {
 
   const selSet = useMemo(() => (selectable.length ? new Set(selectable) : EMPTY_SET), [selectable]);
   const alertSet = useMemo(() => (alert ? new Set(alert.missing) : EMPTY_SET), [alert]);
+  const occupiedSet = useMemo(() => {
+    if (!players || !positions) return EMPTY_SET;
+    const set = new Set<number>();
+    players.forEach((p) => {
+      if (!bankrupt?.[p.id] && positions[p.id] !== undefined) set.add(positions[p.id]);
+    });
+    return set;
+  }, [players, positions, bankrupt]);
   const selecting = selSet.size > 0;
   const activeColor = players?.find((p) => p.id === activeId)?.color ?? null;
 
@@ -105,6 +115,7 @@ export function TilesLayer({ map, onPick }: TilesLayerProps) {
               sel={sel}
               alert={alertSet.has(def.index)}
               here={!selecting && activePos === def.index ? activeColor : null}
+              hasPawn={occupiedSet.has(def.index)}
               salary={salary}
               onPick={onPick}
             />

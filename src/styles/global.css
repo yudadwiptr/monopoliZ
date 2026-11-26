@@ -49,12 +49,12 @@ textarea {
 }
 
 @layer components {
-  /* Frosted glass surface used for panels, cards and dialogs */
+  /* Warm 2D carved wood & gold surface used for panels, cards and dialogs (replaces old navy-blue glass) */
   .glass {
-    @apply rounded-3xl border border-white/10 bg-ink-800/60 shadow-glass backdrop-blur-xl;
+    @apply rounded-3xl border-2 border-[#8c6239]/80 bg-[#362011]/90 shadow-[0_6px_0_#1e130c,0_18px_36px_rgba(0,0,0,0.55)] backdrop-blur-xl;
   }
   .glass-strong {
-    @apply rounded-3xl border border-white/15 bg-ink-800/85 shadow-glass backdrop-blur-2xl;
+    @apply rounded-3xl border-[2.5px] border-[#8c6239] bg-[#3b2313]/95 shadow-[0_7px_0_#1e130c,0_22px_44px_rgba(0,0,0,0.65)] backdrop-blur-2xl;
   }
   .batik-bg {
     background-image: var(--batik-kawung);
@@ -105,8 +105,8 @@ textarea {
   backdrop-filter: none !important;
 }
 .mz-game .glass {
-  background-color: rgba(18, 26, 61, 0.9);
+  background-color: rgba(54, 32, 17, 0.94);
 }
 .mz-game .glass-strong {
-  background-color: rgba(18, 26, 61, 0.96);
+  background-color: rgba(59, 35, 19, 0.97);
 }

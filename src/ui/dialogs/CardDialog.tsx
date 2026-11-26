@@ -118,14 +118,14 @@ export function CardDialog({ game, pending }: CardDialogProps) {
               >
                 <Button
                   ref={btnRef}
-                  variant="primary"
+                  variant="gold"
                   size="lg"
                   silent
                   onClick={ack}
-                  className="min-w-[12rem]"
+                  className="min-w-[12rem] !border-2 !border-[#2b1d12] !font-black !text-[#2b1d12] !shadow-[0_4px_0_#2b1d12]"
                   aria-keyshortcuts="Enter"
                 >
-                  Oke!
+                  Oke, Gas!
                 </Button>
               </motion.div>
             )}

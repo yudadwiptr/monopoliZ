@@ -110,30 +110,29 @@ export function DialogShell({
             aria-labelledby={labelledBy}
             aria-describedby={describedBy}
             className={clsx(
-              'glass-strong pointer-events-auto relative flex w-full flex-col overflow-hidden outline-none',
-              'max-h-[92dvh] max-w-[23.5rem] rounded-3xl border',
-              'sm:max-h-[86dvh] sm:max-w-[25.5rem] sm:rounded-4xl',
+              'pointer-events-auto relative flex w-full flex-col overflow-hidden outline-none',
+              'max-h-[92dvh] max-w-[23.5rem] rounded-[1.85rem] border-[3.5px] border-[#2b1d12] p-2',
+              'sm:max-h-[86dvh] sm:max-w-[25.5rem]',
               className,
             )}
-            style={
-              ring
-                ? { boxShadow: `0 0 0 1.5px ${ring}66, 0 0 40px -6px ${ring}88, 0 24px 60px -12px rgba(0,0,0,0.7)` }
-                : undefined
-            }
+            style={{
+              background: 'linear-gradient(180deg, #7c4d25 0%, #5c3718 55%, #462810 100%)',
+              boxShadow: ring
+                ? `0 0 0 2px ${ring}, 0 8px 0 #2b1d12, 0 24px 55px -10px rgba(0,0,0,0.75)`
+                : '0 8px 0 #2b1d12, 0 24px 55px -10px rgba(0,0,0,0.75)',
+            }}
             initial={{ opacity: 0, y: 24, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.94 }}
             transition={SPRING}
           >
-            {accent && (
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -top-28 left-1/2 h-48 w-72 -translate-x-1/2 rounded-full opacity-40 blur-3xl"
-                style={{ background: accent }}
-              />
-            )}
-            <div className="batik-bg pointer-events-none absolute inset-0 opacity-60" aria-hidden />
-            <div className="scrollbar-thin relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-4">
+            <div
+              className="scrollbar-thin relative min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-[1.35rem] border-2 border-[#8c6239] p-3.5 text-[#2b1d12] sm:p-4"
+              style={{
+                background: 'linear-gradient(180deg, #fff9ea 0%, #f5e6c8 55%, #ebd4a9 100%)',
+                boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.7), inset 0 -3px 0 rgba(140,98,57,0.25)',
+              }}
+            >
               {children}
             </div>
           </motion.section>

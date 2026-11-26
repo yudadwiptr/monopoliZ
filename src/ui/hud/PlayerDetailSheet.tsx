@@ -44,8 +44,8 @@ function Segments({ owned, total, color, hot }: { owned: number; total: number; 
       {Array.from({ length: total }, (_, i) => (
         <motion.span
           key={i}
-          className="block h-2.5 flex-1 rounded-full"
-          style={{ background: i < owned ? color : 'rgba(255,255,255,0.1)' }}
+          className="block h-3 flex-1 rounded-full border border-[#5c4028]"
+          style={{ background: i < owned ? color : '#e2cba4' }}
           initial={{ scaleX: 0 }}
           animate={i < owned && hot ? { scaleX: 1, opacity: [1, 0.55, 1] } : { scaleX: 1 }}
           transition={{
@@ -64,11 +64,11 @@ function ProgressRow({ label, sub, owned, total, color }: { label: string; sub?:
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
-        <span className="font-display font-semibold text-white">
+        <span className="font-display font-extrabold text-[#2b1d12]">
           {label}
-          {sub && <span className="ml-1.5 text-xs font-medium text-ink-300">{sub}</span>}
+          {sub && <span className="ml-1.5 text-xs font-bold text-[#6e5239]">{sub}</span>}
         </span>
-        <span className={clsx('num text-sm font-semibold', done ? 'text-gold-300' : hot ? 'text-merah-300' : 'text-ink-200')}>
+        <span className={clsx('num text-sm font-black', done ? 'text-[#b45309]' : hot ? 'text-[#b91c1c]' : 'text-[#4a3525]')}>
           {hot && <span className="mr-1.5 text-[11px] uppercase tracking-wide">1 lagi!</span>}
           {owned}/{total}
         </span>
@@ -78,7 +78,7 @@ function ProgressRow({ label, sub, owned, total, color }: { label: string; sub?:
   );
 }
 
-/** Bottom sheet with a player's properties, kept cards and monopoly progress. */
+/** Bottom sheet with a player's properties, kept cards and monopoly progress (2D Parchment & Wood theme). */
 export function PlayerDetailSheet({ playerId, onClose }: PlayerDetailSheetProps) {
   const map = useMapDef();
   const player = useGame((s) => (playerId ? s.game?.players.find((p) => p.id === playerId) : undefined));
@@ -104,40 +104,56 @@ export function PlayerDetailSheet({ playerId, onClose }: PlayerDetailSheetProps)
   const titleId = 'hud-player-detail-title';
 
   return (
-    <Modal open={open} onClose={onClose} placement="bottom" labelledBy={titleId} accent={player?.color} className="!max-w-lg !p-0">
+    <Modal open={open} onClose={onClose} placement="bottom" labelledBy={titleId} accent={player?.color} className="!max-w-lg">
       {player && data && map && tiles && (
-        <div data-hud-sheet className="flex max-h-[82dvh] flex-col">
+        <div data-hud-sheet className="-m-4 flex max-h-[80dvh] flex-col text-[#2b1d12] sm:-m-5">
           {/* header */}
-          <div className="flex items-center gap-3 border-b border-white/10 px-5 pb-4 pt-5">
+          <div className="flex items-center gap-3 border-b-2 border-[#c8a97e] bg-[#ebd4a9]/55 px-5 pb-3.5 pt-4">
             <Avatar characterId={player.characterId} size={56} dimmed={bankrupt} />
             <div className="min-w-0 flex-1">
-              <h2 id={titleId} className="truncate font-display text-2xl font-bold text-white">
+              <h2 id={titleId} className="truncate font-display text-2xl font-black text-[#2b1d12]">
                 {player.name}
               </h2>
-              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold">
-                <span className="rounded-full px-2 py-0.5 text-ink-950" style={{ background: player.color }}>
+              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-extrabold">
+                <span
+                  className="rounded-full border border-[#2b1d12] px-2.5 py-0.5 text-[#1e130c]"
+                  style={{ background: player.color }}
+                >
                   {player.isBot ? `🤖 Bot ${BOT_LEVEL_LABEL[player.botLevel]}` : '🎮 Pemain'}
                 </span>
-                {bankrupt && <span className="rounded-full bg-merah-500/25 px-2 py-0.5 text-merah-300">💀 Bangkrut</span>}
-                {island > 0 && <span className="rounded-full bg-laut-500/20 px-2 py-0.5 text-laut-300">🏝️ Terdampar {island} giliran</span>}
+                {bankrupt && (
+                  <span className="rounded-full border border-[#b91c1c] bg-[#fee2e2] px-2 py-0.5 text-[#991b1b]">
+                    💀 Bangkrut
+                  </span>
+                )}
+                {island > 0 && (
+                  <span className="rounded-full border border-[#0369a1] bg-[#e0f2fe] px-2 py-0.5 text-[#075985]">
+                    🏝️ Terdampar {island} giliran
+                  </span>
+                )}
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Tutup" className="!h-11 !w-11 !px-0">
-              <X size={22} aria-hidden />
-            </Button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Tutup"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-[#2b1d12] bg-[#4a3525] text-[#f6eedc] shadow-[0_2px_0_#2b1d12] transition-transform hover:scale-105 active:scale-95"
+            >
+              <X size={20} strokeWidth={2.6} aria-hidden />
+            </button>
           </div>
 
-          <div className="scrollbar-thin min-h-0 flex-1 space-y-5 overflow-y-auto px-5 pb-6 pt-4">
+          <div className="scrollbar-thin min-h-0 flex-1 space-y-4 overflow-y-auto px-5 pb-5 pt-4">
             {/* stats */}
             <div className="grid grid-cols-3 gap-2">
               <Stat label="Kas">
-                <Money value={cash} className="text-lg font-bold text-gold-300" />
+                <Money value={cash} className="text-lg font-black text-[#b45309]" />
               </Stat>
               <Stat label="Total aset">
-                <span className="num text-lg font-bold text-white">{formatRp(bankrupt ? 0 : cash + data.value)}</span>
+                <span className="num text-lg font-black text-[#2b1d12]">{formatRp(bankrupt ? 0 : cash + data.value)}</span>
               </Stat>
               <Stat label="Properti">
-                <span className="num text-lg font-bold text-white">
+                <span className="num text-lg font-black text-[#1d4ed8]">
                   {data.groups.reduce((n, g) => n + g.tiles.length, 0)}
                 </span>
               </Stat>
@@ -145,13 +161,18 @@ export function PlayerDetailSheet({ playerId, onClose }: PlayerDetailSheetProps)
 
             {/* kept cards */}
             <section aria-label="Kartu simpanan">
-              <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-ink-300">Kartu simpanan</h3>
+              <h3 className="mb-1.5 font-display text-xs font-black uppercase tracking-wider text-[#5c4028]">
+                Kartu simpanan
+              </h3>
               {player.cards.length === 0 ? (
-                <p className="text-sm text-ink-400">Belum ada kartu. Coba peruntungan di Kartu Rezeki!</p>
+                <p className="text-sm font-semibold text-[#6e5239]">Belum ada kartu. Coba peruntungan di Kartu Rezeki!</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {player.cards.map((c) => (
-                    <span key={c} className="flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-2.5 py-1.5 text-sm font-semibold">
+                    <span
+                      key={c}
+                      className="flex items-center gap-1.5 rounded-xl border-2 border-[#8c6239] bg-[#fff8e7] px-2.5 py-1.5 text-sm font-extrabold text-[#2b1d12] shadow-[0_2px_0_rgba(140,98,57,0.3)]"
+                    >
                       <span className="text-lg leading-none">{KEEP_CARD_INFO[c].emoji}</span>
                       {KEEP_CARD_INFO[c].name}
                     </span>
@@ -161,8 +182,13 @@ export function PlayerDetailSheet({ playerId, onClose }: PlayerDetailSheetProps)
             </section>
 
             {/* monopoly progress */}
-            <section aria-label="Progres monopoli" className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-3.5">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-ink-300">Jalan menuju monopoli</h3>
+            <section
+              aria-label="Progres monopoli"
+              className="space-y-3 rounded-2xl border-2 border-[#8c6239] bg-[#fff8e7] p-3.5 shadow-[0_2px_0_rgba(140,98,57,0.25)]"
+            >
+              <h3 className="font-display text-xs font-black uppercase tracking-wider text-[#5c4028]">
+                Jalan menuju monopoli
+              </h3>
               <ProgressRow
                 label="Monopoli Wisata"
                 owned={data.status.wisata.owned}
@@ -174,34 +200,47 @@ export function PlayerDetailSheet({ playerId, onClose }: PlayerDetailSheetProps)
                 sub={data.bestJalur.owned > 0 ? SIDE_LABEL[data.bestJalur.side] : undefined}
                 owned={data.bestJalur.owned}
                 total={data.bestJalur.total}
-                color="#5AA6EC"
+                color="#3A8CD6"
               />
               <ProgressRow
                 label="Triple Warna"
                 sub="grup warna komplet"
                 owned={Math.min(data.status.warna.completeGroups.length, data.status.warna.needed)}
                 total={data.status.warna.needed}
-                color="#FFC21F"
+                color="#F59E0B"
               />
             </section>
 
             {/* properties */}
             <section aria-label="Daftar properti">
-              <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-ink-300">Properti</h3>
+              <h3 className="mb-2 font-display text-xs font-black uppercase tracking-wider text-[#5c4028]">Properti</h3>
               {data.groups.length === 0 ? (
-                <p className="text-sm text-ink-400">{bankrupt ? 'Semua aset sudah disita bank.' : 'Belum punya properti. Gas beli kota pertamamu!'}</p>
+                <p className="text-sm font-semibold text-[#6e5239]">
+                  {bankrupt ? 'Semua aset sudah disita bank.' : 'Belum punya properti. Gas beli kota pertamamu!'}
+                </p>
               ) : (
                 <div className="space-y-2.5">
                   {data.groups.map((g) => (
-                    <div key={g.key} className="overflow-hidden rounded-2xl border border-white/10 bg-ink-900/50">
-                      <div className="flex items-center gap-2 px-3 py-1.5" style={{ background: `${g.color}26` }}>
-                        <span className="h-3 w-3 rounded-[4px]" style={{ background: g.color }} aria-hidden />
-                        <span className="flex-1 truncate font-display text-sm font-semibold text-white">{g.name}</span>
-                        <span className={clsx('num text-xs font-semibold', g.tiles.length === g.total ? 'text-gold-300' : 'text-ink-300')}>
+                    <div
+                      key={g.key}
+                      className="overflow-hidden rounded-2xl border-2 border-[#8c6239] bg-[#fff8e7] shadow-[0_2px_0_rgba(140,98,57,0.25)]"
+                    >
+                      <div
+                        className="flex items-center gap-2 border-b border-[#c8a97e] px-3 py-1.5"
+                        style={{ background: `${g.color}33` }}
+                      >
+                        <span className="h-3.5 w-3.5 rounded-[4px] border border-[#2b1d12]" style={{ background: g.color }} aria-hidden />
+                        <span className="flex-1 truncate font-display text-sm font-black text-[#2b1d12]">{g.name}</span>
+                        <span
+                          className={clsx(
+                            'num text-xs font-black',
+                            g.tiles.length === g.total ? 'text-[#b45309]' : 'text-[#5c4028]',
+                          )}
+                        >
                           {g.tiles.length === g.total ? '✓ Komplet' : `${g.tiles.length}/${g.total}`}
                         </span>
                       </div>
-                      <ul className="divide-y divide-white/5">
+                      <ul className="divide-y divide-[#e2cba4]">
                         {g.tiles.map((t) => {
                           const level = tiles[t.index]?.level ?? 0;
                           const toll = tollAt(map.tiles, tiles, t.index, festivalTile);
@@ -211,15 +250,17 @@ export function PlayerDetailSheet({ playerId, onClose }: PlayerDetailSheetProps)
                                 {t.icon}
                               </span>
                               <span className="min-w-0 flex-1">
-                                <span className="block truncate text-sm font-semibold text-white">
+                                <span className="block truncate text-sm font-extrabold text-[#2b1d12]">
                                   {t.name}
-                                  {festivalTile === t.index && <span className="ml-1.5 text-xs text-gold-300">🎆 Pesta ×2</span>}
+                                  {festivalTile === t.index && (
+                                    <span className="ml-1.5 text-xs font-black text-[#b45309]">🎆 Pesta ×2</span>
+                                  )}
                                 </span>
-                                <span className="block text-xs text-ink-300">
+                                <span className="block text-xs font-bold text-[#5c4028]">
                                   {t.kind === 'city' ? (
                                     <>
                                       <span aria-hidden>{LEVEL_ICONS[level]}</span>{' '}
-                                      <span className={level === LANDMARK_LEVEL ? 'font-semibold text-gold-300' : undefined}>
+                                      <span className={level === LANDMARK_LEVEL ? 'font-black text-[#b45309]' : undefined}>
                                         {LEVEL_NAMES[level]}
                                       </span>
                                     </>
@@ -229,8 +270,8 @@ export function PlayerDetailSheet({ playerId, onClose }: PlayerDetailSheetProps)
                                 </span>
                               </span>
                               <span className="text-right">
-                                <span className="block text-[10px] uppercase tracking-wide text-ink-400">Sewa</span>
-                                <span className="num block text-sm font-semibold text-gold-300">{formatRp(toll)}</span>
+                                <span className="block text-[10px] font-bold uppercase tracking-wide text-[#6e5239]">Sewa</span>
+                                <span className="num block text-sm font-black text-[#b45309]">{formatRp(toll)}</span>
                               </span>
                             </li>
                           );
@@ -250,8 +291,8 @@ export function PlayerDetailSheet({ playerId, onClose }: PlayerDetailSheetProps)
 
 function Stat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-ink-300">{label}</div>
+    <div className="rounded-2xl border-2 border-[#8c6239] bg-[#fff8e7] px-3 py-2 shadow-[0_2px_0_rgba(140,98,57,0.25)]">
+      <div className="text-[11px] font-extrabold uppercase tracking-wide text-[#5c4028]">{label}</div>
       <div className="truncate">{children}</div>
     </div>
   );

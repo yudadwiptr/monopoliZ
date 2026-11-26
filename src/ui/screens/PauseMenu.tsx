@@ -1,98 +1,18 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, LogOut, Pause, Play, Save, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { sfx } from '@/audio';
 import { useGame } from '@/store/gameStore';
-import { Button, Modal } from '@/ui/common';
 import { HowToPlay } from './HowToPlay';
 import { SettingsModal } from './SettingsModal';
 
 type Sub = 'main' | 'confirm' | 'settings' | 'howto';
 
-function PauseMain({
-  subtitle,
-  onResume,
-  onSettings,
-  onHowTo,
-  onQuit,
-}: {
-  subtitle: string;
-  onResume(): void;
-  onSettings(): void;
-  onHowTo(): void;
-  onQuit(): void;
-}) {
-  return (
-    <motion.div key="main" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-      <div className="mb-6 flex flex-col items-center text-center">
-        <motion.span
-          initial={{ scale: 0, rotate: -30 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 18, delay: 0.05 }}
-          className="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-b from-brand-400 to-brand-600 text-white shadow-btn-brand"
-        >
-          <Pause size={30} fill="currentColor" aria-hidden />
-        </motion.span>
-        <h2 id="pause-title" className="mt-3 font-display text-4xl font-bold text-white">
-          Jeda
-        </h2>
-        <p className="mt-1 text-sm text-ink-300">{subtitle}</p>
-      </div>
-      <div className="flex flex-col gap-3">
-        <Button variant="primary" size="lg" block icon={<Play size={22} fill="currentColor" aria-hidden />} onClick={onResume} autoFocus>
-          Lanjutkan
-        </Button>
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="glass" size="md" block icon={<Settings size={18} aria-hidden />} onClick={onSettings}>
-            Pengaturan
-          </Button>
-          <Button variant="glass" size="md" block icon={<BookOpen size={18} aria-hidden />} onClick={onHowTo}>
-            Cara Main
-          </Button>
-        </div>
-        <Button
-          variant="ghost"
-          size="md"
-          block
-          icon={<LogOut size={18} aria-hidden />}
-          onClick={onQuit}
-          className="mt-1 text-merah-300 hover:bg-merah-500/10"
-        >
-          Keluar ke Menu
-        </Button>
-      </div>
-    </motion.div>
-  );
-}
-
-function ConfirmQuit({ onCancel, onConfirm }: { onCancel(): void; onConfirm(): void }) {
-  return (
-    <motion.div key="confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-      <div className="mb-6 flex flex-col items-center text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-b from-daun-500 to-daun-600 text-ink-950 shadow-[0_6px_0_#0b7a4f]">
-          <Save size={28} aria-hidden />
-        </span>
-        <h2 id="pause-title" className="mt-3 font-display text-3xl font-bold text-white">
-          Keluar ke menu?
-        </h2>
-        <p className="mt-1 max-w-xs text-sm text-ink-200">
-          Progres tersimpan otomatis, bisa dilanjutkan nanti lewat tombol <b className="text-white">Lanjutkan</b> di menu.
-        </p>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Button variant="glass" size="lg" block onClick={onCancel} autoFocus>
-          Batal
-        </Button>
-        <Button variant="danger" size="lg" block icon={<LogOut size={20} aria-hidden />} onClick={onConfirm}>
-          Keluar
-        </Button>
-      </div>
-    </motion.div>
-  );
-}
-
 /**
- * In-game pause overlay, driven by `useGame().paused`. Settings and the guide replace the pause card
- * while open (so Escape only closes the top-most layer).
+ * 2D Hand-Drawn Pause Menu Modal (`/ui/card_pause_jeda.png`):
+ * - Uses `/ui/card_pause_jeda.png` (`width: min(90vw, 360px)`, `aspect-ratio: 3 / 4`, `background-size: 100% 100%`) as the entire modal frame.
+ * - Does not render a duplicate pause icon since the glowing blue `||` icon is part of the artwork.
+ * - Positions "Jeda" inside the scroll banner (`top: 31.5%`), the round description below it (`top: 41.8%`),
+ *   and transparent interactive buttons directly over the 4 drawn button boxes ("Lanjutkan", "Pengaturan", "Cara Main", "Keluar ke Menu").
  */
 export function PauseMenu() {
   const paused = useGame((s) => s.paused);
@@ -106,34 +26,221 @@ export function PauseMenu() {
     if (!paused) setSub('main');
   }, [paused]);
 
-  const resume = () => setPaused(false);
+  const resume = () => {
+    sfx.play('click');
+    setPaused(false);
+  };
   const subtitle = `Ronde ${round}${maxRounds ? ` dari ${maxRounds}` : ''} • Napas dulu, sultan ☕`;
   const cardOpen = paused && (sub === 'main' || sub === 'confirm');
+  const isConfirm = sub === 'confirm';
 
   return (
     <>
-      <Modal
-        open={cardOpen}
-        onClose={sub === 'confirm' ? () => setSub('main') : resume}
-        accent="#3A8CD6"
-        labelledBy="pause-title"
-        className="!max-w-sm"
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          {sub === 'confirm' ? (
-            <ConfirmQuit key="confirm" onCancel={() => setSub('main')} onConfirm={quitToMenu} />
-          ) : (
-            <PauseMain
-              key="main"
-              subtitle={subtitle}
-              onResume={resume}
-              onSettings={() => setSub('settings')}
-              onHowTo={() => setSub('howto')}
-              onQuit={() => setSub('confirm')}
+      <AnimatePresence>
+        {cardOpen && (
+          <div
+            key="pause-card-overlay"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pause-title"
+          >
+            {/* Soft dark backdrop behind the 2D pause card */}
+            <motion.div
+              aria-hidden
+              className="absolute inset-0 bg-black/60"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={isConfirm ? () => setSub('main') : resume}
             />
-          )}
-        </AnimatePresence>
-      </Modal>
+
+            {/* Main 2D Hand-Drawn Pause Card Container */}
+            <motion.div
+              key="pause-card"
+              className="relative select-none"
+              style={{
+                width: 'min(90vw, 360px)',
+                aspectRatio: '3 / 4',
+                backgroundImage: "url('/ui/card_pause_jeda.png')",
+                backgroundSize: '100% 100%',
+                backgroundRepeat: 'no-repeat',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '10% 8% 12% 8%',
+                filter: 'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6))',
+              }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+            >
+              {/* Title inside the scroll banner below the pause icon */}
+              <h2
+                id="pause-title"
+                className="font-display"
+                style={{
+                  position: 'absolute',
+                  top: '31.4%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '100%',
+                  textAlign: 'center',
+                  fontSize: 'clamp(19px, 5.5vw, 23px)',
+                  fontWeight: 800,
+                  color: '#1e130c',
+                  lineHeight: 1.1,
+                }}
+              >
+                {isConfirm ? 'Keluar?' : 'Jeda'}
+              </h2>
+
+              {/* Description below the scroll banner */}
+              <p
+                className="font-display"
+                style={{
+                  position: 'absolute',
+                  top: '41.8%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  fontSize: 'clamp(10px, 2.5vw, 12px)',
+                  fontWeight: 600,
+                  color: '#5c4028',
+                  width: '80%',
+                  textAlign: 'center',
+                  lineHeight: 1.25,
+                }}
+              >
+                {isConfirm ? 'Progres otomatis tersimpan di menu Lanjutkan 💾' : subtitle}
+              </p>
+
+              {/* 1. Primary Blue Bar Button ("Lanjutkan" / "Batal, Lanjut Main") */}
+              <button
+                type="button"
+                onClick={isConfirm ? () => (sfx.play('click'), setSub('main')) : resume}
+                autoFocus
+                className="font-display transition-transform active:scale-[0.98]"
+                style={{
+                  position: 'absolute',
+                  top: '50.2%',
+                  left: '12%',
+                  width: '76%',
+                  height: '11.5%',
+                  cursor: 'pointer',
+                  background: 'transparent',
+                  border: 'none',
+                  fontSize: 'clamp(14px, 3.8vw, 17px)',
+                  fontWeight: 800,
+                  color: '#ffffff',
+                  textShadow: '0 1.5px 2px rgba(0, 0, 0, 0.55)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingLeft: '10%',
+                }}
+              >
+                {isConfirm ? 'Batal (Lanjut Main)' : 'Lanjutkan'}
+              </button>
+
+              {/* 2. Two Side-by-Side Brown Buttons ("Pengaturan" & "Cara Main") */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '64.8%',
+                  left: '12%',
+                  width: '76%',
+                  height: '10.5%',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '3.5%',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    sfx.play('click');
+                    setSub('settings');
+                  }}
+                  className="font-display transition-transform active:scale-[0.97]"
+                  style={{
+                    cursor: 'pointer',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: 'clamp(11px, 2.5vw, 13px)',
+                    textAlign: 'center',
+                    textShadow: '0 1.5px 2px rgba(0, 0, 0, 0.55)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingLeft: '20%',
+                  }}
+                >
+                  Pengaturan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sfx.play('click');
+                    setSub('howto');
+                  }}
+                  className="font-display transition-transform active:scale-[0.97]"
+                  style={{
+                    cursor: 'pointer',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: 'clamp(11px, 2.5vw, 13px)',
+                    textAlign: 'center',
+                    textShadow: '0 1.5px 2px rgba(0, 0, 0, 0.55)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingLeft: '20%',
+                  }}
+                >
+                  Cara Main
+                </button>
+              </div>
+
+              {/* 3. Bottom Thin Bar Button ("Keluar ke Menu") */}
+              <button
+                type="button"
+                onClick={() => {
+                  sfx.play('click');
+                  if (isConfirm) quitToMenu();
+                  else setSub('confirm');
+                }}
+                className="font-display transition-transform active:scale-[0.98]"
+                style={{
+                  position: 'absolute',
+                  top: '79.3%',
+                  left: '13%',
+                  width: '74%',
+                  height: '6.6%',
+                  cursor: 'pointer',
+                  background: 'transparent',
+                  border: 'none',
+                  fontSize: 'clamp(11px, 2.8vw, 13px)',
+                  fontWeight: 800,
+                  color: isConfirm ? '#b91c1c' : '#b45309',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingLeft: '10%',
+                }}
+              >
+                {isConfirm ? 'Ya, Keluar ke Menu!' : 'Keluar ke Menu'}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <SettingsModal open={paused && sub === 'settings'} onClose={() => setSub('main')} />
 

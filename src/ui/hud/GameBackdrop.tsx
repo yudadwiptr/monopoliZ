@@ -6,7 +6,7 @@
 export function GameBackdrop() {
   return (
     <div
-      className="pointer-events-none absolute inset-0 h-[100dvh] min-h-[100dvh] w-screen select-none overflow-hidden bg-[#389ab2]"
+      className="pointer-events-none absolute inset-0 h-[100dvh] min-h-[100dvh] w-screen select-none overflow-hidden bg-[#163d4a]"
       aria-hidden
     >
       <div
@@ -19,14 +19,15 @@ export function GameBackdrop() {
           width: '100vw',
           height: '100dvh',
           overflow: 'hidden',
+          filter: 'brightness(0.68) saturate(0.92)',
         }}
       />
-      {/* Subtle corner vignette so the 4 corner HUD cards and bottom dice dock pop with extra contrast */}
+      {/* Dark focus overlay & vignette so visual attention stays locked on the center game board and HUD */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 75% 75% at 50% 50%, transparent 55%, rgba(10, 32, 46, 0.28) 100%)',
+            'radial-gradient(ellipse 62% 62% at 50% 50%, rgba(8, 22, 34, 0.24) 0%, rgba(6, 16, 28, 0.56) 100%)',
         }}
       />
     </div>

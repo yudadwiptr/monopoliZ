@@ -27,6 +27,8 @@ export interface TileViewProps {
   alert: boolean;
   /** Colour of the active player when their pawn stands on this tile. */
   here: string | null;
+  /** True when any pawn is currently standing on this tile. */
+  hasPawn?: boolean;
   salary: number;
   onPick: (index: number, el: HTMLElement) => void;
 }
@@ -254,7 +256,7 @@ function SideTileContent({ p, band }: { p: TileViewProps; band: string | null })
         </span>
       </div>
       <div className="bz-mid-zone">
-        {!isOwned && <TileHouseIllustration def={def} band={lotColor} />}
+        {!isOwned && !p.hasPawn && <TileHouseIllustration def={def} band={lotColor} />}
       </div>
       <div className="bz-price-slot">
         <span

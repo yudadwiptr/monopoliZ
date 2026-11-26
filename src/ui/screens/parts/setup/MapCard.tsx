@@ -38,12 +38,12 @@ export function MapCard({ map, selected, onSelect, compact }: MapCardProps) {
       whileTap={locked ? { x: [0, -6, 6, -3, 0] } : { scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 500, damping: 28 }}
       className={clsx(
-        'group relative flex shrink-0 snap-center flex-col overflow-hidden rounded-3xl border text-left outline-none',
+        'group relative flex shrink-0 snap-center flex-col overflow-hidden rounded-3xl border-2 text-left outline-none',
         compact ? 'w-[232px]' : 'w-[78%] sm:w-auto',
-        'bg-ink-800/70 backdrop-blur-xl focus-visible:ring-4 focus-visible:ring-brand-300/60',
+        'bg-[#362011]/90 backdrop-blur-xl focus-visible:ring-4 focus-visible:ring-amber-400/60',
         selected
-          ? 'border-brand-300 shadow-[0_0_0_2px_#5AA6EC,0_18px_40px_-12px_rgba(58,140,214,0.7)]'
-          : 'border-white/10 shadow-glass',
+          ? 'border-[#fbbf24] shadow-[0_0_0_2px_#fbbf24,0_6px_0_#1e130c,0_18px_40px_-12px_rgba(251,191,36,0.65)]'
+          : 'border-[#8c6239]/80 shadow-[0_6px_0_#1e130c,0_18px_36px_rgba(0,0,0,0.55)]',
         locked && 'cursor-not-allowed',
       )}
     >

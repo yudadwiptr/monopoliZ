@@ -31,10 +31,10 @@ export function RankingList({ rows, delay = 0.9 }: { rows: RankRow[]; delay?: nu
           animate={{ opacity: 1, x: 0, scale: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 26, delay: delay + i * 0.12 }}
           className={clsx(
-            'flex items-center gap-3 rounded-2xl border p-3 backdrop-blur-md',
+            'flex items-center gap-3 rounded-2xl border-2 p-3 shadow-[0_4px_0_#1e130c]',
             i === 0
-              ? 'border-gold-400/40 bg-gradient-to-r from-gold-500/25 via-gold-500/10 to-ink-800/60'
-              : 'border-white/10 bg-ink-800/60',
+              ? 'border-[#fbbf24] bg-gradient-to-r from-[#78350f]/90 via-[#4a2b12]/90 to-[#362011]/90'
+              : 'border-[#8c6239]/80 bg-[#362011]/90',
           )}
           style={{ boxShadow: `inset 4px 0 0 ${r.player.color}` }}
         >

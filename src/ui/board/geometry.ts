@@ -39,7 +39,7 @@ export interface Rect {
  * ownership border, building, and pawn aligns with its hand-drawn box to the pixel.
  */
 const COL_BOUNDS_PCT: [number, number][] = [
-  [7.68, 19.72],  // Col 0 (Left corners & left side tiles)
+  [7.45, 20.12],  // Col 0 (Left corners & left side tiles right up to inner ink border at 20.12%)
   [20.92, 28.68], // Col 1
   [29.38, 37.10], // Col 2
   [37.77, 45.52], // Col 3
@@ -47,11 +47,11 @@ const COL_BOUNDS_PCT: [number, number][] = [
   [54.59, 62.31], // Col 5
   [63.03, 70.73], // Col 6
   [71.45, 79.07], // Col 7
-  [80.13, 91.95], // Col 8 (Right corners & right side tiles)
+  [79.66, 92.12], // Col 8 (Right corners & right side tiles starting from inner ink border at 79.66%)
 ];
 
 const ROW_BOUNDS_PCT: [number, number][] = [
-  [7.45, 19.32],  // Row 0 (Top corners & top side tiles)
+  [7.25, 19.88],  // Row 0 (Top corners & top side tiles right down to inner ink border at 19.88%)
   [20.58, 28.43], // Row 1
   [29.15, 36.87], // Row 2
   [37.55, 45.31], // Row 3
@@ -59,7 +59,7 @@ const ROW_BOUNDS_PCT: [number, number][] = [
   [54.53, 62.40], // Row 5
   [63.08, 71.00], // Row 6
   [71.67, 79.39], // Row 7
-  [80.45, 91.97], // Row 8 (Bottom corners & bottom side tiles)
+  [80.12, 92.15], // Row 8 (Bottom corners & bottom side tiles starting from inner ink border at 80.12%)
 ];
 
 function computeRect(index: number): Rect {

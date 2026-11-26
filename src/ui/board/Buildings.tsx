@@ -27,8 +27,7 @@ export function BuildingsLayer({ map }: { map: MapDef }) {
         if (!isProperty(def)) return null;
         const t = tiles[def.index];
         if (!t?.owner) return null;
-        const color = players.find((p) => p.id === t.owner)?.color ?? '#8C96C9';
-        return <Lot key={def.index} index={def.index} tourist={def.kind === 'tourist'} level={t.level} color={color} />;
+        return <Lot key={def.index} index={def.index} tourist={def.kind === 'tourist'} level={t.level} />;
       })}
     </>
   );
@@ -38,10 +37,9 @@ interface LotProps {
   index: number;
   tourist: boolean;
   level: number;
-  color: string;
 }
 
-const Lot = memo(function Lot({ index, tourist, level, color }: LotProps) {
+const Lot = memo(function Lot({ index, tourist, level }: LotProps) {
   const a = lotAnchor(index);
   const stand = useAnchor(a.u, a.v, 0);
   const z = useDepth(a.u, a.v, 18);
@@ -70,14 +68,6 @@ const Lot = memo(function Lot({ index, tourist, level, color }: LotProps) {
             exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.16 } }}
             transition={{ type: 'spring', stiffness: 460, damping: 15 }}
           >
-            {/* Owner colour badge disc behind the building base */}
-            <span
-              className="absolute bottom-[4%] h-[28%] w-[78%] rounded-full border-[1.5px] border-[#2B1D12]"
-              style={{
-                background: color,
-                boxShadow: '0 2px 4px rgba(0,0,0,0.35)',
-              }}
-            />
             <div
               aria-hidden
               className="bz-building-sprite relative z-10 h-full w-full"

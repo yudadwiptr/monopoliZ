@@ -53,31 +53,35 @@ function RevealCard({ reveal }: { reveal: Reveal }) {
   if (!game) return null;
   const card = safeCard(reveal.cardId);
   const player = game.players.find((p) => p.id === reveal.playerId);
+  const toneText = card.tone === 'good' ? '#15803d' : card.tone === 'bad' ? '#b91c1c' : '#b45309';
   const color = TONE_COLOR[card.tone];
   return (
     <div style={{ perspective: 900 }} className="w-full max-w-sm">
       <motion.div
-        className="glass-strong flex items-center gap-3 rounded-2xl p-2.5 pr-4"
-        style={{ boxShadow: `0 0 0 1.5px ${color}88, 0 14px 40px -10px rgba(0,0,0,0.7), 0 0 30px -8px ${color}` }}
+        className="flex items-center gap-3 rounded-2xl border-[3px] border-[#2b1d12] p-2.5 pr-4 text-[#2b1d12]"
+        style={{
+          background: 'linear-gradient(180deg, #fff9ea 0%, #f5e6c8 60%, #ebd4a9 100%)',
+          boxShadow: '0 5px 0 #2b1d12, 0 14px 35px -8px rgba(0,0,0,0.65)',
+        }}
         initial={{ rotateX: -90, opacity: 0, y: -16 }}
         animate={{ rotateX: 0, opacity: 1, y: 0 }}
         exit={{ rotateX: 70, opacity: 0, y: -12 }}
         transition={{ type: 'spring', stiffness: 380, damping: 24 }}
       >
         <div
-          className="grid h-14 w-12 shrink-0 place-items-center rounded-xl border-2 text-3xl leading-none"
-          style={{ borderColor: color, background: `linear-gradient(160deg, ${color}55, ${color}15)` }}
+          className="grid h-14 w-12 shrink-0 place-items-center rounded-xl border-2 border-[#2b1d12] bg-[#fff8e7] text-3xl leading-none shadow-[0_2px_0_#8c6239]"
+          style={{ boxShadow: `inset 0 0 0 2px ${color}66` }}
           aria-hidden
         >
           {card.emoji}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-ink-300">
+          <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#5c4028]">
             {player && <Avatar characterId={player.characterId} size={18} ring={false} />}
             <span className="truncate">{player?.name ?? 'Bot'} dapat Kartu Rezeki</span>
           </div>
-          <p className="truncate font-display text-base font-bold leading-tight text-white">{card.title}</p>
-          <p className="num truncate text-xs font-semibold" style={{ color }}>
+          <p className="truncate font-display text-base font-black leading-tight text-[#2b1d12]">{card.title}</p>
+          <p className="num truncate text-xs font-extrabold" style={{ color: toneText }}>
             {cardEffectSummary(card, mapOf(game))}
           </p>
         </div>

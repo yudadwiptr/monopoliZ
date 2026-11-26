@@ -18,16 +18,16 @@ export interface ChooseTileBannerProps {
 }
 
 const CHIP_TONE: Record<ChipTone, string> = {
-  gold: 'text-gold-300',
-  daun: 'text-daun-400',
-  merah: 'text-merah-300',
-  brand: 'text-brand-300',
-  muted: 'text-ink-300',
+  gold: 'text-[#b45309]',
+  daun: 'text-[#15803d]',
+  merah: 'text-[#b91c1c]',
+  brand: 'text-[#1d4ed8]',
+  muted: 'text-[#6e5239]',
 };
 
 /**
  * Board-picking mode. NOT a modal: Board3D highlights `pending.candidates` and handles taps on tiles.
- * This adds a top instruction banner plus a list of candidate chips (big tap targets for phones).
+ * This adds a 2D wood & parchment top instruction banner plus a list of candidate chips.
  */
 export function ChooseTileBanner({ game, pending }: ChooseTileBannerProps) {
   const titleId = useId();
@@ -57,98 +57,109 @@ export function ChooseTileBanner({ game, pending }: ChooseTileBannerProps) {
     <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
       <motion.section
         aria-labelledby={titleId}
-        className="glass-strong pointer-events-auto relative w-full max-w-xl overflow-hidden"
-        style={{ boxShadow: '0 0 0 1.5px rgba(90,166,236,0.45), 0 18px 50px -12px rgba(0,0,0,0.7), 0 0 40px -10px rgba(58,140,214,0.6)' }}
+        className="pointer-events-auto relative w-full max-w-xl overflow-hidden rounded-[1.6rem] border-[3.5px] border-[#2b1d12] p-1.5 text-[#2b1d12]"
+        style={{
+          background: 'linear-gradient(180deg, #7c4d25 0%, #5c3718 100%)',
+          boxShadow: '0 6px 0 #2b1d12, 0 18px 45px -10px rgba(0,0,0,0.7)',
+        }}
         initial={{ y: -90, opacity: 0, scale: 0.96 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: -70, opacity: 0, scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 420, damping: 30 }}
       >
-        <div className="batik-bg pointer-events-none absolute inset-0" aria-hidden />
-        <div className="relative flex items-center gap-3 p-3">
-          <motion.div
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-500/25 text-[1.75rem] leading-none ring-1 ring-brand-300/40"
-            animate={{ y: [0, -4, 0], rotate: [0, -4, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-            aria-hidden
-          >
-            {copy.emoji}
-          </motion.div>
-          <div className="min-w-0 flex-1">
-            <h2 id={titleId} className="font-display text-base font-bold leading-tight text-white sm:text-lg">
-              <span className="sr-only">{copy.emoji} </span>
-              {copy.title}
-            </h2>
-            <p className="mt-0.5 line-clamp-2 text-xs text-ink-300">{copy.hint}</p>
-          </div>
-          {pending.optional && (
-            <Button
-              variant="glass"
-              size="sm"
-              silent
-              onClick={skip}
-              icon={<X size={15} strokeWidth={2.6} />}
-              className="h-11 shrink-0 px-3"
-              aria-keyshortcuts="Escape"
-            >
-              Lewati
-            </Button>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            sfx.play('click', { volume: 0.6 });
-            setOpen((o) => !o);
+        <div
+          className="overflow-hidden rounded-[1.2rem] border-2 border-[#8c6239]"
+          style={{
+            background: 'linear-gradient(180deg, #fff9ea 0%, #f5e6c8 60%, #ebd4a9 100%)',
           }}
-          aria-expanded={open}
-          aria-controls={listId}
-          className="relative flex min-h-[44px] w-full items-center justify-between border-t border-white/10 px-3 text-xs font-semibold text-ink-200 outline-none hover:bg-white/5 focus-visible:bg-white/10"
         >
-          <span className="flex items-center gap-2">
-            <ListChecks size={15} aria-hidden />
-            Pilih dari daftar
-            <span className="num rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-white">{sorted.length}</span>
-          </span>
-          <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ type: 'spring', stiffness: 400, damping: 24 }}>
-            <ChevronDown size={16} aria-hidden />
-          </motion.span>
-        </button>
-
-        <AnimatePresence initial={false}>
-          {open && (
+          <div className="relative flex items-center gap-3 p-2.5 sm:p-3">
             <motion.div
-              key="list"
-              id={listId}
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-[#2b1d12] bg-[#fef3c7] text-[1.75rem] leading-none shadow-[0_3px_0_#2b1d12]"
+              animate={{ y: [0, -3, 0], rotate: [0, -4, 0] }}
+              transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+              aria-hidden
             >
-              <ul
-                className={clsx(
-                  'scrollbar-thin relative flex snap-x gap-2 overflow-x-auto px-3 pb-3 pt-0.5',
-                  'sm:max-h-[11.75rem] sm:snap-none sm:flex-wrap sm:overflow-y-auto sm:overflow-x-hidden',
-                )}
-                aria-label="Petak yang bisa dipilih"
-              >
-                {sorted.map((tile, i) => (
-                  <Chip
-                    key={tile}
-                    tile={tile}
-                    index={i}
-                    game={game}
-                    map={map}
-                    me={me}
-                    pending={pending}
-                    onChoose={choose}
-                  />
-                ))}
-              </ul>
+              {copy.emoji}
             </motion.div>
-          )}
-        </AnimatePresence>
+            <div className="min-w-0 flex-1">
+              <h2 id={titleId} className="font-display text-base font-black leading-tight text-[#2b1d12] sm:text-lg">
+                <span className="sr-only">{copy.emoji} </span>
+                {copy.title}
+              </h2>
+              <p className="mt-0.5 line-clamp-2 text-xs font-semibold text-[#5c4028]">{copy.hint}</p>
+            </div>
+            {pending.optional && (
+              <Button
+                variant="glass"
+                size="sm"
+                silent
+                onClick={skip}
+                icon={<X size={15} strokeWidth={2.6} />}
+                className="h-10 shrink-0 !border-2 !border-[#5c4028] !bg-[#ebd5b3] px-3 !font-extrabold !text-[#2b1d12] !shadow-[0_3px_0_#5c4028] hover:!bg-[#dfc396]"
+                aria-keyshortcuts="Escape"
+              >
+                Lewati
+              </Button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              sfx.play('click', { volume: 0.6 });
+              setOpen((o) => !o);
+            }}
+            aria-expanded={open}
+            aria-controls={listId}
+            className="relative flex min-h-[40px] w-full items-center justify-between border-t-2 border-[#c8a97e] bg-[#ebd4a9]/55 px-3 text-xs font-extrabold text-[#4a3525] outline-none hover:bg-[#e2c692]/75"
+          >
+            <span className="flex items-center gap-2">
+              <ListChecks size={15} aria-hidden />
+              Pilih dari daftar
+              <span className="num rounded-full border border-[#5c4028] bg-[#fff8e7] px-2 py-0.5 text-[11px] font-black text-[#2b1d12]">
+                {sorted.length}
+              </span>
+            </span>
+            <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ type: 'spring', stiffness: 400, damping: 24 }}>
+              <ChevronDown size={16} aria-hidden />
+            </motion.span>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {open && (
+              <motion.div
+                key="list"
+                id={listId}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
+              >
+                <ul
+                  className={clsx(
+                    'scrollbar-thin relative flex snap-x gap-2 overflow-x-auto px-3 pb-3 pt-2',
+                    'sm:max-h-[11.75rem] sm:snap-none sm:flex-wrap sm:overflow-y-auto sm:overflow-x-hidden',
+                  )}
+                  aria-label="Petak yang bisa dipilih"
+                >
+                  {sorted.map((tile, i) => (
+                    <Chip
+                      key={tile}
+                      tile={tile}
+                      index={i}
+                      game={game}
+                      map={map}
+                      me={me}
+                      pending={pending}
+                      onChoose={choose}
+                    />
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </motion.section>
     </div>
   );
@@ -179,21 +190,21 @@ function Chip({ tile, index, game, map, me, pending, onChoose }: ChipProps) {
         whileHover={{ y: -2 }}
         whileTap={{ scale: 0.95 }}
         aria-label={`${def.name}${info.label ? ` — ${info.label}` : ''}${owner ? ` (milik ${owner.name})` : ''}`}
-        className="relative flex h-14 w-[9.5rem] items-center gap-2 overflow-hidden rounded-2xl border border-white/10 bg-ink-950/40 pl-3.5 pr-2.5 text-left outline-none transition-colors hover:border-brand-300/60 hover:bg-brand-500/15 focus-visible:ring-4 focus-visible:ring-brand-300/60 sm:w-[10.25rem]"
+        className="relative flex h-14 w-[9.5rem] items-center gap-2 overflow-hidden rounded-2xl border-2 border-[#8c6239] bg-[#fff8e7] pl-3.5 pr-2.5 text-left text-[#2b1d12] shadow-[0_2px_0_#8c6239] outline-none transition-colors hover:border-[#d97706] hover:bg-[#fef3c7] focus-visible:ring-4 focus-visible:ring-amber-500/50 sm:w-[10.25rem]"
       >
-        <span className="absolute inset-y-0 left-0 w-1.5" style={{ background: tileColor(map, def) }} aria-hidden />
+        <span className="absolute inset-y-0 left-0 w-2" style={{ background: tileColor(map, def) }} aria-hidden />
         <span className="text-2xl leading-none" aria-hidden>
           {def.icon}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-display text-sm font-semibold leading-tight text-white">{def.name}</span>
+          <span className="block truncate font-display text-sm font-black leading-tight text-[#2b1d12]">{def.name}</span>
           {info.label && (
-            <span className={clsx('num block truncate text-[11px] font-semibold leading-tight', CHIP_TONE[info.tone])}>
+            <span className={clsx('num block truncate text-[11px] font-extrabold leading-tight', CHIP_TONE[info.tone])}>
               {info.label}
             </span>
           )}
         </span>
-        {owner && <Avatar characterId={owner.characterId} size={20} ring={false} className="self-start mt-1" />}
+        {owner && <Avatar characterId={owner.characterId} size={20} ring={false} className="mt-1 self-start" />}
       </motion.button>
     </li>
   );

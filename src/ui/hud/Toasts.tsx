@@ -26,16 +26,16 @@ export function ErrorToast() {
           <motion.div
             key={error}
             role="alert"
-            className="flex max-w-md items-start gap-2.5 rounded-2xl border border-merah-400/60 bg-ink-950/90 px-4 py-2.5 shadow-glow-merah backdrop-blur-md"
+            className="flex max-w-md items-start gap-2.5 rounded-2xl border-[2.5px] border-[#2b1d12] bg-[#fee2e2] px-4 py-2.5 text-[#7f1d1d] shadow-[0_5px_0_#2b1d12,0_12px_28px_rgba(0,0,0,0.5)]"
             initial={{ opacity: 0, y: -24, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1, x: [0, -8, 8, -5, 5, 0] }}
             exit={{ opacity: 0, y: -16, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 420, damping: 24, x: { duration: 0.4 } }}
           >
-            <CircleAlert size={20} className="mt-0.5 shrink-0 text-merah-400" aria-hidden />
+            <CircleAlert size={20} className="mt-0.5 shrink-0 text-[#b91c1c]" aria-hidden />
             <div className="min-w-0">
-              <div className="font-display text-base font-semibold text-merah-300">Waduh, nggak bisa!</div>
-              <div className="break-words text-sm text-ink-200">{error}</div>
+              <div className="font-display text-base font-black text-[#991b1b]">Waduh, nggak bisa!</div>
+              <div className="break-words text-sm font-bold text-[#7f1d1d]">{error}</div>
             </div>
           </motion.div>
         )}
@@ -45,9 +45,9 @@ export function ErrorToast() {
 }
 
 const TONE_STYLE = {
-  good: 'border-daun-500/50 text-daun-400',
-  bad: 'border-merah-500/55 text-merah-300',
-  info: 'border-white/20 text-ink-100',
+  good: 'border-[#15803d] bg-[#dcfce7] text-[#14532d]',
+  bad: 'border-[#b91c1c] bg-[#fee2e2] text-[#7f1d1d]',
+  info: 'border-[#2b1d12] bg-[#f5e6c8] text-[#2b1d12]',
 } as const;
 
 /** Toasts for fx items with neither a tile nor a player anchor (e.g. engine `message` events). */
@@ -66,7 +66,7 @@ export function CenterToasts() {
             key={t.id}
             layout
             className={clsx(
-              'max-w-sm rounded-2xl border bg-ink-950/85 px-4 py-2 text-center font-display text-base font-semibold shadow-glass backdrop-blur-md',
+              'max-w-sm rounded-2xl border-[2.5px] px-4 py-2 text-center font-display text-base font-black shadow-[0_4px_0_#2b1d12,0_10px_24px_rgba(0,0,0,0.45)]',
               TONE_STYLE[t.tone],
             )}
             initial={{ opacity: 0, scale: 0.6, y: 12 }}

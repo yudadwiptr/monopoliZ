@@ -52,8 +52,10 @@ function SkinPicker({ value, onChange }: { value: DiceSkin; onChange: (s: DiceSk
               haptic(10);
             }}
             className={clsx(
-              'flex flex-col items-center gap-1.5 rounded-2xl border px-2 pb-2 pt-3 outline-none transition-colors focus-visible:ring-4 focus-visible:ring-brand-300/60',
-              active ? 'border-brand-300 bg-brand-500/15' : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08]',
+              'flex flex-col items-center gap-1.5 rounded-2xl border-2 px-2 pb-2 pt-3 outline-none transition-colors focus-visible:ring-4 focus-visible:ring-amber-500/50',
+              active
+                ? 'border-[#d97706] bg-[#fef3c7] shadow-[0_2px_0_#b45309]'
+                : 'border-[#c8a97e] bg-[#fff8e7] hover:border-[#8c6239] hover:bg-[#fef3c7]/60',
             )}
           >
             <span className="bz-skin-face" data-skin={skin.id} aria-hidden>
@@ -65,8 +67,8 @@ function SkinPicker({ value, onChange }: { value: DiceSkin; onChange: (s: DiceSk
                 />
               ))}
             </span>
-            <span className="font-display text-xs font-semibold text-white">{skin.name}</span>
-            <span className="line-clamp-1 text-[10px] leading-tight text-ink-300">{skin.tagline}</span>
+            <span className="font-display text-xs font-black text-[#2b1d12]">{skin.name}</span>
+            <span className="line-clamp-1 text-[10px] font-semibold leading-tight text-[#5c4028]">{skin.tagline}</span>
           </button>
         );
       })}
@@ -78,38 +80,43 @@ function Row({ title, hint, children }: { title: string; hint?: string; children
   return (
     <div className="space-y-2">
       <div>
-        <div className="font-display text-base font-semibold text-white">{title}</div>
-        {hint && <div className="text-xs text-ink-300">{hint}</div>}
+        <div className="font-display text-base font-black text-[#2b1d12]">{title}</div>
+        {hint && <div className="text-xs font-semibold text-[#5c4028]">{hint}</div>}
       </div>
       {children}
     </div>
   );
 }
 
-/** Audio, speed, camera and haptics preferences (persisted by useSettings). */
+/** Audio, speed, camera and haptics preferences (persisted by useSettings, 2D Parchment & Wood theme). */
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const s = useSettings();
 
   return (
     <Modal open={open} onClose={onClose} accent="#3A8CD6" labelledBy="settings-title" placement="bottom">
-      <div className="-m-2 max-h-[calc(100dvh-5rem)] overflow-y-auto p-2 scrollbar-thin">
-        <div className="mb-5 flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-b from-brand-400 to-brand-600 text-white shadow-[0_4px_0_#1C5290]">
-            <Settings size={22} aria-hidden />
+      <div className="-m-2 max-h-[calc(100dvh-7rem)] overflow-y-auto p-2 text-[#2b1d12] scrollbar-thin">
+        <div className="mb-4 flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl border-2 border-[#2b1d12] bg-gradient-to-b from-[#fef3c7] to-[#f59e0b] text-[#2b1d12] shadow-[0_3px_0_#2b1d12]">
+            <Settings size={22} strokeWidth={2.5} aria-hidden />
           </span>
           <div className="flex-1">
-            <h2 id="settings-title" className="font-display text-2xl font-bold leading-none text-white">
+            <h2 id="settings-title" className="font-display text-2xl font-black leading-none text-[#2b1d12]">
               Pengaturan
             </h2>
-            <p className="mt-1 text-xs text-ink-300">Atur sesukamu, otomatis tersimpan.</p>
+            <p className="mt-1 text-xs font-semibold text-[#5c4028]">Atur sesukamu, otomatis tersimpan.</p>
           </div>
-          <IconButton label="Tutup pengaturan" variant="ghost" onClick={onClose}>
-            <X size={22} />
-          </IconButton>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Tutup pengaturan"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-[#2b1d12] bg-[#4a3525] text-[#f6eedc] shadow-[0_2px_0_#2b1d12] transition-transform hover:scale-105 active:scale-95"
+          >
+            <X size={20} strokeWidth={2.6} />
+          </button>
         </div>
 
-        <div className="space-y-5">
-          <section className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+        <div className="space-y-4">
+          <section className="space-y-3 rounded-2xl border-2 border-[#8c6239] bg-[#fff8e7] p-3.5 shadow-[0_2px_0_rgba(140,98,57,0.25)]">
             <RangeSlider
               label="Efek Suara"
               icon={s.sfxVolume === 0 ? <VolumeX size={18} aria-hidden /> : <Volume2 size={18} aria-hidden />}
@@ -131,7 +138,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <Segmented options={SPEED_OPTIONS} value={s.speed} onChange={s.setSpeed} ariaLabel="Kecepatan animasi" />
           </Row>
 
-          <Row title="Kamera Papan" hint="Isometrik paling seru (apalagi landscape), Atas paling gampang dibaca.">
+          <Row title="Kamera Papan" hint="Atas (2D Flat) paling gampang dibaca dan ringan.">
             <Segmented
               options={CAMERA_OPTIONS}
               value={s.camera}
@@ -145,23 +152,23 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <SkinPicker value={s.diceSkin} onChange={s.setDiceSkin} />
           </Row>
 
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          <div className="flex items-center justify-between gap-4 rounded-2xl border-2 border-[#8c6239] bg-[#fff8e7] p-3.5 shadow-[0_2px_0_rgba(140,98,57,0.25)]">
             <div className="flex items-center gap-3">
-              <ScanSearch size={20} className="shrink-0 text-brand-300" aria-hidden />
+              <ScanSearch size={20} className="shrink-0 text-[#1d4ed8]" aria-hidden />
               <div>
-                <div className="font-display text-base font-semibold text-white">Kamera Ikut Pion</div>
-                <div className="text-xs text-ink-300">Zoom ke pion yang jalan, lalu balik lihat seluruh papan.</div>
+                <div className="font-display text-base font-black text-[#2b1d12]">Kamera Ikut Pion</div>
+                <div className="text-xs font-semibold text-[#5c4028]">Zoom ke petak tujuan pion, lalu balik lihat seluruh papan.</div>
               </div>
             </div>
             <Toggle checked={s.followCam} label="Kamera ikut pion" onChange={s.setFollowCam} />
           </div>
 
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          <div className="flex items-center justify-between gap-4 rounded-2xl border-2 border-[#8c6239] bg-[#fff8e7] p-3.5 shadow-[0_2px_0_rgba(140,98,57,0.25)]">
             <div className="flex items-center gap-3">
-              <Vibrate size={20} className="shrink-0 text-daun-400" aria-hidden />
+              <Vibrate size={20} className="shrink-0 text-[#15803d]" aria-hidden />
               <div>
-                <div className="font-display text-base font-semibold text-white">Getar</div>
-                <div className="text-xs text-ink-300">Getaran kecil pas dadu & momen penting.</div>
+                <div className="font-display text-base font-black text-[#2b1d12]">Getar</div>
+                <div className="text-xs font-semibold text-[#5c4028]">Getaran kecil pas dadu & momen penting.</div>
               </div>
             </div>
             <Toggle
@@ -175,7 +182,13 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           </div>
         </div>
 
-        <Button variant="primary" size="lg" block className="mt-6" onClick={onClose}>
+        <Button
+          variant="gold"
+          size="lg"
+          block
+          className="mt-5 !border-2 !border-[#2b1d12] !font-black !text-[#2b1d12] !shadow-[0_4px_0_#2b1d12]"
+          onClick={onClose}
+        >
           Sip, beres!
         </Button>
       </div>

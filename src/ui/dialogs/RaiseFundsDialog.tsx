@@ -67,7 +67,7 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
     <DialogShell labelledBy={titleId} accent={MERAH_COLOR} ring={MERAH_COLOR} className="sm:max-w-[28rem]">
       <div className="flex items-center gap-3">
         <motion.div
-          className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-b from-merah-400 to-merah-600 text-3xl leading-none shadow-glow-merah"
+          className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 border-[#2b1d12] bg-gradient-to-b from-merah-400 to-merah-600 text-3xl leading-none shadow-[0_3px_0_#2b1d12]"
           animate={{ rotate: [-6, 6, -6] }}
           transition={{ duration: 0.7, repeat: Infinity, ease: 'easeInOut' }}
           aria-hidden
@@ -75,19 +75,21 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
           💸
         </motion.div>
         <div className="min-w-0">
-          <p className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-merah-300">Darurat dompet</p>
-          <h2 id={titleId} className="font-display text-2xl font-bold leading-tight text-white">
+          <span className="inline-block rounded-full border border-[#2b1d12] bg-merah-500 px-2 py-0.5 font-display text-[10px] font-black uppercase tracking-[0.14em] text-white">
+            Darurat dompet
+          </span>
+          <h2 id={titleId} className="mt-0.5 font-display text-2xl font-black leading-tight text-[#2b1d12]">
             Uang kurang!
           </h2>
-          <p className="flex flex-wrap items-center gap-1 text-xs text-ink-300">
-            Harus {DEBT_REASON[pending.reason]} <b className="num text-white">{formatRp(pending.amount)}</b> ke
+          <p className="flex flex-wrap items-center gap-1 text-xs font-semibold text-[#5c4028]">
+            Harus {DEBT_REASON[pending.reason]} <b className="num font-black text-[#b91c1c]">{formatRp(pending.amount)}</b> ke
             {creditor ? (
-              <span className="inline-flex items-center gap-1 font-semibold text-white">
+              <span className="inline-flex items-center gap-1 font-extrabold text-[#2b1d12]">
                 <Avatar characterId={creditor.characterId} size={16} ring={false} />
                 {creditor.name}
               </span>
             ) : (
-              <span className="font-semibold text-white">🏦 Bank</span>
+              <span className="font-extrabold text-[#2b1d12]">🏦 Bank</span>
             )}
           </p>
         </div>
@@ -105,15 +107,16 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
 
       <div className="mt-3" aria-live="polite">
         <div className="flex items-baseline justify-between text-xs">
-          <span className="text-ink-300">
-            Terkumpul <b className="num text-white">{formatRp(covered)}</b> / <span className="num">{formatRp(pending.amount)}</span>
+          <span className="font-semibold text-[#5c4028]">
+            Terkumpul <b className="num font-black text-[#2b1d12]">{formatRp(covered)}</b> /{' '}
+            <span className="num font-bold">{formatRp(pending.amount)}</span>
           </span>
-          <span className={clsx('font-semibold', enough ? 'text-daun-400' : 'text-merah-300')}>
+          <span className={clsx('font-extrabold', enough ? 'text-[#15803d]' : 'text-[#b91c1c]')}>
             {enough ? 'Cukup! Jual sekarang 👍' : `${Math.round(ratio * 100)}%`}
           </span>
         </div>
         <div
-          className="relative mt-1.5 h-3 overflow-hidden rounded-full bg-white/10"
+          className="relative mt-1.5 h-3.5 overflow-hidden rounded-full border-2 border-[#5c4028] bg-[#e2cba4]"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={pending.amount}
@@ -133,8 +136,8 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
       </div>
 
       <div className="mt-3.5 flex items-center justify-between gap-2">
-        <p className="font-display text-sm font-semibold text-white">
-          Jual ke bank <span className="text-ink-300">(50% nilai)</span>
+        <p className="font-display text-sm font-black text-[#2b1d12]">
+          Jual ke bank <span className="font-bold text-[#6e5239]">(50% nilai)</span>
         </p>
         <Button
           variant="glass"
@@ -142,8 +145,8 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
           silent
           onClick={auto}
           disabled={owned.length === 0 || confirming}
-          icon={<Sparkles size={15} className="text-gold-300" />}
-          className="h-10 shrink-0"
+          icon={<Sparkles size={15} className="text-[#b45309]" />}
+          className="h-9 shrink-0 !border-2 !border-[#5c4028] !bg-[#fff8e7] !font-extrabold !text-[#2b1d12] !shadow-[0_2px_0_#5c4028] hover:!bg-[#fef3c7]"
         >
           Pilih Otomatis
         </Button>
@@ -151,7 +154,9 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
 
       <ul className="scrollbar-thin mt-2 max-h-[30dvh] space-y-1.5 overflow-y-auto pr-0.5 sm:max-h-[15.5rem]" aria-label="Propertimu">
         {owned.length === 0 && (
-          <li className="rounded-2xl bg-white/5 px-3 py-4 text-center text-sm text-ink-300">Tidak ada properti untuk dijual.</li>
+          <li className="rounded-2xl border-2 border-[#c8a97e] bg-[#fff8e7] px-3 py-4 text-center text-sm font-semibold text-[#5c4028]">
+            Tidak ada properti untuk dijual.
+          </li>
         )}
         {owned.map((t, i) => (
           <PropertyRow
@@ -172,7 +177,7 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
         {confirming ? (
           <motion.div
             key="confirm"
-            className="mt-4 rounded-2xl border border-merah-400/50 bg-merah-500/15 p-3"
+            className="mt-4 rounded-2xl border-2 border-[#b91c1c] bg-[#fee2e2] p-3"
             initial={{ opacity: 0, y: 10, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8 }}
@@ -180,11 +185,18 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
             role="alertdialog"
             aria-label="Konfirmasi bangkrut"
           >
-            <p className="text-sm text-white">
-              <b>Yakin nyerah?</b> Semua uang &amp; propertimu diserahkan, dan kamu keluar dari permainan. 💀
+            <p className="text-sm font-semibold text-[#7f1d1d]">
+              <b className="font-black">Yakin nyerah?</b> Semua uang &amp; propertimu diserahkan, dan kamu keluar dari permainan. 💀
             </p>
             <div className="mt-3 flex gap-2.5">
-              <Button variant="glass" size="md" silent onClick={() => setConfirming(false)} className="flex-1" autoFocus>
+              <Button
+                variant="glass"
+                size="md"
+                silent
+                onClick={() => setConfirming(false)}
+                className="flex-1 !border-2 !border-[#5c4028] !bg-[#fff8e7] !font-extrabold !text-[#2b1d12] !shadow-[0_3px_0_#5c4028]"
+                autoFocus
+              >
                 Batal
               </Button>
               <Button
@@ -192,7 +204,7 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
                 size="md"
                 silent
                 onClick={bankrupt}
-                className="flex-1"
+                className="flex-1 !border-2 !border-[#2b1d12] !shadow-[0_3px_0_#2b1d12]"
                 icon={<Skull size={18} strokeWidth={2.4} />}
               >
                 Ya, bangkrut
@@ -211,7 +223,7 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
               variant="danger"
               size="lg"
               onClick={() => setConfirming(true)}
-              className={SKIP_BTN}
+              className="!h-12 shrink-0 !border-2 !border-[#2b1d12] !px-3.5 !text-sm !shadow-[0_4px_0_#2b1d12]"
               icon={<Skull size={18} strokeWidth={2.4} />}
             >
               Bangkrut
@@ -222,7 +234,7 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
               silent
               disabled={selected.length === 0}
               onClick={sell}
-              className="min-w-0 flex-1 px-3"
+              className="!h-12 min-w-0 flex-1 !border-2 !border-[#2b1d12] px-3 !shadow-[0_4px_0_#2b1d12]"
               icon={<Store size={20} strokeWidth={2.4} />}
               aria-keyshortcuts="Enter"
             >
@@ -235,8 +247,8 @@ export function RaiseFundsDialog({ game, pending }: RaiseFundsDialogProps) {
         )}
       </AnimatePresence>
       {!confirming && selected.length > 0 && !enough && (
-        <p className="mt-2 text-center text-[11px] text-ink-300">
-          Belum cukup — masih kurang <span className="num text-merah-300">{formatRp(shortfall)}</span>, tapi boleh dijual dulu.
+        <p className="mt-2 text-center text-[11px] font-bold text-[#5c4028]">
+          Belum cukup — masih kurang <span className="num font-black text-[#b91c1c]">{formatRp(shortfall)}</span>, tapi boleh dijual dulu.
         </p>
       )}
     </DialogShell>
@@ -273,30 +285,32 @@ function PropertyRow({ tile, index, map, game, value, selected, disabled, onTogg
         transition={{ type: 'spring', stiffness: 500, damping: 32, delay: Math.min(index, 10) * 0.03 }}
         whileTap={{ scale: 0.98 }}
         className={clsx(
-          'relative flex min-h-[3.5rem] w-full items-center gap-3 overflow-hidden rounded-2xl border py-2 pl-4 pr-3 text-left outline-none transition-colors',
-          'focus-visible:ring-4 focus-visible:ring-brand-300/60 disabled:opacity-50',
-          selected ? 'border-brand-300/70 bg-brand-500/20' : 'border-white/10 bg-ink-950/35 hover:bg-white/[0.07]',
+          'relative flex min-h-[3.5rem] w-full items-center gap-3 overflow-hidden rounded-2xl border-2 py-2 pl-4 pr-3 text-left outline-none transition-colors',
+          'focus-visible:ring-4 focus-visible:ring-amber-500/50 disabled:opacity-50',
+          selected
+            ? 'border-[#d97706] bg-[#fef3c7] shadow-[0_2px_0_#b45309]'
+            : 'border-[#c8a97e] bg-[#fff8e7] hover:border-[#8c6239] hover:bg-[#fef3c7]/60',
         )}
       >
-        <span className="absolute inset-y-0 left-0 w-1.5" style={{ background: tileColor(map, def) }} aria-hidden />
+        <span className="absolute inset-y-0 left-0 w-2" style={{ background: tileColor(map, def) }} aria-hidden />
         <span className="text-2xl leading-none" aria-hidden>
           {def.icon}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-display text-sm font-semibold leading-tight text-white">
+          <span className="block truncate font-display text-sm font-black leading-tight text-[#2b1d12]">
             {def.name}
             {festival && <span aria-hidden> 🎆</span>}
           </span>
-          <span className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-300">
+          <span className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-[#5c4028]">
             {def.kind === 'city' ? <LevelArt level={level} size={16} /> : <span aria-hidden>🏝️</span>}
             {levelLabel}
           </span>
         </span>
-        <span className="num shrink-0 text-sm font-bold text-daun-400">+{formatRp(value)}</span>
+        <span className="num shrink-0 text-sm font-black text-[#15803d]">+{formatRp(value)}</span>
         <span
           className={clsx(
             'grid h-6 w-6 shrink-0 place-items-center rounded-lg border-2 transition-colors',
-            selected ? 'border-brand-300 bg-brand-400 text-white' : 'border-white/25 bg-transparent',
+            selected ? 'border-[#2b1d12] bg-[#f59e0b] text-[#2b1d12]' : 'border-[#8c6239] bg-[#f5e6c8]',
           )}
           aria-hidden
         >

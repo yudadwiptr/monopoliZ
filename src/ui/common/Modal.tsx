@@ -44,26 +44,35 @@ export function Modal({ open, onClose, children, className, accent, placement = 
           aria-labelledby={labelledBy}
         >
           <motion.div
-            className="absolute inset-0 bg-ink-950/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/65"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
           <motion.div
-            className={clsx('glass-strong relative w-full max-w-md overflow-hidden p-6', className)}
+            className={clsx(
+              'relative w-full max-w-md overflow-hidden rounded-[1.85rem] border-[3.5px] border-[#2b1d12] p-2 text-[#2b1d12]',
+              className,
+            )}
+            style={{
+              background: 'linear-gradient(180deg, #7c4d25 0%, #5c3718 55%, #462810 100%)',
+              boxShadow: '0 8px 0 #2b1d12, 0 24px 55px -10px rgba(0,0,0,0.75)',
+            }}
             initial={{ opacity: 0, y: 60, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 380, damping: 28 }}
           >
-            {accent && (
-              <div
-                className="pointer-events-none absolute -top-24 left-1/2 h-48 w-72 -translate-x-1/2 rounded-full opacity-40 blur-3xl"
-                style={{ background: accent }}
-              />
-            )}
-            <div className="relative">{children}</div>
+            <div
+              className="relative overflow-hidden rounded-[1.35rem] border-2 border-[#8c6239] p-4 sm:p-5"
+              style={{
+                background: 'linear-gradient(180deg, #fff9ea 0%, #f5e6c8 55%, #ebd4a9 100%)',
+                boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.75)',
+              }}
+            >
+              {children}
+            </div>
           </motion.div>
         </motion.div>
       )}

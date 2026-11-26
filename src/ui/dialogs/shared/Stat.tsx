@@ -31,51 +31,38 @@ export interface StatProps {
   className?: string;
 }
 
-/** Compact label + big number box used in every dialog's summary row. */
+/** Compact label + big number box used in every dialog's summary row (2D hand-drawn parchment theme). */
 export function Stat({ label, value, tone = 'plain', icon, hint, className }: StatProps) {
-  const variant = useDialogVariant();
-  const isParchment = variant === 'parchment';
-
-  if (isParchment) {
-    return (
-      <div
-        className={clsx('min-w-0 flex-1 rounded-xl px-2.5 py-1.5', className)}
-        style={{
-          background: 'rgba(255, 248, 231, 0.78)',
-          border: '1.5px solid #8c6239',
-          color: '#2b1d12',
-        }}
-      >
-        <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-[#5c4028]">
-          {icon}
-          <span className="whitespace-nowrap">{label}</span>
-        </div>
-        <div
-          className={clsx('num font-extrabold leading-tight', PARCHMENT_VALUE_TONE[tone])}
-          style={{
-            fontSize: 'clamp(14px, 4.2vw, 17px)',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {value}
-        </div>
-        {hint && (
-          <div className="whitespace-nowrap text-[10px] font-semibold text-[#5c4028]">
-            {hint}
-          </div>
-        )}
-      </div>
-    );
-  }
+  useDialogVariant();
 
   return (
-    <div className={clsx('min-w-0 flex-1 rounded-2xl border border-white/10 bg-ink-950/45 px-3 py-2', className)}>
-      <div className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-ink-300">
+    <div
+      className={clsx('min-w-0 flex-1 rounded-xl px-2.5 py-1.5', className)}
+      style={{
+        background: 'rgba(255, 248, 231, 0.85)',
+        border: '1.5px solid #8c6239',
+        color: '#2b1d12',
+        boxShadow: '0 2px 0 rgba(140, 98, 57, 0.25)',
+      }}
+    >
+      <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-[#5c4028]">
         {icon}
-        <span className="truncate">{label}</span>
+        <span className="whitespace-nowrap">{label}</span>
       </div>
-      <div className={clsx('num truncate text-lg font-bold leading-tight sm:text-xl', DARK_VALUE_TONE[tone])}>{value}</div>
-      {hint && <div className="truncate text-[11px] text-ink-300">{hint}</div>}
+      <div
+        className={clsx('num font-extrabold leading-tight', PARCHMENT_VALUE_TONE[tone])}
+        style={{
+          fontSize: 'clamp(14px, 4.2vw, 17px)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {value}
+      </div>
+      {hint && (
+        <div className="whitespace-nowrap text-[10px] font-semibold text-[#5c4028]">
+          {hint}
+        </div>
+      )}
     </div>
   );
 }
