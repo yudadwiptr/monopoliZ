@@ -328,11 +328,11 @@ export function DiceRoller({ player, compact = false }: DiceRollerProps) {
   );
 }
 
-/** 2D illustrated dice icon from `/icons/icon_dadu_2d.png`. */
+/** 2D illustrated dice icon from `/icons/icon_dadu_2d.webp`. */
 function DiceGlyph({ size }: { size: number }) {
   return (
     <img
-      src="/icons/icon_dadu_2d.png"
+      src="/icons/icon_dadu_2d.webp"
       alt=""
       draggable={false}
       style={{

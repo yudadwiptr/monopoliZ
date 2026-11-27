@@ -59,7 +59,7 @@
     0 calc(var(--c) * 0.55) calc(var(--c) * 1.4) rgba(12, 42, 54, 0.65);
 }
 
-/* Cartoon Hand-Drawn 2D Wooden Board Container (visual frame rendered via `<img src="/board/board_frame_2d.png" />`) */
+/* Cartoon Hand-Drawn 2D Wooden Board Container (visual frame rendered via `<img src="/board/board_frame_2d.webp" />`) */
 .bz-plane {
   container-type: inline-size;
   contain: layout paint;
@@ -73,7 +73,7 @@
   filter: drop-shadow(0 18px 40px rgba(15, 45, 58, 0.45));
 }
 
-/* Hidden because `/board/board_frame_2d.png` already has the hand-drawn wooden frame & ink borders */
+/* Hidden because `/board/board_frame_2d.webp` already has the hand-drawn wooden frame & ink borders */
 .bz-rimline {
   display: none;
 }

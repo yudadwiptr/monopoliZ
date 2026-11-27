@@ -39,7 +39,7 @@ interface GroupChip {
 const RANK_SUFFIX: Record<number, string> = { 1: 'st', 2: 'nd', 3: 'rd', 4: 'th' };
 
 /**
- * Hand-drawn 2D medal colours matching `public/ui/hud_player_cards.png`:
+ * Hand-drawn 2D medal colours matching `public/ui/hud_player_cards.webp`:
  * - 1st: Golden Amber Medal
  * - 2nd: Warm Gold-Bronze Medal
  * - 3rd: Copper-Terracotta Medal
@@ -65,7 +65,7 @@ const RANK_MEDAL_STYLE: Record<number, { bg: string; rim: string }> = {
 };
 
 /**
- * 2D Hand-drawn card theme per player seat (P1..P4) sliced from `/ui/hud_player_cards.png`:
+ * 2D Hand-drawn card theme per player seat (P1..P4) sliced from `/ui/hud_player_cards.webp`:
  * - P1 (Kamu): Orange
  * - P2 (Mbak Sultan / Daeng Tajir): Navy & Wood
  * - P3 (Cak Borong): Purple
@@ -80,22 +80,22 @@ const SEAT_CARD_THEME: Record<
   }
 > = {
   0: {
-    bgImg: "url('/ui/hud_card_p1.png')",
+    bgImg: "url('/ui/hud_card_p1.webp')",
     fallbackBg: 'linear-gradient(180deg, #E8842A 0%, #CE6C1A 100%)',
     outerBorder: '#4a3525',
   },
   1: {
-    bgImg: "url('/ui/hud_card_p2.png')",
+    bgImg: "url('/ui/hud_card_p2.webp')",
     fallbackBg: 'linear-gradient(180deg, #1D334E 0%, #13243A 100%)',
     outerBorder: '#4a3525',
   },
   2: {
-    bgImg: "url('/ui/hud_card_p3.png')",
+    bgImg: "url('/ui/hud_card_p3.webp')",
     fallbackBg: 'linear-gradient(180deg, #7F4B95 0%, #68397D 100%)',
     outerBorder: '#4a3525',
   },
   3: {
-    bgImg: "url('/ui/hud_card_p4.png')",
+    bgImg: "url('/ui/hud_card_p4.webp')",
     fallbackBg: 'linear-gradient(180deg, #408A45 0%, #317236 100%)',
     outerBorder: '#4a3525',
   },
@@ -106,7 +106,7 @@ const COMIC_OUTLINE_SHADOW =
 
 /**
  * Circular 2D Rank Medal ("1st", "2nd", "3rd", "4th") overlapping the top-left of the avatar frame,
- * matching the hand-drawn medallion in `public/ui/hud_player_cards.png`.
+ * matching the hand-drawn medallion in `public/ui/hud_player_cards.webp`.
  */
 function RankCornerBadge({ rank = 1, small = false }: { rank?: number; small?: boolean }) {
   const r = Math.max(1, Math.min(4, rank));
@@ -187,7 +187,7 @@ function HudAvatarFrame({
 }
 
 /**
- * Floating "GILIRAN" scalloped orange badge sliced from `/ui/hud_player_cards.png`
+ * Floating "GILIRAN" scalloped orange badge sliced from `/ui/hud_player_cards.webp`
  * with a gentle pulse animation while it's this player's active turn.
  */
 function TurnBadge({ small }: { small?: boolean }) {
@@ -206,7 +206,7 @@ function TurnBadge({ small }: { small?: boolean }) {
       }}
     >
       <img
-        src="/ui/hud_badge_giliran.png"
+        src="/ui/hud_badge_giliran.webp"
         alt="GILIRAN"
         draggable={false}
         className="h-full w-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)]"
@@ -348,9 +348,9 @@ function CoinCashIcon({ size = 22 }: { size?: number }) {
 
 /**
  * 2D Hand-Drawn Player Status HUD Card:
- * - Uses `/ui/hud_card_p1..p4.png` sliced from `public/ui/hud_player_cards.png` by player seat order:
+ * - Uses `/ui/hud_card_p1..p4.png` sliced from `public/ui/hud_player_cards.webp` by player seat order:
  *   P1 (Orange), P2 (Navy & Wood), P3 (Purple), P4 (Green).
- * - Floating pulsing orange `GILIRAN` badge (`/ui/hud_badge_giliran.png`) at top-center on active turn.
+ * - Floating pulsing orange `GILIRAN` badge (`/ui/hud_badge_giliran.webp`) at top-center on active turn.
  * - Overlapping `1st`–`4th` medallion at top-left of the golden circular avatar frame.
  * - Bold comic text with dark outline (`text-shadow`) for high contrast on all card colours.
  */

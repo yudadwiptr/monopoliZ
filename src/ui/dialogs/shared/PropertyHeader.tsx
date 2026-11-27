@@ -17,9 +17,9 @@ export interface PropertyHeaderProps {
 }
 
 /**
- * 2D Hand-Drawn Property Card Header integrated directly into the full-modal `/ui/card_beli_properti_blank.png` frame:
+ * 2D Hand-Drawn Property Card Header integrated directly into the full-modal `/ui/card_beli_properti_blank.webp` frame:
  * - `.property-card-icon-slot` is positioned at `top: 7.2%; left: 50%; transform: translateX(-50%); width: 17.5%; aspect-ratio: 1 / 1; background: transparent;`
- *   directly over the white square box already drawn in `/ui/card_beli_properti_blank.png`.
+ *   directly over the white square box already drawn in `/ui/card_beli_properti_blank.webp`.
  * - The category/region label sits centered inside the dark teal ribbon plaque (`top: 23.2%; left: 50%; transform: translateX(-50%)`).
  * - City title (`#1e130c`) and province subtitle (`#5c4028`) sit on the cream parchment immediately below the plaque.
  */

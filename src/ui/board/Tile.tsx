@@ -65,7 +65,7 @@ const CHIBI_TILE_SPRITE: CSSProperties = {
   width: 'calc(var(--c) * 0.54)',
   height: 'calc(var(--c) * 0.54)',
   aspectRatio: '1 / 1',
-  backgroundImage: "url('/sprites/icons_chibi_sheet.png')",
+  backgroundImage: "url('/sprites/icons_chibi_sheet.webp')",
   backgroundSize: '400% 200%',
   backgroundRepeat: 'no-repeat',
   flexShrink: 0,
@@ -73,8 +73,8 @@ const CHIBI_TILE_SPRITE: CSSProperties = {
 
 /**
  * Hand-drawn Chibi miniature regional house / tourist temple illustration shown on unowned tiles:
- * - Tourist destination uses Row 2, Col 1 (`0% 100%` — Candi / Destinasi Wisata) from `/sprites/icons_chibi_sheet.png`.
- * - City tiles use Row 1, Col 1 (`0% 0%` — Rumah) from `/sprites/icons_chibi_sheet.png`.
+ * - Tourist destination uses Row 2, Col 1 (`0% 100%` — Candi / Destinasi Wisata) from `/sprites/icons_chibi_sheet.webp`.
+ * - City tiles use Row 1, Col 1 (`0% 0%` — Rumah) from `/sprites/icons_chibi_sheet.webp`.
  */
 function TileHouseIllustration({ def }: { def: TileDef; band: string }) {
   if (def.kind === 'tourist') {
@@ -174,7 +174,7 @@ function CornerBody({ p }: { p: TileViewProps }) {
 }
 
 /**
- * 3-Zone Standard Tile Body over `/board/board_frame_2d.png`:
+ * 3-Zone Standard Tile Body over `/board/board_frame_2d.webp`:
  * - Zone 1 (`.bz-band-zone`, `height: 28%`): Vibrant group color strip + City Name (`clamp(6.5px, 1.35cqi, 11.5px)`, up to 2 lines).
  * - Zone 2 (`.bz-mid-zone`, `height: 50%`): Centered Chibi Building / Special Icon / Pawn standing area.
  * - Zone 3 (`.bz-price-slot`, `height: 22%`): Centered Price / Toll pill (`clamp(6.5px, 1.3cqi, 11px)`).

@@ -20,7 +20,7 @@ export interface DialogShellProps {
   className?: string;
   /** Ring colour around the panel for dramatic moments (acquire, debt) */
   ring?: string;
-  /** Visual frame variant: 'parchment' uses `/ui/card_beli_properti_blank.png` for the full modal frame */
+  /** Visual frame variant: 'parchment' uses `/ui/card_beli_properti_blank.webp` for the full modal frame */
   variant?: DialogVariant;
   children: ReactNode;
 }
@@ -29,7 +29,7 @@ const SPRING = { type: 'spring', stiffness: 420, damping: 34, mass: 0.9 } as con
 
 /**
  * Non-blocking decision container:
- * - When `variant="parchment"`, uses `/ui/card_beli_properti_blank.png` as the entire 3:4 modal frame.
+ * - When `variant="parchment"`, uses `/ui/card_beli_properti_blank.webp` as the entire 3:4 modal frame.
  * - When `variant="dark"`, uses the dark glass container for non-property dialogs.
  */
 export function DialogShell({
@@ -77,7 +77,7 @@ export function DialogShell({
               width: 'min(92vw, 380px)',
               aspectRatio: '3 / 4',
               maxHeight: '92dvh',
-              backgroundImage: "url('/ui/card_beli_properti_blank.png')",
+              backgroundImage: "url('/ui/card_beli_properti_blank.webp')",
               backgroundSize: '100% 100%',
               backgroundRepeat: 'no-repeat',
               position: 'relative',

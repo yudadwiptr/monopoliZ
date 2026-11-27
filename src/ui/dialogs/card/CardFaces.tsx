@@ -75,7 +75,7 @@ export function CardBack() {
             }}
           >
             <img
-              src="/icons/icon_kartu_rezeki.png"
+              src="/icons/icon_kartu_rezeki.webp"
               alt=""
               className="h-20 w-20 object-contain drop-shadow"
               onError={(e) => {

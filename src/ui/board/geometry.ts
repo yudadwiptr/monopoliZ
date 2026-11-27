@@ -8,7 +8,7 @@
  */
 import { BOARD_SIZE, tileGridPos, tileSide } from '@/data/layout';
 
-/** Corner / side-tile depth, in cells (`1.53fr` vs `1fr` in `public/board/board_frame_2d.png`). */
+/** Corner / side-tile depth, in cells (`1.53fr` vs `1fr` in `public/board/board_frame_2d.webp`). */
 export const CORNER_K = 1.53;
 /** Outer wooden frame rim around the tile ring, in cells (`7.5%` of total board). */
 export const RIM_K = 0.88;
@@ -35,7 +35,7 @@ export interface Rect {
 
 /**
  * Exact measured cream-parchment column and row boundaries (in % of full board width/height)
- * directly from `public/board/board_frame_2d.png` (1930×1930) so every tile, color strip,
+ * directly from `public/board/board_frame_2d.webp` (1930×1930) so every tile, color strip,
  * ownership border, building, and pawn aligns with its hand-drawn box to the pixel.
  */
 const COL_BOUNDS_PCT: [number, number][] = [

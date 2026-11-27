@@ -1,16 +1,41 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect, type ComponentType } from 'react';
 import { useGame, type Screen } from '@/store/gameStore';
 import { useSettings } from '@/store/settingsStore';
 import { music, sfx, unlockAudio } from '@/audio';
 import { MainMenu } from '@/ui/screens/MainMenu';
-import { SetupScreen } from '@/ui/screens/SetupScreen';
-import { OnlineLobbyScreen } from '@/ui/screens/OnlineLobbyScreen';
-import { HowToPlay } from '@/ui/screens/HowToPlay';
-import { GameScreen } from '@/ui/screens/GameScreen';
-import { ResultsScreen } from '@/ui/screens/ResultsScreen';
 
-const SCREENS: Record<Screen, () => JSX.Element> = {
+// Only the main menu ships in the first bundle; the other screens are separate chunks, fetched in the
+// background right after the menu shows (so tapping "Main" is still instant).
+const loadSetup = () => import('@/ui/screens/SetupScreen').then((m) => ({ default: m.SetupScreen }));
+const loadOnline = () => import('@/ui/screens/OnlineLobbyScreen').then((m) => ({ default: m.OnlineLobbyScreen }));
+const loadHowTo = () => import('@/ui/screens/HowToPlay').then((m) => ({ default: m.HowToPlay }));
+const loadGame = () => import('@/ui/screens/GameScreen').then((m) => ({ default: m.GameScreen }));
+const loadResults = () => import('@/ui/screens/ResultsScreen').then((m) => ({ default: m.ResultsScreen }));
+const SetupScreen = lazy(loadSetup);
+const OnlineLobbyScreen = lazy(loadOnline);
+const HowToPlay = lazy(loadHowTo);
+const GameScreen = lazy(loadGame);
+const ResultsScreen = lazy(loadResults);
+
+/** Warm the other screens' code and the in-game art once the menu is up. */
+function prefetchGame() {
+  void loadGame();
+  void loadSetup();
+  void loadResults();
+  void loadHowTo();
+  void loadOnline();
+  const base = import.meta.env.BASE_URL;
+  ['board/board_frame_2d.webp', 'board/board_centerpiece.webp', 'board/ingame_bg_2d.webp', 'sprites/icons_chibi_sheet.webp'].forEach(
+    (path) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = `${base}${path}`;
+    },
+  );
+}
+
+const SCREENS: Record<Screen, ComponentType> = {
   menu: MainMenu,
   setup: SetupScreen,
   online: OnlineLobbyScreen,
@@ -21,6 +46,12 @@ const SCREENS: Record<Screen, () => JSX.Element> = {
 
 export default function App() {
   const screen = useGame((s) => s.screen);
+
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(prefetchGame);
+    else setTimeout(prefetchGame, 1200);
+  }, []);
   const sfxVolume = useSettings((s) => s.sfxVolume);
   const musicVolume = useSettings((s) => s.musicVolume);
 
@@ -70,7 +101,9 @@ export default function App() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
         >
-          <Current />
+          <Suspense fallback={<div className="h-full w-full bg-[#163d4a]" />}>
+            <Current />
+          </Suspense>
         </motion.div>
       </AnimatePresence>
     </div>

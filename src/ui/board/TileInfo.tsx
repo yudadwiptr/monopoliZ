@@ -51,7 +51,7 @@ const KIND_META: Record<TileKind, { label: string; color: string }> = {
   tax: { label: 'Pajak', color: '#FF7A59' },
 };
 
-/** Exact ladder row top/height percentages measured from `public/ui/card_detail_kota.png` (1742×2356). */
+/** Exact ladder row top/height percentages measured from `public/ui/card_detail_kota.webp` (1742×2356). */
 const LADDER_ROW_SLOTS: { top: string; height: string }[] = [
   { top: '49.25%', height: '6.15%' },
   { top: '56.75%', height: '5.95%' },
@@ -63,9 +63,9 @@ const LADDER_ROW_SLOTS: { top: string; height: string }[] = [
 const CARD_ASPECT = 1742 / 2356; // width / height ≈ 0.7394
 
 const SPECIAL_ICON_IMG: Partial<Record<TileKind, string>> = {
-  island: '/icons/icon_pulau_terdampar.png',
-  airport: '/icons/icon_bandara.png',
-  chance: '/icons/icon_kartu_rezeki.png',
+  island: '/icons/icon_pulau_terdampar.webp',
+  airport: '/icons/icon_bandara.webp',
+  chance: '/icons/icon_kartu_rezeki.webp',
 };
 
 function isPropertyTile(kind: TileKind): boolean {
@@ -126,7 +126,7 @@ function groupMeta(map: MapDef, def: TileDef): { label: string; color: string } 
 }
 
 /**
- * 2D Hand-Drawn City Detail Card (`/ui/card_detail_kota.png`):
+ * 2D Hand-Drawn City Detail Card (`/ui/card_detail_kota.webp`):
  * - Desktop (`> 768px`): floats neatly on the right side of the screen (`width: min(92vw, 370px)`).
  * - Mobile (`<= 768px`): centered modal card over a semi-transparent dark backdrop (`rgba(15, 23, 42, 0.6)`).
  * - Every element (Icon box, Ribbon, Owner row, 2-column Rent/Acquire boxes, 5-row Building Ladder, and `DI SINI:` row)
@@ -172,7 +172,7 @@ export function TileInfo({ map, target, onClose }: TileInfoProps) {
   const placement = target && wide ? computeFloatingPlacement(target.rect) : null;
   const targetDef = target ? map.tiles[target.index] : null;
   const isPropTile = targetDef ? isPropertyTile(targetDef.kind) : true;
-  const frameBg = isPropTile ? "url('/ui/card_detail_kota.png')" : "url('/ui/card_detail_spesial.png')";
+  const frameBg = isPropTile ? "url('/ui/card_detail_kota.webp')" : "url('/ui/card_detail_spesial.webp')";
 
   return createPortal(
     <AnimatePresence>
@@ -670,7 +670,7 @@ function TileCardContent({ map, index, onClose }: { map: MapDef; index: number; 
 }
 
 /**
- * Dedicated 2D Hand-Drawn Detail Card for Special & Corner Tiles (`/ui/card_detail_spesial.png`):
+ * Dedicated 2D Hand-Drawn Detail Card for Special & Corner Tiles (`/ui/card_detail_spesial.webp`):
  * - Uses the special template featuring a wide description slot, 2 status boxes (KATEGORI & STATUS),
  *   2 illustrated scroll banners (passive/money scroll + landing/trophy scroll), tropical bunting illustration,
  *   and the bottom `DI SINI:` visitor bar.

@@ -72,7 +72,7 @@ const Lot = memo(function Lot({ index, tourist, level }: LotProps) {
               aria-hidden
               className="bz-building-sprite relative z-10 h-full w-full"
               style={{
-                backgroundImage: "url('/sprites/icons_chibi_sheet.png')",
+                backgroundImage: "url('/sprites/icons_chibi_sheet.webp')",
                 backgroundSize: '400% 200%',
                 backgroundPosition: bgPos,
                 backgroundRepeat: 'no-repeat',

@@ -86,7 +86,7 @@ function MenuButton2D({ tone, size = 'lg', icon, onClick, ariaLabel, children }:
   );
 }
 
-/** Title screen using the 2D illustrated `/lobby/lobby_bg_2d.png` background. */
+/** Title screen using the 2D illustrated `/lobby/lobby_bg_2d.webp` background. */
 export function MainMenu() {
   const setScreen = useGame((s) => s.setScreen);
   const startGame = useGame((s) => s.startGame);

@@ -21,7 +21,7 @@ const LEVEL_BG_POS: Record<number, string> = {
 
 /**
  * 2D illustrated chibi building sprites for each property level:
- * Level 0 uses a grass plot + flag; Levels 1–4 render `/sprites/icons_chibi_sheet.png` with `mix-blend-mode: multiply`.
+ * Level 0 uses a grass plot + flag; Levels 1–4 render `/sprites/icons_chibi_sheet.webp` with `mix-blend-mode: multiply`.
  */
 export function LevelArt({ level, size = 40, className, muted }: LevelArtProps) {
   const bgPos = LEVEL_BG_POS[level];
@@ -34,7 +34,7 @@ export function LevelArt({ level, size = 40, className, muted }: LevelArtProps) 
         style={{
           width: size,
           height: size,
-          backgroundImage: "url('/sprites/icons_chibi_sheet.png')",
+          backgroundImage: "url('/sprites/icons_chibi_sheet.webp')",
           backgroundSize: '400% 200%',
           backgroundPosition: bgPos,
           backgroundRepeat: 'no-repeat',

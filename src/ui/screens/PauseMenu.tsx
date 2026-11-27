@@ -8,8 +8,8 @@ import { SettingsModal } from './SettingsModal';
 type Sub = 'main' | 'confirm' | 'settings' | 'howto';
 
 /**
- * 2D Hand-Drawn Pause Menu Modal (`/ui/card_pause_jeda.png`):
- * - Uses `/ui/card_pause_jeda.png` (`width: min(90vw, 360px)`, `aspect-ratio: 3 / 4`, `background-size: 100% 100%`) as the entire modal frame.
+ * 2D Hand-Drawn Pause Menu Modal (`/ui/card_pause_jeda.webp`):
+ * - Uses `/ui/card_pause_jeda.webp` (`width: min(90vw, 360px)`, `aspect-ratio: 3 / 4`, `background-size: 100% 100%`) as the entire modal frame.
  * - Does not render a duplicate pause icon since the glowing blue `||` icon is part of the artwork.
  * - Positions "Jeda" inside the scroll banner (`top: 31.5%`), the round description below it (`top: 41.8%`),
  *   and transparent interactive buttons directly over the 4 drawn button boxes ("Lanjutkan", "Pengaturan", "Cara Main", "Keluar ke Menu").
@@ -63,7 +63,7 @@ export function PauseMenu() {
               style={{
                 width: 'min(90vw, 360px)',
                 aspectRatio: '3 / 4',
-                backgroundImage: "url('/ui/card_pause_jeda.png')",
+                backgroundImage: "url('/ui/card_pause_jeda.webp')",
                 backgroundSize: '100% 100%',
                 backgroundRepeat: 'no-repeat',
                 position: 'relative',

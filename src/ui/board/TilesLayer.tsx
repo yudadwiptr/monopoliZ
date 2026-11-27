@@ -15,8 +15,8 @@ const EMPTY_SET = new Set<number>();
 
 /**
  * Layered 2D Hand-Drawn Board:
- * - z-index 1: `<img src="/board/board_centerpiece.png" />` at `inset: 18.5%; width: 63%; height: 63%; object-fit: cover;`
- * - z-index 2: `<img src="/board/board_frame_2d.png" alt="Board Frame" />` at `inset: 0; width: 100%; height: 100%; object-fit: fill;`
+ * - z-index 1: `<img src="/board/board_centerpiece.webp" />` at `inset: 18.5%; width: 63%; height: 63%; object-fit: cover;`
+ * - z-index 2: `<img src="/board/board_frame_2d.webp" alt="Board Frame" />` at `inset: 0; width: 100%; height: 100%; object-fit: fill;`
  * - z-index 3: 32-tile transparent CSS Grid at `inset: 5.2%; grid-template-columns: 1.35fr repeat(7, 1fr) 1.35fr;`
  */
 export function TilesLayer({ map, onPick }: TilesLayerProps) {
@@ -54,7 +54,7 @@ export function TilesLayer({ map, onPick }: TilesLayerProps) {
     <>
       {/* Layer 1 (z-index: 1): Center Island Diorama tucked inside the inner opening of board_frame_2d.png */}
       <img
-        src="/board/board_centerpiece.png"
+        src="/board/board_centerpiece.webp"
         alt=""
         decoding="async"
         draggable={false}
@@ -71,7 +71,7 @@ export function TilesLayer({ map, onPick }: TilesLayerProps) {
 
       {/* Layer 2 (z-index: 2): Full 2D Hand-Drawn Wooden Frame & Parchment Tile Grid Image */}
       <img
-        src="/board/board_frame_2d.png"
+        src="/board/board_frame_2d.webp"
         alt="Board Frame"
         decoding="async"
         draggable={false}

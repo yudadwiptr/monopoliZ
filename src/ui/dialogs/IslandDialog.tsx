@@ -43,7 +43,7 @@ export function IslandDialog({ game, pending }: IslandDialogProps) {
           aria-hidden
         >
           <img
-            src="/icons/icon_pulau_terdampar.png"
+            src="/icons/icon_pulau_terdampar.webp"
             alt=""
             className="h-[84%] w-[84%] object-contain"
             onError={(e) => {

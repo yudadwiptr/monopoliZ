@@ -1,5 +1,5 @@
 /**
- * Full-screen 2D illustrated Archipelago In-Game Backdrop (`/board/ingame_bg_2d.png`).
+ * Full-screen 2D illustrated Archipelago In-Game Backdrop (`/board/ingame_bg_2d.webp`).
  * The open sea in the center aligns behind the square game board while the illustrated islands
  * and boats on the left and right frame the board naturally.
  */
@@ -12,7 +12,7 @@ export function GameBackdrop() {
       <div
         className="h-full w-full"
         style={{
-          backgroundImage: "url('/board/ingame_bg_2d.png')",
+          backgroundImage: "url('/board/ingame_bg_2d.webp')",
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',

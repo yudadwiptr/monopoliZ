@@ -10,7 +10,7 @@ export interface MenuBackdropProps {
 }
 
 /**
- * 2D Hand-drawn Nusantara Lobby Backdrop (`/lobby/lobby_bg_2d.png`).
+ * 2D Hand-drawn Nusantara Lobby Backdrop (`/lobby/lobby_bg_2d.webp`).
  * - On desktop & landscape screens: full-bleed `background-size: cover; background-position: center bottom`.
  * - On tall portrait phones: dual-pinned top (logo + sky) and bottom (4 corner characters + meadow) blended
  *   seamlessly through the central green meadow so neither the top MONOPOLIZ logo nor the bottom-left
@@ -28,7 +28,7 @@ export function MenuBackdrop({ variant = 'full', tint }: MenuBackdropProps) {
       <div
         className="absolute inset-0 hidden h-[100dvh] min-h-[100dvh] w-full bg-no-repeat sm:block"
         style={{
-          backgroundImage: "url('/lobby/lobby_bg_2d.png')",
+          backgroundImage: "url('/lobby/lobby_bg_2d.webp')",
           backgroundSize: '100% 100%',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
@@ -49,7 +49,7 @@ export function MenuBackdrop({ variant = 'full', tint }: MenuBackdropProps) {
         <div
           className="relative h-[44vh] w-full shrink-0 bg-no-repeat"
           style={{
-            backgroundImage: "url('/lobby/lobby_bg_2d.png')",
+            backgroundImage: "url('/lobby/lobby_bg_2d.webp')",
             backgroundSize: '122% auto',
             backgroundPosition: 'center top',
             WebkitMaskImage: 'linear-gradient(180deg, #000 0%, #000 72%, transparent 100%)',
@@ -60,7 +60,7 @@ export function MenuBackdrop({ variant = 'full', tint }: MenuBackdropProps) {
         <div
           className="relative mt-auto h-[58vh] w-full shrink-0 bg-no-repeat"
           style={{
-            backgroundImage: "url('/lobby/lobby_bg_2d.png')",
+            backgroundImage: "url('/lobby/lobby_bg_2d.webp')",
             backgroundSize: '116% auto',
             backgroundPosition: 'center bottom',
             WebkitMaskImage: 'linear-gradient(0deg, #000 0%, #000 74%, transparent 100%)',

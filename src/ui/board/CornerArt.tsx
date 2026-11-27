@@ -10,7 +10,7 @@ const CHIBI_SHEET_BASE: CSSProperties = {
   width: '84%',
   height: '84%',
   aspectRatio: '1 / 1',
-  backgroundImage: "url('/sprites/icons_chibi_sheet.png')",
+  backgroundImage: "url('/sprites/icons_chibi_sheet.webp')",
   backgroundSize: '400% 200%',
   backgroundRepeat: 'no-repeat',
 };
@@ -18,9 +18,9 @@ const CHIBI_SHEET_BASE: CSSProperties = {
 /**
  * 2D Hand-drawn Chibi Corner Tile Illustrations:
  * - start: Indonesian Gapura Merah-Putih gate with flag
- * - island: `/sprites/icons_chibi_sheet.png` Row 2, Col 2 (`33.33% 100%`)
+ * - island: `/sprites/icons_chibi_sheet.webp` Row 2, Col 2 (`33.33% 100%`)
  * - festival: Pesta Rakyat festive bunting
- * - airport: `/sprites/icons_chibi_sheet.png` Row 2, Col 3 (`66.66% 100%`)
+ * - airport: `/sprites/icons_chibi_sheet.webp` Row 2, Col 3 (`66.66% 100%`)
  */
 export function CornerArt({ kind }: ArtProps) {
   switch (kind) {
